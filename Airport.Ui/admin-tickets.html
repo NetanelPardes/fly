@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Manage Tickets</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+  <main class="page-shell manager-layout"><aside class="sidebar manager-sidebar"><div class="brand"><span class="brand-mark">AM</span><div><strong>Manager Console</strong><small>Airport control</small></div></div><nav class="nav" id="adminNav"></nav><div class="identity-card"><span id="roleBadge">Admin</span><strong id="userName">Manager</strong><small id="userEmail">-</small></div></aside>
+  <section class="workspace"><header class="topbar"><div><p class="eyebrow">Ticketing</p><h1>Tickets</h1></div><div class="top-actions"><button id="refreshButton" class="ghost-button">Refresh</button><button id="logoutButton" class="danger-button">Logout</button></div></header><section class="panel"><div class="panel-head"><div><p class="eyebrow">All passengers</p><h2>Ticket list</h2></div></div><div id="ticketsTable"></div></section></section><dialog id="ticketDialog"><form id="ticketOptionsForm" method="dialog" class="dialog-form"><h2>Change ticket</h2><input id="manageTicketId" type="hidden"><label>Seat<input id="manageSeat" required></label><label>Class<select id="manageClass"><option>Economy</option><option>Business</option><option>First</option></select></label><div class="dialog-actions"><button type="button" id="closeTicketDialog" class="ghost-button">Close</button><button class="primary-button">Save</button></div></form></dialog><div id="toast" class="toast" hidden></div></main>
+  <script src="shared.js"></script><script src="admin-common.js"></script><script src="admin-tickets.js"></script>
+</body>
+</html>

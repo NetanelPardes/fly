@@ -1,0 +1,177 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: airport-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: airport_management
+      MYSQL_USER: airport_user
+      MYSQL_PASSWORD: airport_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u airport_user -pairport_password --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: airport-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: airport
+      RABBITMQ_DEFAULT_PASS: airport
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: airport-kafka
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+
+  airport-api:
+    build:
+      context: .
+      dockerfile: Airport.Api/Dockerfile
+    container_name: airport-api
+    restart: on-failure
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: airport_management
+      MYSQL_USER: airport_user
+      MYSQL_PASSWORD: airport_password
+      MYSQL_SERVER_VERSION: 8.0.36
+      JWT_KEY: development-only-secret-key-change-me-please-32chars
+      JWT_ISSUER: AirportManagementSystem
+      JWT_AUDIENCE: AirportManagementSystem
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: airport
+      RABBITMQ_PASSWORD: airport
+      RABBITMQ_TICKET_QUEUE: ticket-generation
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    ports:
+      - "8080:8080"
+    volumes:
+      - ticket-files:/tickets:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  airport-ui:
+    build:
+      context: .
+      dockerfile: Airport.Ui/Dockerfile
+    container_name: airport-ui
+    restart: on-failure
+    ports:
+      - "5173:80"
+    depends_on:
+      - airport-api
+
+  flight-consumer:
+    build:
+      context: .
+      dockerfile: Airport.FlightUpdates.Consumer/Dockerfile
+    container_name: airport-flight-consumer
+    restart: on-failure
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: airport_management
+      MYSQL_USER: airport_user
+      MYSQL_PASSWORD: airport_password
+      MYSQL_SERVER_VERSION: 8.0.36
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_FLIGHT_TOPIC: flight-updates
+      KAFKA_GROUP_ID: airport-flight-updates
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+
+  flight-producer:
+    build:
+      context: .
+      dockerfile: python/flight-producer/Dockerfile
+    container_name: airport-flight-producer
+    restart: on-failure
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_FLIGHT_TOPIC: flight-updates
+      FLIGHT_PRODUCER_MODE: amadeus
+      FLIGHT_PRODUCER_INTERVAL_SECONDS: "60"
+      FLIGHT_PRODUCER_FALLBACK_TO_DEMO: "false"
+      AMADEUS_BASE_URL: https://test.api.amadeus.com
+      AMADEUS_CLIENT_ID: ${AMADEUS_CLIENT_ID:-}
+      AMADEUS_CLIENT_SECRET: ${AMADEUS_CLIENT_SECRET:-}
+      AMADEUS_ROUTES: TLV:LON,TLV:PAR,TLV:ATH,TLV:DXB,LON:TLV,PAR:TLV,ATH:TLV,ROM:TLV
+      AMADEUS_DAYS_AHEAD: "14"
+      AMADEUS_MAX_OFFERS_PER_SEARCH: "8"
+      AMADEUS_CURRENCY: USD
+    depends_on:
+      kafka:
+        condition: service_started
+
+  ticket-worker:
+    build:
+      context: .
+      dockerfile: python/ticket-generator/Dockerfile
+    container_name: airport-ticket-worker
+    restart: on-failure
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: airport_management
+      MYSQL_USER: airport_user
+      MYSQL_PASSWORD: airport_password
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: airport
+      RABBITMQ_PASSWORD: airport
+      RABBITMQ_TICKET_QUEUE: ticket-generation
+      TICKET_OUTPUT_DIR: /tickets
+      TICKET_WORKER_MAX_RETRIES: "5"
+    volumes:
+      - ticket-files:/tickets
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  mysql-data:
+  ticket-files:

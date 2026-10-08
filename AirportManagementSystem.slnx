@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Airport.Api/Airport.Api.csproj" />
+  <Project Path="Airport.FlightUpdates.Consumer/Airport.FlightUpdates.Consumer.csproj" />
+</Solution>

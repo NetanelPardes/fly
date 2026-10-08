@@ -1,0 +1,1085 @@
+:root {
+  --ink: #17202a;
+  --muted: #657486;
+  --line: #dce4ec;
+  --panel: rgba(255, 255, 255, 0.92);
+  --paper: #f4f7fa;
+  --navy: #153243;
+  --blue: #1261a6;
+  --blue-dark: #0c467a;
+  --amber: #f0b429;
+  --green: #1f8a70;
+  --red: #b42318;
+  --shadow: 0 18px 48px rgba(17, 35, 49, 0.13);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background:
+    linear-gradient(135deg, rgba(18, 97, 166, 0.12), transparent 38%),
+    linear-gradient(315deg, rgba(240, 180, 41, 0.12), transparent 42%),
+    var(--paper);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-shell {
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.portal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(1180px, 100%);
+  margin: 0 auto 22px;
+}
+
+.home-link {
+  color: var(--navy);
+  font-weight: 900;
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.page-nav a {
+  min-height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.page-nav a:hover,
+.page-nav a.active {
+  color: white;
+  background: var(--blue);
+}
+
+.customer-hero {
+  width: min(1180px, 100%);
+  margin: 0 auto 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.customer-hero h1 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 64px);
+  line-height: 1;
+}
+
+.identity-card.light {
+  min-width: 240px;
+  color: var(--ink);
+  background: white;
+  border-color: var(--line);
+}
+
+.identity-card.light small {
+  color: var(--muted);
+}
+
+#customerApp > .metrics,
+#customerApp > .panel,
+#customerApp > .flight-card-grid {
+  width: min(1180px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.manager-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  margin: -24px;
+  min-height: 100vh;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 24px;
+  padding: 24px;
+  color: white;
+  background: linear-gradient(180deg, #102532, #173849);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 14px;
+  color: #0d2a38;
+  background: var(--amber);
+  font-weight: 900;
+}
+
+.brand strong,
+.identity-card strong {
+  display: block;
+}
+
+.brand small,
+.identity-card small {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.nav {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.nav-item {
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.78);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: white;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.identity-card {
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#roleBadge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #102532;
+  background: #dff5ee;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.workspace {
+  min-width: 0;
+  padding: 28px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.topbar h1,
+.login-panel h2,
+.panel h2 {
+  margin: 0;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.top-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.primary-button,
+.ghost-button,
+.danger-button,
+.inline-form button,
+.form-grid button {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-button,
+.inline-form button,
+.form-grid button {
+  color: white;
+  background: var(--blue);
+}
+
+.primary-button:hover,
+.inline-form button:hover,
+.form-grid button:hover {
+  background: var(--blue-dark);
+}
+
+.ghost-button {
+  color: var(--blue-dark);
+  background: white;
+  border: 1px solid var(--line);
+}
+
+.danger-button {
+  color: white;
+  background: var(--red);
+}
+
+.login-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.login-panel,
+.visual-panel,
+.panel,
+.metrics article {
+  border: 1px solid rgba(220, 228, 236, 0.9);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.login-panel {
+  padding: 28px;
+}
+
+.stack {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  background: white;
+}
+
+.demo-users {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.demo-users button {
+  min-height: 36px;
+  border-radius: 9px;
+  color: var(--navy);
+  background: #e9f1f8;
+  cursor: pointer;
+}
+
+.visual-panel {
+  min-height: 420px;
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.visual-panel img,
+.map-panel img {
+  width: 100%;
+  display: block;
+}
+
+.signal-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.signal-strip span {
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #14313f;
+  background: #eaf3f8;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.metrics article {
+  padding: 18px;
+}
+
+.metrics small,
+.metrics span {
+  color: var(--muted);
+}
+
+.metrics strong {
+  display: block;
+  margin: 8px 0 4px;
+  font-size: 34px;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+  gap: 18px;
+}
+
+.panel {
+  padding: 20px;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+#clock {
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: var(--navy);
+  background: #edf4f8;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+
+.inline-form,
+.form-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.inline-form {
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+}
+
+.form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-bottom: 16px;
+}
+
+.check-filter {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: end;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  background: white;
+}
+
+.check-filter input {
+  width: 18px;
+  min-height: 18px;
+  padding: 0;
+}
+
+.segmented-control {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 6px;
+  padding: 6px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #edf4f8;
+}
+
+.segmented-control button {
+  min-height: 38px;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.segmented-control button.active {
+  color: white;
+  background: var(--blue);
+}
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid #edf1f5;
+  text-align: left;
+}
+
+th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+tbody tr:hover {
+  background: #f8fbfd;
+}
+
+.status {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.Scheduled,
+.Active,
+.CheckedIn {
+  color: #12466a;
+  background: #e1f0fa;
+}
+
+.Boarding,
+.SecurityPassed,
+.LoadedToPlane {
+  color: #76510a;
+  background: #fff3d0;
+}
+
+.Delayed,
+.Lost {
+  color: #8a2d1d;
+  background: #fde4dd;
+}
+
+.Departed,
+.ArrivedAtBaggageClaim {
+  color: #17644f;
+  background: #dcf5eb;
+}
+
+.Cancelled {
+  color: #84231b;
+  background: #f8d7d2;
+}
+
+.Outgoing {
+  color: #12466a;
+  background: #dff0ff;
+}
+
+.Incoming {
+  color: #5c3d08;
+  background: #fff0bd;
+}
+
+.departure-board {
+  display: grid;
+  gap: 10px;
+}
+
+.flight-row {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr) 140px 90px;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 14px;
+  color: #dce9ef;
+  background: #142c39;
+}
+
+.flight-row strong {
+  color: white;
+}
+
+.flight-row small {
+  color: #95aab6;
+}
+
+.gate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.gate-card {
+  min-height: 112px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(145deg, white, #eef5f9);
+}
+
+.gate-card strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 28px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tiny-button {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: var(--blue-dark);
+  background: #e6f0f7;
+  cursor: pointer;
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  max-width: min(420px, calc(100vw - 48px));
+  padding: 14px 16px;
+  border-radius: 14px;
+  color: white;
+  background: #132b38;
+  box-shadow: var(--shadow);
+}
+
+.hidden-by-role {
+  display: none !important;
+}
+
+@media (max-width: 1100px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .nav {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .login-grid,
+  .two-column,
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .workspace,
+  .sidebar {
+    padding: 16px;
+  }
+
+  .topbar,
+  .panel-head,
+  .portal-header {
+    display: grid;
+  }
+
+  .nav,
+  .inline-form,
+  .signal-strip,
+  .page-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .page-nav {
+    display: grid;
+  }
+
+  .flight-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal {
+  min-height: 100vh;
+}
+
+.entry-screen,
+.login-screen {
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  gap: 28px;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.entry-copy {
+  max-width: 760px;
+}
+
+.entry-copy h1 {
+  margin: 0;
+  font-size: clamp(44px, 7vw, 92px);
+  line-height: 0.94;
+  color: var(--navy);
+}
+
+.lead {
+  max-width: 620px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 20px;
+}
+
+.entry-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.entry-card {
+  min-height: 280px;
+  display: grid;
+  align-content: end;
+  gap: 10px;
+  padding: 28px;
+  border: 1px solid rgba(220, 228, 236, 0.9);
+  border-radius: 24px;
+  color: white;
+  text-align: left;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+}
+
+.entry-card::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+}
+
+.entry-card span,
+.entry-card strong,
+.entry-card small {
+  position: relative;
+}
+
+.entry-card span {
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #102532;
+  background: var(--amber);
+  font-weight: 900;
+}
+
+.entry-card strong {
+  max-width: 420px;
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1;
+}
+
+.entry-card small {
+  max-width: 380px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+}
+
+.passenger-card {
+  background:
+    linear-gradient(145deg, rgba(18, 97, 166, 0.88), rgba(21, 50, 67, 0.95)),
+    url("assets/terminal-map.svg") center / cover;
+}
+
+.admin-card {
+  background:
+    linear-gradient(145deg, rgba(21, 50, 67, 0.92), rgba(31, 138, 112, 0.82)),
+    url("assets/terminal-map.svg") center / cover;
+}
+
+.login-screen {
+  grid-template-columns: minmax(0, 420px);
+  justify-content: center;
+}
+
+.login-box {
+  padding: 30px;
+  border: 1px solid rgba(220, 228, 236, 0.9);
+  border-radius: 22px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.hero-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.15fr);
+  gap: 18px;
+  align-items: end;
+}
+
+.hero-panel p {
+  color: var(--muted);
+}
+
+.flight-card-grid,
+.ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.flight-card,
+.ticket-card,
+.empty-state {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 10px 28px rgba(17, 35, 49, 0.08);
+}
+
+.flight-card {
+  display: grid;
+  gap: 12px;
+}
+
+.flight-card.incoming {
+  background: linear-gradient(145deg, #ffffff, #fffaf0);
+}
+
+.flight-card.outgoing {
+  background: linear-gradient(145deg, #ffffff, #f2f8ff);
+}
+
+.flight-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.flight-card h3,
+.ticket-card h3 {
+  margin: 0;
+}
+
+.flight-card p,
+.ticket-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.flight-card button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flight-tags {
+  min-height: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.flight-tags span {
+  display: inline-grid;
+  min-height: 26px;
+  place-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  color: #10354a;
+  background: #dff5ee;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.flight-times {
+  display: grid;
+  grid-template-columns: minmax(70px, 1fr) minmax(92px, 1fr) minmax(70px, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.flight-times div:not(.flight-line) {
+  display: grid;
+  gap: 2px;
+}
+
+.flight-times strong {
+  font-size: 22px;
+}
+
+.flight-times small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.flight-line {
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.flight-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: var(--line);
+}
+
+.flight-line span {
+  position: relative;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: white;
+}
+
+.fare-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #edf1f5;
+}
+
+.fare-row span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.fare-row strong {
+  color: var(--navy);
+  font-size: 26px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.detail-grid article {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f8fbfd;
+}
+
+.detail-grid small {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.detail-grid strong {
+  color: var(--ink);
+}
+
+.notice {
+  padding: 12px;
+  border-radius: 12px;
+  color: #84231b;
+  background: #f8d7d2;
+  font-weight: 800;
+}
+
+.ticket-card {
+  display: grid;
+  gap: 16px;
+}
+
+dialog {
+  width: min(460px, calc(100% - 32px));
+  border: 0;
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+
+dialog::backdrop {
+  background: rgba(12, 28, 38, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.dialog-form {
+  display: grid;
+  gap: 14px;
+  padding: 10px;
+}
+
+.price-breakdown {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.price-breakdown span {
+  color: var(--muted);
+}
+
+.price-breakdown strong {
+  color: var(--navy);
+}
+
+.dialog-form h2,
+.dialog-form p {
+  margin: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@media (max-width: 1100px) {
+  .manager-layout {
+    display: block;
+    margin: 0;
+  }
+
+  .customer-hero {
+    display: grid;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-panel,
+  .entry-cards {
+    grid-template-columns: 1fr;
+  }
+}

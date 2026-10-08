@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Login</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page-shell auth-page">
+    <header class="portal-header">
+      <a class="home-link" href="index.html">Airport Portal</a>
+    </header>
+    <section class="login-screen">
+      <div class="login-box">
+        <p class="eyebrow">Customer access</p>
+        <h1>Welcome aboard</h1>
+        <form id="customerLoginForm" class="stack">
+          <label>Email<input id="loginEmail" type="email" value="passenger@airport.local" required></label>
+          <label>Password<input id="loginPassword" type="password" value="Password123!" required></label>
+          <button class="primary-button">Enter customer portal</button>
+        </form>
+      </div>
+    </section>
+    <div id="toast" class="toast" hidden></div>
+  </main>
+  <script src="shared.js"></script>
+  <script src="customer-login.js"></script>
+</body>
+</html>

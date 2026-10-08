@@ -1,0 +1,9 @@
+{
+  "name": "airport-ui",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npx serve .",
+    "docker": "docker compose up --build airport-ui"
+  }
+}

@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Manage Flights</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+  <main class="page-shell manager-layout"><aside class="sidebar manager-sidebar"><div class="brand"><span class="brand-mark">AM</span><div><strong>Manager Console</strong><small>Airport control</small></div></div><nav class="nav" id="adminNav"></nav><div class="identity-card"><span id="roleBadge">Admin</span><strong id="userName">Manager</strong><small id="userEmail">-</small></div></aside>
+  <section class="workspace"><header class="topbar"><div><p class="eyebrow">Schedule</p><h1>Flights</h1></div><div class="top-actions"><button id="refreshButton" class="ghost-button">Refresh</button><button id="logoutButton" class="danger-button">Logout</button></div></header><section class="panel"><div class="panel-head"><div><p class="eyebrow">Filter</p><h2>Flight list</h2></div><form id="flightFilters" class="inline-form"><input id="fromDate" type="date"><input id="toDate" type="date"><input id="origin" placeholder="Origin"><button>Filter</button></form></div><div id="flightsTable"></div></section></section><div id="toast" class="toast" hidden></div></main>
+  <script src="shared.js"></script><script src="admin-common.js"></script><script src="admin-flights.js"></script>
+</body>
+</html>
