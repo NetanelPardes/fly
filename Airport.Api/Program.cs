@@ -31,8 +31,10 @@ builder.Services.AddDbContext<AirportDbContext>(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddSingleton<AirportLocationCatalog>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddHostedService<TicketOutboxPublisher>();
+builder.Services.AddHostedService<CsvFlightScheduleHostedService>();
 
 var jwtKey = builder.Configuration["JWT_KEY"] ?? "development-only-secret-key-change-me-please-32chars";
 var jwtIssuer = builder.Configuration["JWT_ISSUER"] ?? "AirportManagementSystem";

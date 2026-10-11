@@ -15,7 +15,16 @@ public record FlightDto(
     string? GateNumber,
     string? ExternalId,
     string Source,
-    DateTime LastUpdatedAt);
+    DateTime LastUpdatedAt,
+    string? AirlineName,
+    string? AirlineIata,
+    string? AircraftModel,
+    string? OriginAirportName,
+    string? OriginIataCode,
+    string? OriginCountry,
+    string? DestinationAirportName,
+    string? DestinationIataCode,
+    string? DestinationCountry);
 
 public record CreateFlightDto(
     [Required, MaxLength(20)] string FlightNumber,

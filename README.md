@@ -133,11 +133,11 @@ The default Docker setup no longer calls a flight API. It generates flights from
 Default generation settings:
 
 - `AIRPORT_CSV_FLIGHT_DAYS=14`
-- `AIRPORT_CSV_ROUTE_COUNT=60`
+- `AIRPORT_CSV_DESTINATIONS_PER_ORIGIN=1`
 - `AIRPORT_CSV_MIN_FLIGHTS_PER_ROUTE_DAY=1`
 - `AIRPORT_CSV_MAX_FLIGHTS_PER_ROUTE_DAY=3`
 
-This creates a moderate schedule with 1 to 3 flights per route per day, including routes into and out of Tel Aviv for the customer portal.
+This creates a moderate schedule with at least one random destination from every scheduled large/medium airport source, and 1 to 3 flights per route per day.
 
 To regenerate CSV flights in an existing database, set:
 

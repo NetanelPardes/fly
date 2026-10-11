@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Customer Flights</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20261011-8">
 </head>
 <body>
   <main class="page-shell">
@@ -29,28 +29,27 @@
     </section>
     <section class="metrics">
       <article><small>Flights shown</small><strong id="metricFlights">0</strong><span>filtered schedule</span></article>
-      <article><small>Outgoing</small><strong id="metricOutgoing">0</strong><span>bookable direction</span></article>
-      <article><small>Incoming</small><strong id="metricIncoming">0</strong><span>view only</span></article>
+      <article><small>Destinations</small><strong id="metricOutgoing">0</strong><span>visible routes</span></article>
+      <article><small>Travel dates</small><strong id="metricIncoming">0</strong><span>visible days</span></article>
       <article><small>Best fare</small><strong id="metricBestFare">-</strong><span>visible results</span></article>
     </section>
     <section class="panel">
       <div class="panel-head"><div><p class="eyebrow">Search flights</p><h2>Flight finder</h2></div></div>
-      <div class="segmented-control" role="tablist" aria-label="Flight direction">
-        <button type="button" class="active" data-direction="outgoing">Outgoing flights</button>
-        <button type="button" data-direction="incoming">Incoming flights</button>
-      </div>
       <form id="flightFilters" class="form-grid">
-        <label>From date<input id="fromDate" type="date"></label>
-        <label>To date<input id="toDate" type="date"></label>
-        <label>Origin<input id="origin" list="originOptions" placeholder="Origin"><datalist id="originOptions"></datalist></label>
-        <label>Destination<input id="destination" list="destinationOptions" placeholder="Destination"><datalist id="destinationOptions"></datalist></label>
+        <label>From date<input id="fromDate" type="date" lang="en-GB"></label>
+        <label>To date<input id="toDate" type="date" lang="en-GB"></label>
+        <label>Origin<input id="origin" list="originOptions" placeholder="City, country"><datalist id="originOptions"></datalist></label>
+        <label>Destination<input id="destination" list="destinationOptions" placeholder="City, country"><datalist id="destinationOptions"></datalist></label>
         <label>Status<select id="status"><option value="">Any status</option><option>Scheduled</option><option>Boarding</option><option>Departed</option><option>Delayed</option><option>Cancelled</option></select></label>
-        <label>Sort by<select id="sortBy"><option value="recommended">Recommended</option><option value="price">Lowest price</option></select></label>
+        <label>Sort by<select id="sortBy"><option value="date">Earliest date</option><option value="price">Lowest price</option></select></label>
         <label class="check-filter"><input id="bookableOnly" type="checkbox"> Bookable only</label>
-        <button>Search</button>
+        <div class="search-action"><button>Search</button></div>
       </form>
     </section>
-    <section id="flightsGrid" class="flight-card-grid"></section>
+    <section id="resultsPanel" class="panel results-panel" hidden>
+      <div class="panel-head"><div><p class="eyebrow">Results</p><div class="results-title-row"><h2 id="resultsTitle">Available flights</h2><span id="searchResultCount">0 results</span></div></div></div>
+      <section id="flightsGrid" class="flight-card-grid"></section>
+    </section>
     <dialog id="detailsDialog">
       <form method="dialog" class="dialog-form">
         <h2 id="detailsTitle">Flight details</h2>
@@ -73,8 +72,8 @@
     </dialog>
     <div id="toast" class="toast" hidden></div>
   </main>
-  <script src="shared.js"></script>
-  <script src="locations.js"></script>
-  <script src="customer-flights.js"></script>
+  <script src="shared.js?v=20261011-8"></script>
+  <script src="locations.js?v=20261011-8"></script>
+  <script src="customer-flights.js?v=20261011-8"></script>
 </body>
 </html>

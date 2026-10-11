@@ -1,10 +1,11 @@
-const HOME_AIRPORT = "Tel Aviv";
 const BAGGAGE_PRICE = 45;
 const BOOKING_CUTOFF_HOURS = 5;
 let user = Airport.getUser();
 let flights = [];
 let visibleFlights = [];
-let direction = "outgoing";
+let airportLocations = [];
+let airportCountries = [];
+let locationOptions = [];
 let selectedFlight = null;
 let hasSearched = false;
 
@@ -17,11 +18,8 @@ function init() {
   document.querySelector("#logoutButton").addEventListener("click", logout);
   document.querySelector("#refreshButton").addEventListener("click", () => refresh().catch(e => Airport.toast(e.message)));
   document.querySelector("#flightFilters").addEventListener("submit", e => { e.preventDefault(); searchFlights().catch(error => Airport.toast(error.message)); });
-  document.querySelectorAll("[data-direction]").forEach(button => button.addEventListener("click", () => {
-    direction = button.dataset.direction;
-    document.querySelectorAll("[data-direction]").forEach(item => item.classList.toggle("active", item === button));
-    resetSearchResults();
-  }));
+  setupLocationInput("#origin", "#originOptions");
+  setupLocationInput("#destination", "#destinationOptions");
   document.querySelector("#bookingClass").addEventListener("change", updateBookingPrice);
   document.querySelector("#bookingBaggage").addEventListener("change", updateBookingPrice);
   document.querySelector("#closeDetails").addEventListener("click", () => document.querySelector("#detailsDialog").close());
@@ -49,9 +47,14 @@ async function refresh() {
     return;
   }
 
-  flights = await Airport.api("/api/flights");
+  const catalog = await Airport.api("/api/locations/airports").catch(error => {
+    Airport.toast(error.message);
+    return { countries: [], locations: [] };
+  });
+  flights = [];
+  airportLocations = catalog.locations || [];
+  airportCountries = catalog.countries || [];
   renderAutocomplete();
-  updateDirectionMetrics(flights);
   resetSearchResults();
 }
 
@@ -59,19 +62,47 @@ async function searchFlights() {
   hasSearched = true;
   const query = customerFlightQuery();
   if (!query) return;
-  flights = await Airport.api(`/api/flights?${query}`);
+  const status = await Airport.api("/api/flights/schedule-status").catch(() => null);
+  if (status && !status.ready) {
+    Airport.toast("Flight schedule is still loading. Try again in a moment.");
+    return;
+  }
+
+  try {
+    flights = await Airport.api(`/api/flights?${query}`);
+  } catch (error) {
+    Airport.toast(error.message === "Failed to fetch" ? "API is still starting. Try again in a moment." : error.message);
+    return;
+  }
   renderAutocomplete();
   renderFlights();
 }
 
 function customerFlightQuery() {
   const params = new URLSearchParams();
-  const from = document.querySelector("#fromDate").value;
-  const to = document.querySelector("#toDate").value;
-  const startDate = from || localDateInput(new Date());
-  const endDate = from ? (to || from) : startDate;
-  const start = localDateTime(startDate, "00:00");
-  const end = localDateTime(endDate, "23:59");
+  const from = document.querySelector("#fromDate").value.trim();
+  const to = document.querySelector("#toDate").value.trim();
+  const origin = document.querySelector("#origin").value.trim();
+  if (!origin) {
+    Airport.toast("Choose an origin.");
+    return null;
+  }
+
+  if (!from || !to) {
+    Airport.toast("Choose from and to dates.");
+    return null;
+  }
+
+  const startDate = parseDateInput(from);
+  const endDate = parseDateInput(to);
+
+  if (!startDate || !endDate) {
+    Airport.toast("Choose a valid date.");
+    return null;
+  }
+
+  const start = withTime(startDate, 0, 0);
+  const end = withTime(endDate, 23, 59);
 
   if (end < start) {
     Airport.toast("End time must be after start time.");
@@ -80,76 +111,157 @@ function customerFlightQuery() {
 
   params.set("from", start.toISOString());
   params.set("to", end.toISOString());
+  params.set("originSearch", searchTermForLocation(document.querySelector("#origin")));
+
+  const destination = document.querySelector("#destination").value.trim();
+  if (destination) params.set("destinationSearch", searchTermForLocation(document.querySelector("#destination")));
 
   const status = document.querySelector("#status").value;
   if (status) params.set("status", status);
   return params;
 }
 
-function localDateInput(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function parseDateInput(value) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return date;
 }
 
-function localDateTime(dateValue, timeValue) {
-  return new Date(`${dateValue}T${timeValue}:00`);
+function withTime(date, hours, minutes) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes, 0);
 }
 
 function resetSearchResults() {
   hasSearched = false;
   visibleFlights = [];
   document.querySelector("#metricFlights").textContent = "0";
+  document.querySelector("#metricOutgoing").textContent = "0";
+  document.querySelector("#metricIncoming").textContent = "0";
   document.querySelector("#metricBestFare").textContent = "-";
-  document.querySelector("#flightsGrid").innerHTML = Airport.empty("Choose filters and press Search to see flights");
+  document.querySelector("#searchResultCount").textContent = "0 results";
+  document.querySelector("#resultsPanel").hidden = true;
+  document.querySelector("#flightsGrid").innerHTML = "";
 }
 
 function renderAutocomplete() {
-  const flightLocations = flights.flatMap(f => [
-    { city: f.origin, country: "Available route" },
-    { city: f.destination, country: "Available route" }
-  ]);
-  const allLocations = mergeLocations([...(window.AirportLocations || []), ...flightLocations]);
-  const options = allLocations.map(item => `<option value="${Airport.escapeHtml(item.city)}" label="${Airport.escapeHtml(item.country)}"></option>`).join("");
-  document.querySelector("#originOptions").innerHTML = options;
-  document.querySelector("#destinationOptions").innerHTML = options;
+  const allLocations = mergeLocations(airportLocations);
+  const countryEntries = airportCountries.map(country => ({
+    type: "country",
+    value: country,
+    searchValue: country,
+    tokens: [country]
+  }));
+  const locationEntries = allLocations.map(item => ({
+    type: "airport",
+    value: locationValue(item),
+    label: "",
+    searchValue: locationValue(item),
+    tokens: [item.city, item.country, item.iataCode, item.icaoCode, item.airportName].filter(Boolean)
+  }));
+
+  locationOptions = [...countryEntries, ...locationEntries].sort((a, b) => a.value.localeCompare(b.value));
+  updateLocationOptions(document.querySelector("#origin").value, "#originOptions");
+  updateLocationOptions(document.querySelector("#destination").value, "#destinationOptions");
 }
 
 function mergeLocations(locations) {
   const byCity = new Map();
   locations.forEach(item => {
     if (!item.city) return;
-    const key = item.city.toLowerCase();
-    const existing = byCity.get(key);
-    if (!existing || existing.country !== "Available route") byCity.set(key, item);
+    const key = `${item.city}|${item.country || ""}`.toLowerCase();
+    if (!byCity.has(key)) byCity.set(key, item);
   });
-  return [...byCity.values()].sort((a, b) => a.city.localeCompare(b.city));
+  return [...byCity.values()].sort((a, b) => locationLabel(a).localeCompare(locationLabel(b)));
+}
+
+function locationLabel(item) {
+  return `${item.city || ""}, ${item.country || ""}`;
+}
+
+function locationValue(item) {
+  const country = item.country ? `, ${item.country}` : "";
+  return `${item.city}${country}`;
+}
+
+function setupLocationInput(inputSelector, listSelector) {
+  const input = document.querySelector(inputSelector);
+
+  input.addEventListener("input", () => {
+    delete input.dataset.searchValue;
+    updateLocationOptions(input.value, listSelector);
+  });
+  input.addEventListener("focus", () => updateLocationOptions(input.value, listSelector));
+}
+
+function updateLocationOptions(query, listSelector) {
+  const list = document.querySelector(listSelector);
+  if (!list) return;
+  const normalized = query.trim().toLowerCase();
+  list.innerHTML = locationOptions
+    .filter(option => !normalized || option.tokens.some(token => token.toLowerCase().startsWith(normalized)))
+    .slice(0, 160)
+    .map(option => `<option value="${Airport.escapeHtml(option.value)}"${option.label ? ` label="${Airport.escapeHtml(option.label)}"` : ""}></option>`)
+    .join("");
+}
+
+function searchTermForLocation(input) {
+  const value = input.value.trim();
+  if (input.dataset.searchValue) return input.dataset.searchValue;
+  return searchTermFromValue(value);
+}
+
+function searchTermFromValue(value) {
+  const match = locationOptions.find(option => option.value.toLowerCase() === value.toLowerCase());
+  if (match) return match.searchValue;
+  return value.replace(/\s*\([A-Z0-9]{2,4}\)\s*$/, "").split(",")[0].trim();
 }
 
 function renderFlights() {
-  const origin = document.querySelector("#origin").value.trim().toLowerCase();
-  const destination = document.querySelector("#destination").value.trim().toLowerCase();
+  const origin = document.querySelector("#origin").value.trim();
+  const destination = document.querySelector("#destination").value.trim();
   const status = document.querySelector("#status").value;
   const bookableOnly = document.querySelector("#bookableOnly").checked;
-  const outgoing = flights.filter(f => f.origin === HOME_AIRPORT);
-  const incoming = flights.filter(f => f.destination === HOME_AIRPORT);
-  visibleFlights = (direction === "outgoing" ? outgoing : incoming)
-    .filter(f => !origin || f.origin.toLowerCase().includes(origin))
-    .filter(f => !destination || f.destination.toLowerCase().includes(destination))
+  visibleFlights = flights
+    .filter(f => locationMatches(f, "origin", origin))
+    .filter(f => locationMatches(f, "destination", destination))
     .filter(f => !status || f.status === status)
     .filter(f => !bookableOnly || !bookingBlockReason(f))
     .sort(compareFlights);
   document.querySelector("#metricFlights").textContent = visibleFlights.length;
+  document.querySelector("#metricOutgoing").textContent = new Set(visibleFlights.map(f => f.destination)).size;
+  document.querySelector("#metricIncoming").textContent = new Set(visibleFlights.map(f => dateOnly(f.departureTime))).size;
   document.querySelector("#metricBestFare").textContent = visibleFlights.length ? Airport.money(Math.min(...visibleFlights.map(basePriceForFlight))) : "-";
-  updateDirectionMetrics(flights);
+  document.querySelector("#searchResultCount").textContent = `${visibleFlights.length} ${visibleFlights.length === 1 ? "result" : "results"}`;
+  document.querySelector("#resultsPanel").hidden = false;
+  document.querySelector("#resultsTitle").textContent = `Flights from ${origin}`;
   document.querySelector("#flightsGrid").innerHTML = visibleFlights.map(flightCard).join("") || Airport.empty("No flights match this search");
+}
+
+function locationMatches(flight, side, value) {
+  if (!value) return true;
+  const queries = clientSearchTerms(searchTermFromValue(value));
+  const fields = side === "origin"
+    ? [flight.origin, flight.originCountry, flight.originIataCode, flight.originAirportName]
+    : [flight.destination, flight.destinationCountry, flight.destinationIataCode, flight.destinationAirportName];
+  return queries.some(query => fields.some(field => String(field || "").toLowerCase().includes(query)));
+}
+
+function clientSearchTerms(value) {
+  const withoutCode = value.replace(/\s*\([A-Z0-9]{2,4}\)\s*$/, "");
+  return [...withoutCode.split(","), withoutCode]
+    .map(term => term.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 function compareFlights(a, b) {
   const mode = document.querySelector("#sortBy").value;
   if (mode === "price") return basePriceForFlight(a) - basePriceForFlight(b);
-  return recommendationScore(a) - recommendationScore(b);
+  return new Date(a.departureTime) - new Date(b.departureTime);
 }
 
 function recommendationScore(flight) {
@@ -160,22 +272,23 @@ function recommendationScore(flight) {
   return price * 3 + duration + hoursFromNoon * 8 + blockedPenalty;
 }
 
-function updateDirectionMetrics(sourceFlights) {
-  document.querySelector("#metricOutgoing").textContent = sourceFlights.filter(f => f.origin === HOME_AIRPORT).length;
-  document.querySelector("#metricIncoming").textContent = sourceFlights.filter(f => f.destination === HOME_AIRPORT).length;
-}
-
 function flightCard(flight) {
   const reason = bookingBlockReason(flight);
-  return `<article class="flight-card ${direction}">
-    <div class="flight-card-top"><strong>${Airport.escapeHtml(flight.flightNumber)}</strong>${Airport.badge(direction === "outgoing" ? "Outgoing" : "Incoming")}</div>
+  const origin = placeLabel(flight.origin, flight.originCountry);
+  const destination = placeLabel(flight.destination, flight.destinationCountry);
+  return `<article class="flight-card">
+    <div class="flight-card-top"><strong>${Airport.escapeHtml(flight.flightNumber)}</strong>${Airport.badge(flight.status)}</div>
     <div class="flight-tags">${recommendationTags(flight).map(tag => `<span>${tag}</span>`).join("")}</div>
-    <h3>${Airport.escapeHtml(flight.origin)} -> ${Airport.escapeHtml(flight.destination)}</h3>
+    <h3>${Airport.escapeHtml(origin)} -> ${Airport.escapeHtml(destination)}</h3>
     <div class="flight-times"><div><strong>${timeOnly(flight.departureTime)}</strong><small>${dateOnly(flight.departureTime)}</small></div><div class="flight-line"><span>${durationLabel(flight)}</span></div><div><strong>${timeOnly(flight.arrivalTime)}</strong><small>${dateOnly(flight.arrivalTime)}</small></div></div>
-    <p>Gate ${Airport.escapeHtml(flight.gateNumber || "TBD")} - ${Airport.badge(flight.status)} - ${Airport.escapeHtml(flight.source || "Unknown")}</p>
+    <p>Gate ${Airport.escapeHtml(flight.gateNumber || "TBD")} - ${Airport.escapeHtml(flight.airlineName || flight.source || "Unknown")}</p>
     <div class="fare-row"><span>From</span><strong>${Airport.money(basePriceForFlight(flight))}</strong></div>
     <div class="row-actions"><button class="ghost-button" data-flight-details="${flight.id}">Details</button><button class="primary-button" data-book-flight="${flight.id}" ${reason ? "disabled" : ""}>${reason || "Book"}</button></div>
   </article>`;
+}
+
+function placeLabel(city, country) {
+  return country ? `${city}, ${country}` : city;
 }
 
 function recommendationTags(flight) {
@@ -192,7 +305,7 @@ function openFlightDetails(flightId) {
   const reason = bookingBlockReason(selectedFlight);
   document.querySelector("#detailsTitle").textContent = `${selectedFlight.flightNumber} flight details`;
   document.querySelector("#detailsBody").innerHTML = `<div class="detail-grid">
-    <article><small>Route</small><strong>${Airport.escapeHtml(selectedFlight.origin)} -> ${Airport.escapeHtml(selectedFlight.destination)}</strong></article>
+    <article><small>Route</small><strong>${Airport.escapeHtml(placeLabel(selectedFlight.origin, selectedFlight.originCountry))} -> ${Airport.escapeHtml(placeLabel(selectedFlight.destination, selectedFlight.destinationCountry))}</strong></article>
     <article><small>Departure</small><strong>${Airport.formatDate(selectedFlight.departureTime)}</strong></article>
     <article><small>Arrival</small><strong>${Airport.formatDate(selectedFlight.arrivalTime)}</strong></article>
     <article><small>Duration</small><strong>${durationLabel(selectedFlight)}</strong></article>
@@ -209,7 +322,6 @@ function openFlightDetails(flightId) {
 }
 
 function bookingBlockReason(flight) {
-  if (direction !== "outgoing") return "Incoming only";
   if (flight.status === "Cancelled" || flight.status === "Departed") return "Unavailable";
   if (new Date(flight.departureTime) <= new Date(Date.now() + BOOKING_CUTOFF_HOURS * 60 * 60 * 1000)) return "Closed";
   return "";
@@ -219,7 +331,7 @@ function openBooking(flightId) {
   selectedFlight = flights.find(f => f.id === Number(flightId));
   if (!selectedFlight || bookingBlockReason(selectedFlight)) return;
   document.querySelector("#bookingFlightId").value = selectedFlight.id;
-  document.querySelector("#bookingFlightText").textContent = `${selectedFlight.flightNumber}: ${selectedFlight.origin} -> ${selectedFlight.destination} - ${Airport.formatDate(selectedFlight.departureTime)}`;
+  document.querySelector("#bookingFlightText").textContent = `${selectedFlight.flightNumber}: ${placeLabel(selectedFlight.origin, selectedFlight.originCountry)} -> ${placeLabel(selectedFlight.destination, selectedFlight.destinationCountry)} - ${Airport.formatDate(selectedFlight.departureTime)}`;
   document.querySelector("#bookingPassengerName").value = user.fullName;
   document.querySelector("#bookingPassengerEmail").value = user.email;
   document.querySelector("#bookingSeat").value = "12A";
@@ -262,7 +374,7 @@ function timeOnly(value) {
 }
 
 function dateOnly(value) {
-  return new Date(value).toLocaleDateString(undefined, { month: "short", day: "2-digit" });
+  return new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 async function bookTicket(event) {

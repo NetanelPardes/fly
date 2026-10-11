@@ -12,12 +12,22 @@ namespace Airport.Api.Controllers;
 [Authorize]
 public class FlightsController(AirportDbContext dbContext, IConfiguration configuration) : ControllerBase
 {
-    private static readonly string[] DemoSources = ["DemoSeed", "DemoSchedule", "PythonDemo"];
+    private const string ActiveCsvSource = "CsvGeneratedAllOriginsV3";
+    private static readonly string[] DemoSources = ["DemoSeed", "DemoSchedule", "PythonDemo", "CsvGenerated", "CsvGeneratedAllOrigins", "CsvGeneratedAllOriginsV2"];
+
+    [HttpGet("schedule-status")]
+    public async Task<ActionResult<object>> GetScheduleStatus(CancellationToken cancellationToken)
+    {
+        var count = await dbContext.Flights.CountAsync(flight => flight.Source == ActiveCsvSource, cancellationToken);
+        return Ok(new { ready = count > 0, flightCount = count });
+    }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<FlightDto>>> GetFlights(
         [FromQuery] string? origin,
         [FromQuery] string? destination,
+        [FromQuery] string? originSearch,
+        [FromQuery] string? destinationSearch,
         [FromQuery] FlightStatus? status,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
@@ -27,6 +37,7 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         var query = dbContext.Flights
             .AsNoTracking()
             .Include(flight => flight.Gate)
+            .Include(flight => flight.GeneratedSchedule)
             .AsQueryable();
 
         if (!includeDemo
@@ -44,6 +55,50 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         if (!string.IsNullOrWhiteSpace(destination))
         {
             query = query.Where(flight => flight.Destination == destination.Trim());
+        }
+
+        if (!string.IsNullOrWhiteSpace(originSearch))
+        {
+            var terms = SearchTerms(originSearch);
+            var first = terms.ElementAtOrDefault(0);
+            var second = terms.ElementAtOrDefault(1);
+            var third = terms.ElementAtOrDefault(2);
+            query = query.Where(flight =>
+                (first != null && flight.Origin.Contains(first))
+                || (second != null && flight.Origin.Contains(second))
+                || (third != null && flight.Origin.Contains(third))
+                || (flight.GeneratedSchedule != null
+                && ((first != null && ((flight.GeneratedSchedule.OriginCountry != null && flight.GeneratedSchedule.OriginCountry.Contains(first))
+                    || flight.GeneratedSchedule.OriginIataCode.Contains(first)
+                    || flight.GeneratedSchedule.OriginAirportName.Contains(first)))
+                || (second != null && ((flight.GeneratedSchedule.OriginCountry != null && flight.GeneratedSchedule.OriginCountry.Contains(second))
+                    || flight.GeneratedSchedule.OriginIataCode.Contains(second)
+                    || flight.GeneratedSchedule.OriginAirportName.Contains(second)))
+                || (third != null && ((flight.GeneratedSchedule.OriginCountry != null && flight.GeneratedSchedule.OriginCountry.Contains(third))
+                    || flight.GeneratedSchedule.OriginIataCode.Contains(third)
+                    || flight.GeneratedSchedule.OriginAirportName.Contains(third))))));
+        }
+
+        if (!string.IsNullOrWhiteSpace(destinationSearch))
+        {
+            var terms = SearchTerms(destinationSearch);
+            var first = terms.ElementAtOrDefault(0);
+            var second = terms.ElementAtOrDefault(1);
+            var third = terms.ElementAtOrDefault(2);
+            query = query.Where(flight =>
+                (first != null && flight.Destination.Contains(first))
+                || (second != null && flight.Destination.Contains(second))
+                || (third != null && flight.Destination.Contains(third))
+                || (flight.GeneratedSchedule != null
+                && ((first != null && ((flight.GeneratedSchedule.DestinationCountry != null && flight.GeneratedSchedule.DestinationCountry.Contains(first))
+                    || flight.GeneratedSchedule.DestinationIataCode.Contains(first)
+                    || flight.GeneratedSchedule.DestinationAirportName.Contains(first)))
+                || (second != null && ((flight.GeneratedSchedule.DestinationCountry != null && flight.GeneratedSchedule.DestinationCountry.Contains(second))
+                    || flight.GeneratedSchedule.DestinationIataCode.Contains(second)
+                    || flight.GeneratedSchedule.DestinationAirportName.Contains(second)))
+                || (third != null && ((flight.GeneratedSchedule.DestinationCountry != null && flight.GeneratedSchedule.DestinationCountry.Contains(third))
+                    || flight.GeneratedSchedule.DestinationIataCode.Contains(third)
+                    || flight.GeneratedSchedule.DestinationAirportName.Contains(third))))));
         }
 
         if (status.HasValue)
@@ -75,6 +130,7 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         var flight = await dbContext.Flights
             .AsNoTracking()
             .Include(item => item.Gate)
+            .Include(item => item.GeneratedSchedule)
             .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
 
         return flight is null ? NotFound() : Ok(ToDto(flight));
@@ -95,6 +151,7 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         dbContext.Flights.Add(flight);
         await dbContext.SaveChangesAsync(cancellationToken);
         await dbContext.Entry(flight).Reference(item => item.Gate).LoadAsync(cancellationToken);
+        await dbContext.Entry(flight).Reference(item => item.GeneratedSchedule).LoadAsync(cancellationToken);
 
         return CreatedAtAction(nameof(GetFlight), new { id = flight.Id }, ToDto(flight));
     }
@@ -120,6 +177,7 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         Apply(request, flight);
         await dbContext.SaveChangesAsync(cancellationToken);
         await dbContext.Entry(flight).Reference(item => item.Gate).LoadAsync(cancellationToken);
+        await dbContext.Entry(flight).Reference(item => item.GeneratedSchedule).LoadAsync(cancellationToken);
 
         return Ok(ToDto(flight));
     }
@@ -177,7 +235,16 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         flight.Gate?.GateNumber,
         flight.ExternalId,
         flight.Source,
-        flight.LastUpdatedAt);
+        flight.LastUpdatedAt,
+        flight.GeneratedSchedule?.AirlineName,
+        flight.GeneratedSchedule?.AirlineIata,
+        flight.GeneratedSchedule?.AircraftModel,
+        flight.GeneratedSchedule?.OriginAirportName,
+        flight.GeneratedSchedule?.OriginIataCode,
+        flight.GeneratedSchedule?.OriginCountry,
+        flight.GeneratedSchedule?.DestinationAirportName,
+        flight.GeneratedSchedule?.DestinationIataCode,
+        flight.GeneratedSchedule?.DestinationCountry);
 
     private static DateTime EnsureUtc(DateTime value)
     {
@@ -187,5 +254,49 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
             DateTimeKind.Local => value.ToUniversalTime(),
             _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
         };
+    }
+
+    private static string[] SearchTerms(string value)
+    {
+        var trimmed = value.Trim();
+        var withoutCode = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\s*\([A-Za-z0-9]{2,4}\)\s*$", "");
+        var terms = withoutCode
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Append(withoutCode)
+            .ToList();
+
+        foreach (var term in terms.ToArray())
+        {
+            var countryCode = CountryCodeFor(term);
+            if (!string.IsNullOrWhiteSpace(countryCode))
+            {
+                terms.Add(countryCode);
+            }
+        }
+
+        return terms
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Where(term => !string.IsNullOrWhiteSpace(term))
+            .ToArray();
+    }
+
+    private static string? CountryCodeFor(string countryName)
+    {
+        foreach (var culture in System.Globalization.CultureInfo.GetCultures(System.Globalization.CultureTypes.SpecificCultures))
+        {
+            try
+            {
+                var region = new System.Globalization.RegionInfo(culture.Name);
+                if (region.EnglishName.Equals(countryName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return region.TwoLetterISORegionName;
+                }
+            }
+            catch (ArgumentException)
+            {
+            }
+        }
+
+        return null;
     }
 }

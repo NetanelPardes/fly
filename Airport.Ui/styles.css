@@ -261,7 +261,8 @@ button {
 .ghost-button,
 .danger-button,
 .inline-form button,
-.form-grid button {
+.form-grid > button,
+.search-action button {
   min-height: 42px;
   padding: 0 16px;
   border-radius: 10px;
@@ -271,14 +272,16 @@ button {
 
 .primary-button,
 .inline-form button,
-.form-grid button {
+.form-grid > button,
+.search-action button {
   color: white;
   background: var(--blue);
 }
 
 .primary-button:hover,
 .inline-form button:hover,
-.form-grid button:hover {
+.form-grid > button:hover,
+.search-action button:hover {
   background: var(--blue-dark);
 }
 
@@ -455,7 +458,84 @@ select {
 
 .form-grid {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: start;
   margin-bottom: 16px;
+}
+
+.form-grid > button {
+  align-self: end;
+}
+
+.search-action {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-self: end;
+  width: 100%;
+}
+
+.search-action button {
+  display: block;
+  width: 100%;
+}
+
+.results-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.results-title-row span {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.location-field {
+  position: relative;
+}
+
+.autocomplete-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 18px 42px rgba(17, 35, 49, 0.18);
+}
+
+.autocomplete-option {
+  width: 100%;
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 0;
+  min-height: auto;
+  color: var(--ink);
+  text-align: left;
+  background: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.autocomplete-option:hover,
+.autocomplete-option:focus {
+  background: #edf4f8;
+}
+
+.autocomplete-option strong {
+  font-size: 14px;
+}
+
+.autocomplete-option span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .check-filter {

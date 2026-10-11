@@ -7,9 +7,13 @@ namespace Airport.Api.Services;
 
 public static class CsvFlightScheduleSeeder
 {
-    private const string Source = "CsvGenerated";
+    private const string Source = "CsvGeneratedAllOriginsV3";
 
-    public static async Task SeedAsync(AirportDbContext dbContext, IConfiguration configuration, IHostEnvironment environment)
+    public static async Task SeedAsync(
+        AirportDbContext dbContext,
+        IConfiguration configuration,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken = default)
     {
         if (!configuration.GetValue("AIRPORT_SEED_CSV_FLIGHTS", true))
         {
@@ -20,10 +24,10 @@ public static class CsvFlightScheduleSeeder
         {
             await dbContext.Flights
                 .Where(flight => flight.Source == Source)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync(cancellationToken);
         }
 
-        if (await dbContext.GeneratedFlightSchedules.AnyAsync())
+        if (await dbContext.Flights.AnyAsync(flight => flight.Source == Source, cancellationToken))
         {
             return;
         }
@@ -41,11 +45,11 @@ public static class CsvFlightScheduleSeeder
         var seed = configuration.GetValue("AIRPORT_CSV_RANDOM_SEED", 20261011);
         var random = new Random(seed);
         var days = Math.Clamp(configuration.GetValue("AIRPORT_CSV_FLIGHT_DAYS", 14), 1, 60);
-        var routeCount = Math.Clamp(configuration.GetValue("AIRPORT_CSV_ROUTE_COUNT", 60), 1, 300);
+        var destinationsPerOrigin = Math.Clamp(configuration.GetValue("AIRPORT_CSV_DESTINATIONS_PER_ORIGIN", 5), 1, 12);
         var minFlightsPerRouteDay = Math.Clamp(configuration.GetValue("AIRPORT_CSV_MIN_FLIGHTS_PER_ROUTE_DAY", 1), 1, 10);
         var maxFlightsPerRouteDay = Math.Clamp(configuration.GetValue("AIRPORT_CSV_MAX_FLIGHTS_PER_ROUTE_DAY", 3), minFlightsPerRouteDay, 10);
 
-        var routes = BuildRoutes(airports, routeCount, random);
+        var routes = BuildRoutes(airports, destinationsPerOrigin, random);
         var generatedAt = DateTime.UtcNow;
         var startDate = DateTime.UtcNow.Date;
         var schedules = new List<GeneratedFlightSchedule>();
@@ -100,12 +104,12 @@ public static class CsvFlightScheduleSeeder
                         OriginAirportName = Limit(route.Origin.Name, 160),
                         OriginIataCode = Limit(route.Origin.Iata, 8),
                         OriginIcaoCode = LimitOrNull(route.Origin.Icao, 8),
-                        OriginCountry = LimitOrNull(route.Origin.Country, 80),
+                        OriginCountry = LimitOrNull(CountryName(route.Origin.Country), 80),
                         DestinationAirportExternalId = Limit(route.Destination.Id, 40),
                         DestinationAirportName = Limit(route.Destination.Name, 160),
                         DestinationIataCode = Limit(route.Destination.Iata, 8),
                         DestinationIcaoCode = LimitOrNull(route.Destination.Icao, 8),
-                        DestinationCountry = LimitOrNull(route.Destination.Country, 80),
+                        DestinationCountry = LimitOrNull(CountryName(route.Destination.Country), 80),
                         DistanceKm = distanceKm,
                         GeneratedAt = generatedAt
                     });
@@ -113,8 +117,13 @@ public static class CsvFlightScheduleSeeder
             }
         }
 
-        dbContext.GeneratedFlightSchedules.AddRange(schedules);
-        await dbContext.SaveChangesAsync();
+        const int batchSize = 500;
+        foreach (var batch in schedules.Chunk(batchSize))
+        {
+            dbContext.GeneratedFlightSchedules.AddRange(batch);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            dbContext.ChangeTracker.Clear();
+        }
     }
 
     private static string ResolveDataDirectory(IConfiguration configuration, IHostEnvironment environment)
@@ -192,40 +201,20 @@ public static class CsvFlightScheduleSeeder
             .ToList();
     }
 
-    private static List<RouteRecord> BuildRoutes(List<AirportRecord> airports, int routeCount, Random random)
+    private static List<RouteRecord> BuildRoutes(List<AirportRecord> airports, int destinationsPerOrigin, Random random)
     {
-        var home = airports.FirstOrDefault(airport => airport.Iata == "TLV")
-            ?? airports.First(airport => airport.Country == "IL");
-        var shuffled = airports
-            .Where(airport => airport.Iata != home.Iata)
-            .OrderBy(_ => random.Next())
-            .ToList();
-
         var routes = new List<RouteRecord>();
-        var homeRoutes = Math.Min(routeCount / 2, shuffled.Count);
-        for (var index = 0; index < homeRoutes; index++)
+        foreach (var origin in airports.OrderBy(_ => random.Next()))
         {
-            var destination = shuffled[index];
-            routes.Add(index % 2 == 0
-                ? new RouteRecord(home, destination)
-                : new RouteRecord(destination, home));
-        }
+            var candidates = airports
+                .Where(airport => airport.Iata != origin.Iata)
+                .OrderBy(_ => random.Next())
+                .Take(destinationsPerOrigin);
 
-        while (routes.Count < routeCount && shuffled.Count > 1)
-        {
-            var origin = Pick(shuffled, random);
-            var destination = Pick(shuffled, random);
-            if (origin.Iata == destination.Iata)
+            foreach (var destination in candidates)
             {
-                continue;
+                routes.Add(new RouteRecord(origin, destination));
             }
-
-            if (routes.Any(route => route.Origin.Iata == origin.Iata && route.Destination.Iata == destination.Iata))
-            {
-                continue;
-            }
-
-            routes.Add(new RouteRecord(origin, destination));
         }
 
         return routes;
@@ -328,6 +317,23 @@ public static class CsvFlightScheduleSeeder
         }
 
         return Limit(value, maxLength);
+    }
+
+    private static string CountryName(string countryCode)
+    {
+        if (string.IsNullOrWhiteSpace(countryCode) || countryCode.Equals("ZZ", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return new RegionInfo(countryCode).EnglishName;
+        }
+        catch (ArgumentException)
+        {
+            return countryCode;
+        }
     }
 
     private static IEnumerable<Dictionary<string, string>> ReadCsv(string path, bool hasHeader)
