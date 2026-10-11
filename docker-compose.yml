@@ -35,6 +35,7 @@ services:
       start_period: 20s
 
   kafka:
+    profiles: ["external-flight-api"]
     image: confluentinc/cp-kafka:7.6.1
     container_name: airport-kafka
     environment:
@@ -73,6 +74,13 @@ services:
       JWT_KEY: development-only-secret-key-change-me-please-32chars
       JWT_ISSUER: AirportManagementSystem
       JWT_AUDIENCE: AirportManagementSystem
+      AIRPORT_SEED_CSV_FLIGHTS: "true"
+      AIRPORT_CSV_FLIGHT_DAYS: "14"
+      AIRPORT_CSV_ROUTE_COUNT: "60"
+      AIRPORT_CSV_MIN_FLIGHTS_PER_ROUTE_DAY: "1"
+      AIRPORT_CSV_MAX_FLIGHTS_PER_ROUTE_DAY: "3"
+      AIRPORT_SEED_DEMO_FLIGHTS: "false"
+      AIRPORT_HIDE_DEMO_FLIGHTS: "true"
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: "5672"
       RABBITMQ_USER: airport
@@ -101,6 +109,7 @@ services:
       - airport-api
 
   flight-consumer:
+    profiles: ["external-flight-api"]
     build:
       context: .
       dockerfile: Airport.FlightUpdates.Consumer/Dockerfile
@@ -123,6 +132,7 @@ services:
         condition: service_started
 
   flight-producer:
+    profiles: ["external-flight-api"]
     build:
       context: .
       dockerfile: python/flight-producer/Dockerfile
@@ -131,9 +141,9 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_FLIGHT_TOPIC: flight-updates
-      FLIGHT_PRODUCER_MODE: amadeus
+      FLIGHT_PRODUCER_MODE: ${FLIGHT_PRODUCER_MODE:-firehose}
       FLIGHT_PRODUCER_INTERVAL_SECONDS: "60"
-      FLIGHT_PRODUCER_FALLBACK_TO_DEMO: "false"
+      FLIGHT_PRODUCER_FALLBACK_TO_DEMO: ${FLIGHT_PRODUCER_FALLBACK_TO_DEMO:-false}
       AMADEUS_BASE_URL: https://test.api.amadeus.com
       AMADEUS_CLIENT_ID: ${AMADEUS_CLIENT_ID:-}
       AMADEUS_CLIENT_SECRET: ${AMADEUS_CLIENT_SECRET:-}
@@ -141,6 +151,13 @@ services:
       AMADEUS_DAYS_AHEAD: "14"
       AMADEUS_MAX_OFFERS_PER_SEARCH: "8"
       AMADEUS_CURRENCY: USD
+      FLIGHTAWARE_FIREHOSE_USERNAME: ${FLIGHTAWARE_FIREHOSE_USERNAME:-}
+      FLIGHTAWARE_FIREHOSE_PASSWORD: ${FLIGHTAWARE_FIREHOSE_PASSWORD:-}
+      FLIGHTAWARE_FIREHOSE_HOST: ${FLIGHTAWARE_FIREHOSE_HOST:-firehose.flightaware.com}
+      FLIGHTAWARE_FIREHOSE_PORT: ${FLIGHTAWARE_FIREHOSE_PORT:-1501}
+      FLIGHTAWARE_FIREHOSE_INIT_ARGS: ${FLIGHTAWARE_FIREHOSE_INIT_ARGS:-events "flifo departure arrival cancellation" keepalive 60}
+      FLIGHTAWARE_FIREHOSE_READ_SECONDS: ${FLIGHTAWARE_FIREHOSE_READ_SECONDS:-55}
+      FLIGHTAWARE_FIREHOSE_MAX_MESSAGES: ${FLIGHTAWARE_FIREHOSE_MAX_MESSAGES:-100}
     depends_on:
       kafka:
         condition: service_started

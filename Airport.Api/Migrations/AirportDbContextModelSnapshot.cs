@@ -201,6 +201,126 @@ namespace Airport.Api.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Airport.Api.Models.GeneratedFlightSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AircraftManufacturer")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("AircraftModel")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("AircraftRegistration")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("AirlineCountry")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("AirlineExternalId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("AirlineIata")
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<string>("AirlineIcao")
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<string>("AirlineName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.Property<string>("DestinationAirportExternalId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("DestinationAirportName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.Property<string>("DestinationCountry")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("DestinationIataCode")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<string>("DestinationIcaoCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<int>("DistanceKm")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FlightId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+
+                    b.Property<int>("ManufactureYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OriginAirportExternalId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("OriginAirportName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.Property<string>("OriginCountry")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("OriginIataCode")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<string>("OriginIcaoCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<int>("SeatCapacity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AirlineName");
+
+                    b.HasIndex("FlightId")
+                        .IsUnique();
+
+                    b.HasIndex("OriginIataCode", "DestinationIataCode");
+
+                    b.ToTable("GeneratedFlightSchedules");
+                });
+
             modelBuilder.Entity("Airport.Api.Models.OutboxMessage", b =>
                 {
                     b.Property<int>("Id")
@@ -391,6 +511,17 @@ namespace Airport.Api.Migrations
                     b.Navigation("Gate");
                 });
 
+            modelBuilder.Entity("Airport.Api.Models.GeneratedFlightSchedule", b =>
+                {
+                    b.HasOne("Airport.Api.Models.Flight", "Flight")
+                        .WithOne("GeneratedSchedule")
+                        .HasForeignKey("Airport.Api.Models.GeneratedFlightSchedule", "FlightId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Flight");
+                });
+
             modelBuilder.Entity("Airport.Api.Models.Ticket", b =>
                 {
                     b.HasOne("Airport.Api.Models.Flight", "Flight")
@@ -412,6 +543,8 @@ namespace Airport.Api.Migrations
 
             modelBuilder.Entity("Airport.Api.Models.Flight", b =>
                 {
+                    b.Navigation("GeneratedSchedule");
+
                     b.Navigation("Tickets");
                 });
 

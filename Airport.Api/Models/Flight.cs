@@ -37,5 +37,7 @@ public class Flight
 
     public Gate? Gate { get; set; }
 
+    public GeneratedFlightSchedule? GeneratedSchedule { get; set; }
+
     public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 }

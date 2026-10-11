@@ -9,9 +9,10 @@ This project is meant for local development and study. It is not production-read
 - `Airport.Api` - ASP.NET Core Web API, EF Core MySQL data model, JWT auth, role checks, Swagger, static frontend in `wwwroot`, and RabbitMQ outbox publisher.
 - `Airport.Ui` - standalone polished HTML/CSS/Vanilla JS operations console that connects to the API.
 - `Airport.FlightUpdates.Consumer` - .NET 8 Console App Kafka consumer. Automatic offset commits are disabled; offsets are committed only after MySQL persistence succeeds.
-- `python/flight-producer` - Python Kafka producer. It runs in local demo mode by default and can optionally call Amadeus Flight Offers Search with API credentials.
+- `Data` - local CSV data sources for aircraft, airports, and airlines.
+- `python/flight-producer` - optional Python Kafka producer for external flight APIs, kept behind a Docker Compose profile.
 - `python/ticket-generator` - Python RabbitMQ consumer that generates ticket text files, updates MySQL, acknowledges only after processing, and prevents duplicate handling with `EventId`.
-- `docker-compose.yml` - MySQL, RabbitMQ, Kafka, API, C# flight consumer, Python flight producer, and Python ticket worker.
+- `docker-compose.yml` - MySQL, RabbitMQ, API, standalone UI, and Python ticket worker by default. Kafka and external flight ingestion are optional.
 
 ## Demo Users
 
@@ -47,6 +48,8 @@ Open:
 
 The API applies migrations automatically at startup. MySQL data persists in the `mysql-data` Docker volume. Generated ticket files persist in the `ticket-files` Docker volume.
 
+On startup, the API reads `Data/aircraft.csv`, `Data/airports.csv`, and `Data/Airlines.csv` and creates a local flight schedule. It stores the enriched CSV-derived details in `GeneratedFlightSchedules` and creates matching `Flights` rows so booking still works.
+
 To rebuild only the standalone UI:
 
 ```powershell
@@ -67,13 +70,13 @@ Run the API:
 dotnet run --project Airport.Api
 ```
 
-Run the C# Kafka consumer:
+Run the C# Kafka consumer only when using the optional external flight API profile:
 
 ```powershell
 dotnet run --project Airport.FlightUpdates.Consumer
 ```
 
-Run the Python producer locally if Python dependencies are installed:
+Run the Python producer locally only when using the optional external flight API profile and Python dependencies are installed:
 
 ```powershell
 pip install -r python/flight-producer/requirements.txt
@@ -119,9 +122,33 @@ The Python producer publishes `flight-updates` messages:
 
 The C# consumer upserts by `Source + ExternalId`, not by `FlightNumber`.
 
-## Real Flight API Mode
+## Local CSV Flight Schedule
 
-The flight producer is configured for Amadeus mode in `docker-compose.yml`:
+The default Docker setup no longer calls a flight API. It generates flights from the three local CSV files:
+
+- `Data/aircraft.csv`
+- `Data/airports.csv`
+- `Data/Airlines.csv`
+
+Default generation settings:
+
+- `AIRPORT_CSV_FLIGHT_DAYS=14`
+- `AIRPORT_CSV_ROUTE_COUNT=60`
+- `AIRPORT_CSV_MIN_FLIGHTS_PER_ROUTE_DAY=1`
+- `AIRPORT_CSV_MAX_FLIGHTS_PER_ROUTE_DAY=3`
+
+This creates a moderate schedule with 1 to 3 flights per route per day, including routes into and out of Tel Aviv for the customer portal.
+
+To regenerate CSV flights in an existing database, set:
+
+```powershell
+$env:AIRPORT_CSV_REGENERATE_FLIGHTS = "true"
+docker compose up -d --build airport-api
+```
+
+## Optional Real Flight API Mode
+
+The flight producer supports Amadeus mode when `FLIGHT_PRODUCER_MODE` is set to `amadeus`:
 
 ```powershell
 FLIGHT_PRODUCER_MODE=amadeus
@@ -134,10 +161,10 @@ $env:AMADEUS_CLIENT_ID = "your_api_key"
 $env:AMADEUS_CLIENT_SECRET = "your_api_secret"
 ```
 
-Then rebuild and run:
+Then rebuild and run with the external API profile:
 
 ```powershell
-docker compose up -d --build flight-producer flight-consumer airport-api
+docker compose --profile external-flight-api up -d --build flight-producer flight-consumer airport-api
 ```
 
 Amadeus uses OAuth client credentials. The producer requests a token from `/v1/security/oauth2/token`, then searches `/v2/shopping/flight-offers` for the configured routes and publishes the returned flights to Kafka. The C# consumer stores them in MySQL with `Source = Amadeus`.
@@ -149,6 +176,44 @@ If the producer fails, inspect it with:
 ```powershell
 docker compose logs -f flight-producer
 ```
+
+## FlightAware Firehose Mode
+
+The same Python producer can also read from FlightAware Firehose and publish normalized `flight-updates` messages to Kafka. The existing C# consumer will persist those messages to MySQL without API changes.
+
+Firehose connects over a long-lived TLS socket to `firehose.flightaware.com:1501`. The producer sends an initiation command and maps `flifo`, `departure`, `arrival`, and `cancellation` messages into the project's flight update format.
+
+Firehose is available only when the `external-flight-api` Docker Compose profile is enabled. If credentials are missing or the Firehose connection fails, the producer fails loudly instead of publishing demo flights.
+
+Set your credentials as environment variables before running Docker Compose:
+
+```powershell
+$env:FLIGHT_PRODUCER_MODE = "firehose"
+$env:FLIGHTAWARE_FIREHOSE_USERNAME = "your_username"
+$env:FLIGHTAWARE_FIREHOSE_PASSWORD = "your_firehose_api_key_or_trial_password"
+```
+
+Optional filters can reduce the stream volume:
+
+```powershell
+$env:FLIGHTAWARE_FIREHOSE_INIT_ARGS = 'events "flifo departure arrival cancellation" airport_filter "LLBG" keepalive 60'
+```
+
+Then rebuild and run with the external API profile:
+
+```powershell
+docker compose --profile external-flight-api up -d --build flight-producer flight-consumer airport-api
+```
+
+To inspect the Firehose connector:
+
+```powershell
+docker compose logs -f flight-producer
+```
+
+Do not commit Firehose credentials into source files. Use environment variables or a local `.env` file that stays out of git.
+
+If old demo flights are still visible, remember that MySQL data persists in the `mysql-data` Docker volume. Those old rows can remain even after the producer has switched to Firehose.
 
 ## Checks
 

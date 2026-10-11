@@ -126,3 +126,6 @@ C:\Users\sendi\Desktop\FinelProject\Airport.Api\bin\Debug\net8.0\Microsoft.Ident
 C:\Users\sendi\Desktop\FinelProject\Airport.Api\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\sendi\Desktop\FinelProject\Airport.Api\bin\Debug\net8.0\RabbitMQ.Client.dll
 C:\Users\sendi\Desktop\FinelProject\Airport.Api\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\sendi\Desktop\FinelProject\Airport.Api\bin\Debug\net8.0\Data\aircraft.csv
+C:\Users\sendi\Desktop\FinelProject\Airport.Api\bin\Debug\net8.0\Data\Airlines.csv
+C:\Users\sendi\Desktop\FinelProject\Airport.Api\bin\Debug\net8.0\Data\airports.csv

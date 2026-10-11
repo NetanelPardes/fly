@@ -172,7 +172,7 @@ function flightCard(flight) {
     <div class="flight-tags">${recommendationTags(flight).map(tag => `<span>${tag}</span>`).join("")}</div>
     <h3>${Airport.escapeHtml(flight.origin)} -> ${Airport.escapeHtml(flight.destination)}</h3>
     <div class="flight-times"><div><strong>${timeOnly(flight.departureTime)}</strong><small>${dateOnly(flight.departureTime)}</small></div><div class="flight-line"><span>${durationLabel(flight)}</span></div><div><strong>${timeOnly(flight.arrivalTime)}</strong><small>${dateOnly(flight.arrivalTime)}</small></div></div>
-    <p>Gate ${Airport.escapeHtml(flight.gateNumber || "TBD")} - ${Airport.badge(flight.status)}</p>
+    <p>Gate ${Airport.escapeHtml(flight.gateNumber || "TBD")} - ${Airport.badge(flight.status)} - ${Airport.escapeHtml(flight.source || "Unknown")}</p>
     <div class="fare-row"><span>From</span><strong>${Airport.money(basePriceForFlight(flight))}</strong></div>
     <div class="row-actions"><button class="ghost-button" data-flight-details="${flight.id}">Details</button><button class="primary-button" data-book-flight="${flight.id}" ${reason ? "disabled" : ""}>${reason || "Book"}</button></div>
   </article>`;
@@ -198,6 +198,7 @@ function openFlightDetails(flightId) {
     <article><small>Duration</small><strong>${durationLabel(selectedFlight)}</strong></article>
     <article><small>Gate</small><strong>${Airport.escapeHtml(selectedFlight.gateNumber || "TBD")}</strong></article>
     <article><small>Status</small><strong>${selectedFlight.status}</strong></article>
+    <article><small>Source</small><strong>${Airport.escapeHtml(selectedFlight.source || "Unknown")}</strong></article>
     <article><small>Economy from</small><strong>${Airport.money(basePriceForFlight(selectedFlight))}</strong></article>
     <article><small>Business from</small><strong>${Airport.money(basePriceForFlight(selectedFlight) + 252)}</strong></article>
   </div>${reason ? `<p class="notice">${Airport.escapeHtml(reason)} - this flight cannot be booked here.</p>` : ""}`;

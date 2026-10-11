@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Airport.FlightUpdates.Consumer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+623419a637540d39a42b1af6a74bf52edbc8ec8e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+49ae757e2340d8c14f07628b1c09b442ab4cb70f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Airport.FlightUpdates.Consumer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Airport.FlightUpdates.Consumer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

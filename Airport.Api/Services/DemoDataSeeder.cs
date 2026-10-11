@@ -17,11 +17,18 @@ public static class DemoDataSeeder
             {
                 using var scope = services.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AirportDbContext>();
+                var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+                var environment = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
                 var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
 
                 await dbContext.Database.MigrateAsync();
 
-                await SeedDemoFlightsAsync(dbContext);
+                await CsvFlightScheduleSeeder.SeedAsync(dbContext, configuration, environment);
+
+                if (configuration.GetValue("AIRPORT_SEED_DEMO_FLIGHTS", true))
+                {
+                    await SeedDemoFlightsAsync(dbContext);
+                }
 
                 if (await dbContext.Users.AnyAsync())
                 {

@@ -10,8 +10,10 @@ namespace Airport.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class FlightsController(AirportDbContext dbContext) : ControllerBase
+public class FlightsController(AirportDbContext dbContext, IConfiguration configuration) : ControllerBase
 {
+    private static readonly string[] DemoSources = ["DemoSeed", "DemoSchedule", "PythonDemo"];
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<FlightDto>>> GetFlights(
         [FromQuery] string? origin,
@@ -19,12 +21,20 @@ public class FlightsController(AirportDbContext dbContext) : ControllerBase
         [FromQuery] FlightStatus? status,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        [FromQuery] bool includeDemo = false)
     {
         var query = dbContext.Flights
             .AsNoTracking()
             .Include(flight => flight.Gate)
             .AsQueryable();
+
+        if (!includeDemo
+            && configuration.GetValue("AIRPORT_HIDE_DEMO_FLIGHTS", false)
+            && await dbContext.Flights.AnyAsync(flight => !DemoSources.Contains(flight.Source), cancellationToken))
+        {
+            query = query.Where(flight => !DemoSources.Contains(flight.Source));
+        }
 
         if (!string.IsNullOrWhiteSpace(origin))
         {

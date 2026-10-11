@@ -9,6 +9,7 @@ public class AirportDbContext(DbContextOptions<AirportDbContext> options) : DbCo
     public DbSet<User> Users => Set<User>();
     public DbSet<Gate> Gates => Set<Gate>();
     public DbSet<Flight> Flights => Set<Flight>();
+    public DbSet<GeneratedFlightSchedule> GeneratedFlightSchedules => Set<GeneratedFlightSchedule>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<Baggage> Baggage => Set<Baggage>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -80,6 +81,18 @@ public class AirportDbContext(DbContextOptions<AirportDbContext> options) : DbCo
                     Source = "DemoSeed",
                     LastUpdatedAt = new DateTime(2026, 10, 8, 0, 0, 0, DateTimeKind.Utc)
                 });
+        });
+
+        modelBuilder.Entity<GeneratedFlightSchedule>(entity =>
+        {
+            entity.HasIndex(schedule => schedule.FlightId).IsUnique();
+            entity.HasIndex(schedule => new { schedule.OriginIataCode, schedule.DestinationIataCode });
+            entity.HasIndex(schedule => schedule.AirlineName);
+            entity.Property(schedule => schedule.GeneratedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+            entity.HasOne(schedule => schedule.Flight)
+                .WithOne(flight => flight.GeneratedSchedule)
+                .HasForeignKey<GeneratedFlightSchedule>(schedule => schedule.FlightId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Ticket>(entity =>

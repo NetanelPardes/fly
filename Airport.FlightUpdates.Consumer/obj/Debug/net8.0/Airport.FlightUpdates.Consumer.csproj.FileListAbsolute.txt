@@ -77,3 +77,6 @@ C:\Users\sendi\Desktop\FinelProject\Airport.FlightUpdates.Consumer\bin\Debug\net
 C:\Users\sendi\Desktop\FinelProject\Airport.FlightUpdates.Consumer\bin\Debug\net8.0\Airport.Api.dll
 C:\Users\sendi\Desktop\FinelProject\Airport.FlightUpdates.Consumer\bin\Debug\net8.0\Airport.Api.pdb
 C:\Users\sendi\Desktop\FinelProject\Airport.FlightUpdates.Consumer\obj\Debug\net8.0\Airport..E710C9AF.Up2Date
+C:\Users\sendi\Desktop\FinelProject\Airport.FlightUpdates.Consumer\bin\Debug\net8.0\Data\aircraft.csv
+C:\Users\sendi\Desktop\FinelProject\Airport.FlightUpdates.Consumer\bin\Debug\net8.0\Data\Airlines.csv
+C:\Users\sendi\Desktop\FinelProject\Airport.FlightUpdates.Consumer\bin\Debug\net8.0\Data\airports.csv
