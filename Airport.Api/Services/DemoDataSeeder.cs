@@ -17,36 +17,49 @@ public static class DemoDataSeeder
             {
                 using var scope = services.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AirportDbContext>();
-                var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
                 var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
 
                 await dbContext.Database.MigrateAsync();
 
-                if (configuration.GetValue("AIRPORT_SEED_DEMO_FLIGHTS", true))
-                {
-                    await SeedDemoFlightsAsync(dbContext);
-                }
-
-                if (await dbContext.Users.AnyAsync())
+                var passengersAlreadySeeded = await dbContext.Users.AnyAsync(user => user.Role == UserRole.Passenger);
+                var employeesAlreadySeeded = await dbContext.Employees.AnyAsync();
+                if (passengersAlreadySeeded && employeesAlreadySeeded)
                 {
                     return;
                 }
 
-                var users = new[]
+                foreach (var user in BuildSeedPassengers())
                 {
-                    new User { FullName = "Demo Admin", Email = "admin@airport.local", Role = UserRole.Admin },
-                    new User { FullName = "Demo Ticketing", Email = "ticketing@airport.local", Role = UserRole.Ticketing },
-                    new User { FullName = "Demo Baggage", Email = "baggage@airport.local", Role = UserRole.Baggage },
-                    new User { FullName = "Demo Passenger", Email = "passenger@airport.local", Role = UserRole.Passenger }
-                };
+                    var exists = await dbContext.Users.AnyAsync(existing =>
+                        existing.Email == user.Email
+                        || existing.NationalId == user.NationalId
+                        || existing.PhoneNumber == user.PhoneNumber);
+                    if (exists)
+                    {
+                        continue;
+                    }
 
-                foreach (var user in users)
-                {
-                    user.PasswordHash = passwordHasher.HashPassword(user, "Password123!");
+                    user.PasswordHash = passwordHasher.HashPassword(user, "1234");
                     user.CreatedAt = DateTime.UtcNow;
+                    dbContext.Users.Add(user);
                 }
 
-                dbContext.Users.AddRange(users);
+                foreach (var employee in BuildSeedEmployees())
+                {
+                    var exists = await dbContext.Employees.AnyAsync(existing =>
+                        existing.Email == employee.Email
+                        || existing.NationalId == employee.NationalId
+                        || existing.PhoneNumber == employee.PhoneNumber);
+                    if (exists)
+                    {
+                        continue;
+                    }
+
+                    employee.PasswordHash = passwordHasher.HashPassword(ToPasswordUser(employee), "1234");
+                    employee.CreatedAt = DateTime.UtcNow;
+                    dbContext.Employees.Add(employee);
+                }
+
                 await dbContext.SaveChangesAsync();
                 return;
             }
@@ -57,62 +70,113 @@ public static class DemoDataSeeder
         }
     }
 
-    private static async Task SeedDemoFlightsAsync(AirportDbContext dbContext)
+    private static IEnumerable<User> BuildSeedPassengers()
     {
-        const string source = "DemoSchedule";
-        if (await dbContext.Flights.AnyAsync(flight => flight.Source == source))
+        var passengers = new[]
         {
-            return;
-        }
-
-        var routes = new[]
-        {
-            ("Tel Aviv", "London"),
-            ("London", "Tel Aviv"),
-            ("Tel Aviv", "Paris"),
-            ("Paris", "Tel Aviv"),
-            ("Tel Aviv", "Athens"),
-            ("Athens", "Tel Aviv"),
-            ("Rome", "Tel Aviv"),
-            ("Tel Aviv", "Dubai")
+            "Altman Elazar",
+            "Elmalich Avraham",
+            "Bagad Pesach",
+            "Ben Chaim Yedidya",
+            "Bar-Tal Mordechai",
+            "Gross Avraham",
+            "Gershi Elazar",
+            "Yosilevitz Yoel",
+            "Cohen Menachem",
+            "Levental Yoni",
+            "Pirov Asher",
+            "Pesach Mordechai",
+            "Pardes Netanel",
+            "Kanner Ariel",
+            "Katzburg Aharon",
+            "Rosengarten Avraham",
+            "Ruchlin Meir",
+            "Reiner Yitzchak",
+            "Shuv Shlomo",
+            "Shteren David",
+            "Netanel Kaplin"
         };
 
-        var start = DateTime.UtcNow.Date.AddMonths(-6);
-        var flights = new List<Flight>();
-        var sequence = 300;
-
-        for (var day = 0; day <= 365; day += 2)
+        var sequence = 1;
+        foreach (var name in passengers)
         {
-            var date = start.AddDays(day);
-            for (var routeIndex = 0; routeIndex < routes.Length; routeIndex++)
-            {
-                var route = routes[routeIndex];
-                var departure = date.AddHours(6 + routeIndex * 2);
-                var status = departure < DateTime.UtcNow.AddDays(-2)
-                    ? FlightStatus.Departed
-                    : departure < DateTime.UtcNow
-                        ? FlightStatus.Boarding
-                        : day % 19 == 0
-                            ? FlightStatus.Delayed
-                            : FlightStatus.Scheduled;
-
-                flights.Add(new Flight
-                {
-                    FlightNumber = $"AM{sequence++}",
-                    Origin = route.Item1,
-                    Destination = route.Item2,
-                    DepartureTime = departure,
-                    ArrivalTime = departure.AddHours(3).AddMinutes(routeIndex * 8),
-                    Status = status,
-                    GateId = routeIndex % 3 + 1,
-                    ExternalId = $"demo-schedule-{date:yyyyMMdd}-{routeIndex}",
-                    Source = source,
-                    LastUpdatedAt = DateTime.UtcNow
-                });
-            }
+            yield return BuildUser(name, UserRole.Passenger, sequence++);
         }
-
-        dbContext.Flights.AddRange(flights);
-        await dbContext.SaveChangesAsync();
     }
+
+    private static IEnumerable<Employee> BuildSeedEmployees()
+    {
+        var admins = new[]
+        {
+            "Moishy Horowitz",
+            "Netanel Amar",
+            "Noam Hadad",
+            "Yaniv Hadar"
+        };
+
+        var sequence = 1;
+        foreach (var name in admins)
+        {
+            yield return BuildEmployee(name, sequence++);
+        }
+    }
+
+    private static User BuildUser(string fullName, UserRole role, int sequence)
+    {
+        var parts = fullName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var firstName = parts.Length > 0 ? parts[0] : fullName;
+        var lastName = parts.Length > 1 ? parts[1] : "User";
+        var email = $"{NormalizeEmailPart(firstName)}.{NormalizeEmailPart(lastName)}@gmail.com";
+
+        return new User
+        {
+            NationalId = (100000000 + sequence * 7919).ToString(),
+            FirstName = firstName,
+            LastName = lastName,
+            FullName = $"{firstName} {lastName}",
+            Email = email,
+            Role = role,
+            Gender = "m",
+            Address = $"{10 + sequence} Airport Avenue",
+            PhoneNumber = $"050{sequence:0000000}"
+        };
+    }
+
+    private static string NormalizeEmailPart(string value) =>
+        new(value.ToLowerInvariant().Where(character => char.IsLetterOrDigit(character)).ToArray());
+
+    private static Employee BuildEmployee(string fullName, int sequence)
+    {
+        var parts = fullName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var firstName = parts.Length > 0 ? parts[0] : fullName;
+        var lastName = parts.Length > 1 ? parts[1] : "Manager";
+        var email = $"{NormalizeEmailPart(firstName)}.{NormalizeEmailPart(lastName)}@gmail.com";
+
+        return new Employee
+        {
+            NationalId = (200000000 + sequence * 7919).ToString(),
+            FirstName = firstName,
+            LastName = lastName,
+            FullName = $"{firstName} {lastName}",
+            Email = email,
+            Gender = "m",
+            Address = $"{50 + sequence} Airport Avenue",
+            PhoneNumber = $"052{sequence:0000000}",
+            Rank = "Manager"
+        };
+    }
+
+    private static User ToPasswordUser(Employee employee) => new()
+    {
+        Id = employee.Id,
+        NationalId = employee.NationalId,
+        FirstName = employee.FirstName,
+        LastName = employee.LastName,
+        FullName = employee.FullName,
+        Email = employee.Email,
+        Role = UserRole.Admin,
+        Gender = employee.Gender,
+        Address = employee.Address,
+        PhoneNumber = employee.PhoneNumber
+    };
 }

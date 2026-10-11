@@ -1,4 +1,5 @@
-const BAGGAGE_PRICE = 45;
+const SEAT_SELECTION_PRICE = 18;
+const BAGGAGE_PRICES = { 10: 35, 20: 60, 35: 95 };
 const BOOKING_CUTOFF_HOURS = 5;
 let user = Airport.getUser();
 let flights = [];
@@ -16,12 +17,19 @@ function init() {
   document.querySelector("#userName").textContent = user.fullName;
   document.querySelector("#userEmail").textContent = user.email;
   document.querySelector("#logoutButton").addEventListener("click", logout);
-  document.querySelector("#refreshButton").addEventListener("click", () => refresh().catch(e => Airport.toast(e.message)));
   document.querySelector("#flightFilters").addEventListener("submit", e => { e.preventDefault(); searchFlights().catch(error => Airport.toast(error.message)); });
   setupLocationInput("#origin", "#originOptions");
   setupLocationInput("#destination", "#destinationOptions");
   document.querySelector("#bookingClass").addEventListener("change", updateBookingPrice);
   document.querySelector("#bookingBaggage").addEventListener("change", updateBookingPrice);
+  document.querySelector("#chooseSeat").addEventListener("change", event => {
+    document.querySelector("#seatPickerRow").hidden = !event.target.checked;
+    updateBookingPrice();
+  });
+  document.querySelector("#addBaggage").addEventListener("change", event => {
+    document.querySelector("#baggagePickerRow").hidden = !event.target.checked;
+    updateBookingPrice();
+  });
   document.querySelector("#closeDetails").addEventListener("click", () => document.querySelector("#detailsDialog").close());
   document.querySelector("#detailsBookButton").addEventListener("click", () => {
     document.querySelector("#detailsDialog").close();
@@ -88,6 +96,11 @@ function customerFlightQuery() {
     return null;
   }
 
+  if (!isExactAirport(origin)) {
+    Airport.toast("Choose an exact origin airport from the list.");
+    return null;
+  }
+
   if (!from || !to) {
     Airport.toast("Choose from and to dates.");
     return null;
@@ -114,10 +127,14 @@ function customerFlightQuery() {
   params.set("originSearch", searchTermForLocation(document.querySelector("#origin")));
 
   const destination = document.querySelector("#destination").value.trim();
-  if (destination) params.set("destinationSearch", searchTermForLocation(document.querySelector("#destination")));
+  if (destination) {
+    if (!isExactAirport(destination)) {
+      Airport.toast("Choose an exact destination airport from the list.");
+      return null;
+    }
+    params.set("destinationSearch", searchTermForLocation(document.querySelector("#destination")));
+  }
 
-  const status = document.querySelector("#status").value;
-  if (status) params.set("status", status);
   return params;
 }
 
@@ -150,42 +167,54 @@ function resetSearchResults() {
 
 function renderAutocomplete() {
   const allLocations = mergeLocations(airportLocations);
-  const countryEntries = airportCountries.map(country => ({
-    type: "country",
-    value: country,
-    searchValue: country,
-    tokens: [country]
-  }));
-  const locationEntries = allLocations.map(item => ({
-    type: "airport",
-    value: locationValue(item),
-    label: "",
-    searchValue: locationValue(item),
-    tokens: [item.city, item.country, item.iataCode, item.icaoCode, item.airportName].filter(Boolean)
-  }));
+  const locationEntries = allLocations.map(item => {
+    const value = locationValue(item);
+    const legacyValue = legacyLocationValue(item);
+    const codeValue = item.iataCode ? `${item.city || ""}, ${item.country || ""} (${item.iataCode})` : "";
+    return {
+      type: "airport",
+      value,
+      label: "",
+      searchValue: item.iataCode || item.icaoCode || item.airportName || item.city || value,
+      aliases: [value, legacyValue, codeValue].filter(Boolean).map(text => text.toLowerCase()),
+      tokens: [item.city, item.country, item.iataCode, item.icaoCode, item.airportName, value, legacyValue].filter(Boolean)
+    };
+  });
 
-  locationOptions = [...countryEntries, ...locationEntries].sort((a, b) => a.value.localeCompare(b.value));
+  locationOptions = locationEntries.sort((a, b) => a.value.localeCompare(b.value));
   updateLocationOptions(document.querySelector("#origin").value, "#originOptions");
   updateLocationOptions(document.querySelector("#destination").value, "#destinationOptions");
 }
 
+function isExactAirport(value) {
+  const normalized = value.toLowerCase();
+  return locationOptions.some(option => option.type === "airport" && option.aliases.includes(normalized));
+}
+
 function mergeLocations(locations) {
-  const byCity = new Map();
+  const byAirport = new Map();
   locations.forEach(item => {
-    if (!item.city) return;
-    const key = `${item.city}|${item.country || ""}`.toLowerCase();
-    if (!byCity.has(key)) byCity.set(key, item);
+    if (!item.city || !item.airportName) return;
+    const key = `${item.country || ""}|${item.city}|${item.airportName}|${item.iataCode || ""}`.toLowerCase();
+    if (!byAirport.has(key)) byAirport.set(key, item);
   });
-  return [...byCity.values()].sort((a, b) => locationLabel(a).localeCompare(locationLabel(b)));
+  return [...byAirport.values()].sort((a, b) => locationLabel(a).localeCompare(locationLabel(b)));
 }
 
 function locationLabel(item) {
-  return `${item.city || ""}, ${item.country || ""}`;
+  return `${item.country || ""}, ${item.city || ""} (${item.airportName || ""})`;
 }
 
 function locationValue(item) {
-  const country = item.country ? `, ${item.country}` : "";
-  return `${item.city}${country}`;
+  return locationLabel(item);
+}
+
+function legacyLocationValue(item) {
+  const code = item.iataCode || item.icaoCode || "";
+  const cityCountry = [item.city, item.country].filter(Boolean).join(", ");
+  const codeText = code ? ` (${code})` : "";
+  const airportText = item.airportName ? ` - ${item.airportName}` : "";
+  return `${cityCountry}${codeText}${airportText}`;
 }
 
 function setupLocationInput(inputSelector, listSelector) {
@@ -216,21 +245,18 @@ function searchTermForLocation(input) {
 }
 
 function searchTermFromValue(value) {
-  const match = locationOptions.find(option => option.value.toLowerCase() === value.toLowerCase());
+  const normalized = value.toLowerCase();
+  const match = locationOptions.find(option => option.aliases.includes(normalized));
   if (match) return match.searchValue;
-  return value.replace(/\s*\([A-Z0-9]{2,4}\)\s*$/, "").split(",")[0].trim();
+  return value.replace(/\s*\([^)]*\)\s*$/, "").split(",").map(part => part.trim()).filter(Boolean).slice(-1)[0] || value;
 }
 
 function renderFlights() {
   const origin = document.querySelector("#origin").value.trim();
   const destination = document.querySelector("#destination").value.trim();
-  const status = document.querySelector("#status").value;
-  const bookableOnly = document.querySelector("#bookableOnly").checked;
   visibleFlights = flights
     .filter(f => locationMatches(f, "origin", origin))
     .filter(f => locationMatches(f, "destination", destination))
-    .filter(f => !status || f.status === status)
-    .filter(f => !bookableOnly || !bookingBlockReason(f))
     .sort(compareFlights);
   document.querySelector("#metricFlights").textContent = visibleFlights.length;
   document.querySelector("#metricOutgoing").textContent = new Set(visibleFlights.map(f => f.destination)).size;
@@ -238,7 +264,7 @@ function renderFlights() {
   document.querySelector("#metricBestFare").textContent = visibleFlights.length ? Airport.money(Math.min(...visibleFlights.map(basePriceForFlight))) : "-";
   document.querySelector("#searchResultCount").textContent = `${visibleFlights.length} ${visibleFlights.length === 1 ? "result" : "results"}`;
   document.querySelector("#resultsPanel").hidden = false;
-  document.querySelector("#resultsTitle").textContent = `Flights from ${origin}`;
+  document.querySelector("#resultsTitle").textContent = destination ? `${origin} to ${destination}` : `Flights from ${origin}`;
   document.querySelector("#flightsGrid").innerHTML = visibleFlights.map(flightCard).join("") || Airport.empty("No flights match this search");
 }
 
@@ -281,7 +307,7 @@ function flightCard(flight) {
     <div class="flight-tags">${recommendationTags(flight).map(tag => `<span>${tag}</span>`).join("")}</div>
     <h3>${Airport.escapeHtml(origin)} -> ${Airport.escapeHtml(destination)}</h3>
     <div class="flight-times"><div><strong>${timeOnly(flight.departureTime)}</strong><small>${dateOnly(flight.departureTime)}</small></div><div class="flight-line"><span>${durationLabel(flight)}</span></div><div><strong>${timeOnly(flight.arrivalTime)}</strong><small>${dateOnly(flight.arrivalTime)}</small></div></div>
-    <p>Gate ${Airport.escapeHtml(flight.gateNumber || "TBD")} - ${Airport.escapeHtml(flight.airlineName || flight.source || "Unknown")}</p>
+    <p>Gate ${Airport.escapeHtml(flight.boardingGate || flight.gateNumber || "TBD")} - ${Airport.escapeHtml(flight.aircraftModel || flight.aircraftCode || "Aircraft TBD")}</p>
     <div class="fare-row"><span>From</span><strong>${Airport.money(basePriceForFlight(flight))}</strong></div>
     <div class="row-actions"><button class="ghost-button" data-flight-details="${flight.id}">Details</button><button class="primary-button" data-book-flight="${flight.id}" ${reason ? "disabled" : ""}>${reason || "Book"}</button></div>
   </article>`;
@@ -309,11 +335,12 @@ function openFlightDetails(flightId) {
     <article><small>Departure</small><strong>${Airport.formatDate(selectedFlight.departureTime)}</strong></article>
     <article><small>Arrival</small><strong>${Airport.formatDate(selectedFlight.arrivalTime)}</strong></article>
     <article><small>Duration</small><strong>${durationLabel(selectedFlight)}</strong></article>
-    <article><small>Gate</small><strong>${Airport.escapeHtml(selectedFlight.gateNumber || "TBD")}</strong></article>
+    <article><small>Gate</small><strong>${Airport.escapeHtml(selectedFlight.boardingGate || selectedFlight.gateNumber || "TBD")}</strong></article>
     <article><small>Status</small><strong>${selectedFlight.status}</strong></article>
-    <article><small>Source</small><strong>${Airport.escapeHtml(selectedFlight.source || "Unknown")}</strong></article>
+    <article><small>Aircraft</small><strong>${Airport.escapeHtml([selectedFlight.aircraftManufacturer, selectedFlight.aircraftModel].filter(Boolean).join(" ") || selectedFlight.aircraftCode || "Unknown")}</strong></article>
+    <article><small>Seats</small><strong>${Airport.escapeHtml(selectedFlight.seatCapacity || "TBD")}</strong></article>
     <article><small>Economy from</small><strong>${Airport.money(basePriceForFlight(selectedFlight))}</strong></article>
-    <article><small>Business from</small><strong>${Airport.money(basePriceForFlight(selectedFlight) + 252)}</strong></article>
+    <article><small>Business from</small><strong>${Airport.money(classTotal(selectedFlight, "Business"))}</strong></article>
   </div>${reason ? `<p class="notice">${Airport.escapeHtml(reason)} - this flight cannot be booked here.</p>` : ""}`;
   const button = document.querySelector("#detailsBookButton");
   button.disabled = Boolean(reason);
@@ -332,30 +359,45 @@ function openBooking(flightId) {
   if (!selectedFlight || bookingBlockReason(selectedFlight)) return;
   document.querySelector("#bookingFlightId").value = selectedFlight.id;
   document.querySelector("#bookingFlightText").textContent = `${selectedFlight.flightNumber}: ${placeLabel(selectedFlight.origin, selectedFlight.originCountry)} -> ${placeLabel(selectedFlight.destination, selectedFlight.destinationCountry)} - ${Airport.formatDate(selectedFlight.departureTime)}`;
-  document.querySelector("#bookingPassengerName").value = user.fullName;
+  document.querySelector("#bookingPassengerId").value = user.nationalId || "";
   document.querySelector("#bookingPassengerEmail").value = user.email;
-  document.querySelector("#bookingSeat").value = "12A";
+  document.querySelector("#chooseSeat").checked = false;
+  document.querySelector("#seatPickerRow").hidden = true;
+  document.querySelector("#bookingSeat").value = "";
   document.querySelector("#bookingClass").value = "Economy";
-  document.querySelector("#bookingBaggage").value = "none";
+  document.querySelector("#addBaggage").checked = false;
+  document.querySelector("#baggagePickerRow").hidden = true;
+  document.querySelector("#bookingBaggage").value = "10";
   updateBookingPrice();
   document.querySelector("#bookingDialog").showModal();
 }
 
 function updateBookingPrice() {
   const base = basePriceForFlight(selectedFlight);
-  const seat = document.querySelector("#bookingClass").value === "Business" ? 252 : 0;
-  const bag = document.querySelector("#bookingBaggage").value === "bag" ? BAGGAGE_PRICE : 0;
+  const klass = document.querySelector("#bookingClass").value;
+  const classExtra = classTotal(selectedFlight, klass) - base;
+  const seat = document.querySelector("#chooseSeat").checked ? SEAT_SELECTION_PRICE : 0;
+  const bag = document.querySelector("#addBaggage").checked ? BAGGAGE_PRICES[document.querySelector("#bookingBaggage").value] || 0 : 0;
   document.querySelector("#flightPriceText").textContent = Airport.money(base);
   document.querySelector("#seatPriceText").textContent = Airport.money(seat);
   document.querySelector("#bagPriceText").textContent = Airport.money(bag);
-  document.querySelector("#bookingPrice").value = (base + seat + bag).toFixed(2);
+  document.querySelector("#classPriceText").textContent = Airport.money(classExtra);
+  document.querySelector("#bookingPrice").value = (base + classExtra + seat + bag).toFixed(2);
 }
 
 function basePriceForFlight(flight) {
+  if (flight?.basePrice) return Number(flight.basePrice);
   const hoursAway = flight ? (new Date(flight.departureTime) - Date.now()) / 36e5 : 999;
   const routeWeight = flight ? Math.abs((flight.destination || "").length - (flight.origin || "").length) * 6 : 0;
   const demand = flight?.status === "Boarding" ? 50 : flight?.status === "Delayed" ? -20 : 0;
   return Math.max(95, (hoursAway < 48 ? 260 : hoursAway < 168 ? 220 : 180) + routeWeight + demand);
+}
+
+function classTotal(flight, klass) {
+  const base = basePriceForFlight(flight);
+  if (klass === "First") return base * 4.1;
+  if (klass === "Business") return base * 2.4;
+  return base;
 }
 
 function durationMinutes(flight) {
@@ -380,10 +422,19 @@ function dateOnly(value) {
 async function bookTicket(event) {
   event.preventDefault();
   try {
-    const created = await Airport.api("/api/tickets", { method: "POST", body: JSON.stringify({ passengerId: null, flightId: Number(document.querySelector("#bookingFlightId").value), seatNumber: document.querySelector("#bookingSeat").value, class: document.querySelector("#bookingClass").value, price: Number(document.querySelector("#bookingPrice").value) }) });
-    if (document.querySelector("#bookingBaggage").value === "bag") {
-      await Airport.api("/api/baggage", { method: "POST", body: JSON.stringify({ ticketId: created.id, tagNumber: `BAG-${created.id}`, weightKg: 18.5 }) }).catch(() => {});
-    }
+    await Airport.api("/api/tickets", {
+      method: "POST",
+      body: JSON.stringify({
+        passengerId: null,
+        flightId: Number(document.querySelector("#bookingFlightId").value),
+        passengerNationalId: document.querySelector("#bookingPassengerId").value.trim(),
+        passengerEmail: document.querySelector("#bookingPassengerEmail").value.trim(),
+        seatNumber: document.querySelector("#chooseSeat").checked ? document.querySelector("#bookingSeat").value.trim() : null,
+        baggageAllowanceKg: document.querySelector("#addBaggage").checked ? Number(document.querySelector("#bookingBaggage").value) : 0,
+        class: document.querySelector("#bookingClass").value,
+        price: Number(document.querySelector("#bookingPrice").value)
+      })
+    });
     document.querySelector("#bookingDialog").close();
     Airport.toast("Ticket booked.");
     setTimeout(() => location.href = "customer-tickets.html", 700);

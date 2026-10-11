@@ -12,8 +12,18 @@ public class Ticket
     public int FlightId { get; set; }
 
     [Required]
+    [MaxLength(9)]
+    public string PassengerNationalId { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(254)]
+    public string PassengerEmail { get; set; } = string.Empty;
+
+    [Required]
     [MaxLength(10)]
     public string SeatNumber { get; set; } = string.Empty;
+
+    public int BaggageAllowanceKg { get; set; }
 
     public TicketClass Class { get; set; }
 
@@ -21,6 +31,8 @@ public class Ticket
     public decimal Price { get; set; }
 
     public TicketStatus Status { get; set; }
+
+    public DateTime BookingDate { get; set; }
 
     [MaxLength(500)]
     public string? TicketFilePath { get; set; }

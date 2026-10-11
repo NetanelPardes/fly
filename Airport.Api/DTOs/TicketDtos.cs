@@ -7,21 +7,29 @@ public record TicketDto(
     int Id,
     int PassengerId,
     string PassengerName,
+    string PassengerNationalId,
+    string PassengerEmail,
     int FlightId,
     string FlightNumber,
     string SeatNumber,
+    int BaggageAllowanceKg,
     TicketClass Class,
     decimal Price,
     TicketStatus Status,
-    string? TicketFilePath);
+    string? TicketFilePath,
+    DateTime BookingDate);
 
 public record CreateTicketDto(
     int? PassengerId,
     int FlightId,
-    [Required, MaxLength(10)] string SeatNumber,
+    [MaxLength(9)] string? PassengerNationalId,
+    [EmailAddress, MaxLength(254)] string? PassengerEmail,
+    [MaxLength(10)] string? SeatNumber,
+    int? BaggageAllowanceKg,
     TicketClass Class,
-    [Range(0, 999999)] decimal Price);
+    [Range(0, 999999)] decimal? Price);
 
 public record UpdateTicketOptionsDto(
     [Required, MaxLength(10)] string SeatNumber,
-    TicketClass Class);
+    TicketClass Class,
+    int? BaggageAllowanceKg);

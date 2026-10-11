@@ -9,11 +9,22 @@ namespace Airport.Api.Services;
 public interface IJwtTokenService
 {
     string CreateToken(User user);
+    string CreateToken(Employee employee);
 }
 
 public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
 {
     public string CreateToken(User user)
+    {
+        return CreateToken(user.Id, user.Email, user.Role);
+    }
+
+    public string CreateToken(Employee employee)
+    {
+        return CreateToken(employee.Id, employee.Email, UserRole.Admin);
+    }
+
+    private string CreateToken(int id, string email, UserRole role)
     {
         var key = configuration["JWT_KEY"] ?? "development-only-secret-key-change-me-please-32chars";
         var issuer = configuration["JWT_ISSUER"] ?? "AirportManagementSystem";
@@ -22,10 +33,10 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Email),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
+            new Claim(ClaimTypes.NameIdentifier, id.ToString()),
+            new Claim(ClaimTypes.Name, email),
+            new Claim(ClaimTypes.Email, email),
+            new Claim(ClaimTypes.Role, role.ToString())
         };
 
         var credentials = new SigningCredentials(

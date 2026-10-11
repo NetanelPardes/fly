@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\sendi\\Desktop\\FinelProject\\Airport.Api\\Airport.Api.csproj": {}
+    "C:\\Users\\sendi\\Desktop\\fly\\Airport.Api\\Airport.Api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\sendi\\Desktop\\FinelProject\\Airport.Api\\Airport.Api.csproj": {
+    "C:\\Users\\sendi\\Desktop\\fly\\Airport.Api\\Airport.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\sendi\\Desktop\\FinelProject\\Airport.Api\\Airport.Api.csproj",
+        "projectUniqueName": "C:\\Users\\sendi\\Desktop\\fly\\Airport.Api\\Airport.Api.csproj",
         "projectName": "Airport.Api",
-        "projectPath": "C:\\Users\\sendi\\Desktop\\FinelProject\\Airport.Api\\Airport.Api.csproj",
+        "projectPath": "C:\\Users\\sendi\\Desktop\\fly\\Airport.Api\\Airport.Api.csproj",
         "packagesPath": "C:\\Users\\sendi\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\sendi\\Desktop\\FinelProject\\Airport.Api\\obj\\",
+        "outputPath": "C:\\Users\\sendi\\Desktop\\fly\\Airport.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

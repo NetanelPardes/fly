@@ -135,3 +135,4 @@ static string BuildMySqlConnectionString(IConfiguration configuration)
 
     return $"Server={host};Port={port};Database={database};User={user};Password={password};TreatTinyAsBoolean=true;";
 }
+

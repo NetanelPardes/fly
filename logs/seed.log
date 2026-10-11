@@ -1,0 +1,276 @@
+2026-10-11T14:05:54.7718691Z CSV schedule seeding started.
+2026-10-11T14:05:55.0789541Z Inserted airport batch. Total airports inserted: 1000 / 3856.
+2026-10-11T14:05:55.3403632Z Inserted airport batch. Total airports inserted: 2000 / 3856.
+2026-10-11T14:05:55.5710463Z Inserted airport batch. Total airports inserted: 3000 / 3856.
+2026-10-11T14:05:55.7742725Z Inserted airport batch. Total airports inserted: 3856 / 3856.
+2026-10-11T14:05:55.8046411Z Airport import completed. Inserted 3856 airports from /app/Data/airport.csv.
+2026-10-11T14:05:57.8218728Z Inserted aircraft batch. Total aircraft inserted: 1000 / 240000.
+2026-10-11T14:05:57.9974202Z Inserted aircraft batch. Total aircraft inserted: 2000 / 240000.
+2026-10-11T14:05:58.1957760Z Inserted aircraft batch. Total aircraft inserted: 3000 / 240000.
+2026-10-11T14:05:58.4071225Z Inserted aircraft batch. Total aircraft inserted: 4000 / 240000.
+2026-10-11T14:05:58.6200233Z Inserted aircraft batch. Total aircraft inserted: 5000 / 240000.
+2026-10-11T14:05:58.7935311Z Inserted aircraft batch. Total aircraft inserted: 6000 / 240000.
+2026-10-11T14:05:59.0209411Z Inserted aircraft batch. Total aircraft inserted: 7000 / 240000.
+2026-10-11T14:05:59.2720345Z Inserted aircraft batch. Total aircraft inserted: 8000 / 240000.
+2026-10-11T14:05:59.5075845Z Inserted aircraft batch. Total aircraft inserted: 9000 / 240000.
+2026-10-11T14:05:59.6867579Z Inserted aircraft batch. Total aircraft inserted: 10000 / 240000.
+2026-10-11T14:05:59.7987091Z Inserted aircraft batch. Total aircraft inserted: 11000 / 240000.
+2026-10-11T14:05:59.8915629Z Inserted aircraft batch. Total aircraft inserted: 12000 / 240000.
+2026-10-11T14:05:59.9844670Z Inserted aircraft batch. Total aircraft inserted: 13000 / 240000.
+2026-10-11T14:06:00.0884292Z Inserted aircraft batch. Total aircraft inserted: 14000 / 240000.
+2026-10-11T14:06:00.1723778Z Inserted aircraft batch. Total aircraft inserted: 15000 / 240000.
+2026-10-11T14:06:00.2692535Z Inserted aircraft batch. Total aircraft inserted: 16000 / 240000.
+2026-10-11T14:06:00.3675739Z Inserted aircraft batch. Total aircraft inserted: 17000 / 240000.
+2026-10-11T14:06:00.4535629Z Inserted aircraft batch. Total aircraft inserted: 18000 / 240000.
+2026-10-11T14:06:00.5456369Z Inserted aircraft batch. Total aircraft inserted: 19000 / 240000.
+2026-10-11T14:06:00.6389025Z Inserted aircraft batch. Total aircraft inserted: 20000 / 240000.
+2026-10-11T14:06:00.7351063Z Inserted aircraft batch. Total aircraft inserted: 21000 / 240000.
+2026-10-11T14:06:00.8518590Z Inserted aircraft batch. Total aircraft inserted: 22000 / 240000.
+2026-10-11T14:06:00.9581250Z Inserted aircraft batch. Total aircraft inserted: 23000 / 240000.
+2026-10-11T14:06:01.0464296Z Inserted aircraft batch. Total aircraft inserted: 24000 / 240000.
+2026-10-11T14:06:01.1380853Z Inserted aircraft batch. Total aircraft inserted: 25000 / 240000.
+2026-10-11T14:06:01.2307837Z Inserted aircraft batch. Total aircraft inserted: 26000 / 240000.
+2026-10-11T14:06:01.3452280Z Inserted aircraft batch. Total aircraft inserted: 27000 / 240000.
+2026-10-11T14:06:01.4685596Z Inserted aircraft batch. Total aircraft inserted: 28000 / 240000.
+2026-10-11T14:06:01.5943168Z Inserted aircraft batch. Total aircraft inserted: 29000 / 240000.
+2026-10-11T14:06:01.6875184Z Inserted aircraft batch. Total aircraft inserted: 30000 / 240000.
+2026-10-11T14:06:01.7939589Z Inserted aircraft batch. Total aircraft inserted: 31000 / 240000.
+2026-10-11T14:06:01.8943719Z Inserted aircraft batch. Total aircraft inserted: 32000 / 240000.
+2026-10-11T14:06:02.0079137Z Inserted aircraft batch. Total aircraft inserted: 33000 / 240000.
+2026-10-11T14:06:02.1045578Z Inserted aircraft batch. Total aircraft inserted: 34000 / 240000.
+2026-10-11T14:06:02.2156119Z Inserted aircraft batch. Total aircraft inserted: 35000 / 240000.
+2026-10-11T14:06:02.3168710Z Inserted aircraft batch. Total aircraft inserted: 36000 / 240000.
+2026-10-11T14:06:02.4225445Z Inserted aircraft batch. Total aircraft inserted: 37000 / 240000.
+2026-10-11T14:06:02.5355607Z Inserted aircraft batch. Total aircraft inserted: 38000 / 240000.
+2026-10-11T14:06:02.6701576Z Inserted aircraft batch. Total aircraft inserted: 39000 / 240000.
+2026-10-11T14:06:02.7980863Z Inserted aircraft batch. Total aircraft inserted: 40000 / 240000.
+2026-10-11T14:06:02.9011446Z Inserted aircraft batch. Total aircraft inserted: 41000 / 240000.
+2026-10-11T14:06:02.9943156Z Inserted aircraft batch. Total aircraft inserted: 42000 / 240000.
+2026-10-11T14:06:03.0981742Z Inserted aircraft batch. Total aircraft inserted: 43000 / 240000.
+2026-10-11T14:06:03.2217992Z Inserted aircraft batch. Total aircraft inserted: 44000 / 240000.
+2026-10-11T14:06:03.3545950Z Inserted aircraft batch. Total aircraft inserted: 45000 / 240000.
+2026-10-11T14:06:03.6201753Z Inserted aircraft batch. Total aircraft inserted: 46000 / 240000.
+2026-10-11T14:06:03.7099142Z Inserted aircraft batch. Total aircraft inserted: 47000 / 240000.
+2026-10-11T14:06:03.8003930Z Inserted aircraft batch. Total aircraft inserted: 48000 / 240000.
+2026-10-11T14:06:03.8825875Z Inserted aircraft batch. Total aircraft inserted: 49000 / 240000.
+2026-10-11T14:06:03.9703240Z Inserted aircraft batch. Total aircraft inserted: 50000 / 240000.
+2026-10-11T14:06:04.0462178Z Inserted aircraft batch. Total aircraft inserted: 51000 / 240000.
+2026-10-11T14:06:04.1362204Z Inserted aircraft batch. Total aircraft inserted: 52000 / 240000.
+2026-10-11T14:06:04.2621366Z Inserted aircraft batch. Total aircraft inserted: 53000 / 240000.
+2026-10-11T14:06:04.4002466Z Inserted aircraft batch. Total aircraft inserted: 54000 / 240000.
+2026-10-11T14:06:04.4918207Z Inserted aircraft batch. Total aircraft inserted: 55000 / 240000.
+2026-10-11T14:06:04.5773506Z Inserted aircraft batch. Total aircraft inserted: 56000 / 240000.
+2026-10-11T14:06:04.6639107Z Inserted aircraft batch. Total aircraft inserted: 57000 / 240000.
+2026-10-11T14:06:04.7541967Z Inserted aircraft batch. Total aircraft inserted: 58000 / 240000.
+2026-10-11T14:06:04.8356035Z Inserted aircraft batch. Total aircraft inserted: 59000 / 240000.
+2026-10-11T14:06:04.9130146Z Inserted aircraft batch. Total aircraft inserted: 60000 / 240000.
+2026-10-11T14:06:04.9979628Z Inserted aircraft batch. Total aircraft inserted: 61000 / 240000.
+2026-10-11T14:06:05.0822093Z Inserted aircraft batch. Total aircraft inserted: 62000 / 240000.
+2026-10-11T14:06:05.1737902Z Inserted aircraft batch. Total aircraft inserted: 63000 / 240000.
+2026-10-11T14:06:05.2789734Z Inserted aircraft batch. Total aircraft inserted: 64000 / 240000.
+2026-10-11T14:06:05.3833063Z Inserted aircraft batch. Total aircraft inserted: 65000 / 240000.
+2026-10-11T14:06:05.4558498Z Inserted aircraft batch. Total aircraft inserted: 66000 / 240000.
+2026-10-11T14:06:05.5509711Z Inserted aircraft batch. Total aircraft inserted: 67000 / 240000.
+2026-10-11T14:06:05.6555648Z Inserted aircraft batch. Total aircraft inserted: 68000 / 240000.
+2026-10-11T14:06:05.7489381Z Inserted aircraft batch. Total aircraft inserted: 69000 / 240000.
+2026-10-11T14:06:05.8257898Z Inserted aircraft batch. Total aircraft inserted: 70000 / 240000.
+2026-10-11T14:06:05.9030526Z Inserted aircraft batch. Total aircraft inserted: 71000 / 240000.
+2026-10-11T14:06:05.9954708Z Inserted aircraft batch. Total aircraft inserted: 72000 / 240000.
+2026-10-11T14:06:06.0808926Z Inserted aircraft batch. Total aircraft inserted: 73000 / 240000.
+2026-10-11T14:06:06.1743673Z Inserted aircraft batch. Total aircraft inserted: 74000 / 240000.
+2026-10-11T14:06:06.2591728Z Inserted aircraft batch. Total aircraft inserted: 75000 / 240000.
+2026-10-11T14:06:06.3294023Z Inserted aircraft batch. Total aircraft inserted: 76000 / 240000.
+2026-10-11T14:06:06.4026774Z Inserted aircraft batch. Total aircraft inserted: 77000 / 240000.
+2026-10-11T14:06:06.5108112Z Inserted aircraft batch. Total aircraft inserted: 78000 / 240000.
+2026-10-11T14:06:06.5947041Z Inserted aircraft batch. Total aircraft inserted: 79000 / 240000.
+2026-10-11T14:06:06.6930781Z Inserted aircraft batch. Total aircraft inserted: 80000 / 240000.
+2026-10-11T14:06:06.7924183Z Inserted aircraft batch. Total aircraft inserted: 81000 / 240000.
+2026-10-11T14:06:06.8788198Z Inserted aircraft batch. Total aircraft inserted: 82000 / 240000.
+2026-10-11T14:06:06.9690175Z Inserted aircraft batch. Total aircraft inserted: 83000 / 240000.
+2026-10-11T14:06:07.0458272Z Inserted aircraft batch. Total aircraft inserted: 84000 / 240000.
+2026-10-11T14:06:07.1252970Z Inserted aircraft batch. Total aircraft inserted: 85000 / 240000.
+2026-10-11T14:06:07.2129049Z Inserted aircraft batch. Total aircraft inserted: 86000 / 240000.
+2026-10-11T14:06:07.2934769Z Inserted aircraft batch. Total aircraft inserted: 87000 / 240000.
+2026-10-11T14:06:07.3822032Z Inserted aircraft batch. Total aircraft inserted: 88000 / 240000.
+2026-10-11T14:06:07.4918045Z Inserted aircraft batch. Total aircraft inserted: 89000 / 240000.
+2026-10-11T14:06:07.5698743Z Inserted aircraft batch. Total aircraft inserted: 90000 / 240000.
+2026-10-11T14:06:07.6454134Z Inserted aircraft batch. Total aircraft inserted: 91000 / 240000.
+2026-10-11T14:06:07.7226716Z Inserted aircraft batch. Total aircraft inserted: 92000 / 240000.
+2026-10-11T14:06:07.8004546Z Inserted aircraft batch. Total aircraft inserted: 93000 / 240000.
+2026-10-11T14:06:07.8770585Z Inserted aircraft batch. Total aircraft inserted: 94000 / 240000.
+2026-10-11T14:06:07.9705692Z Inserted aircraft batch. Total aircraft inserted: 95000 / 240000.
+2026-10-11T14:06:08.0626224Z Inserted aircraft batch. Total aircraft inserted: 96000 / 240000.
+2026-10-11T14:06:08.1460044Z Inserted aircraft batch. Total aircraft inserted: 97000 / 240000.
+2026-10-11T14:06:08.2316823Z Inserted aircraft batch. Total aircraft inserted: 98000 / 240000.
+2026-10-11T14:06:08.3078307Z Inserted aircraft batch. Total aircraft inserted: 99000 / 240000.
+2026-10-11T14:06:08.3824435Z Inserted aircraft batch. Total aircraft inserted: 100000 / 240000.
+2026-10-11T14:06:08.4727398Z Inserted aircraft batch. Total aircraft inserted: 101000 / 240000.
+2026-10-11T14:06:08.5771363Z Inserted aircraft batch. Total aircraft inserted: 102000 / 240000.
+2026-10-11T14:06:08.6780419Z Inserted aircraft batch. Total aircraft inserted: 103000 / 240000.
+2026-10-11T14:06:08.7735787Z Inserted aircraft batch. Total aircraft inserted: 104000 / 240000.
+2026-10-11T14:06:08.8892903Z Inserted aircraft batch. Total aircraft inserted: 105000 / 240000.
+2026-10-11T14:06:08.9720674Z Inserted aircraft batch. Total aircraft inserted: 106000 / 240000.
+2026-10-11T14:06:09.0558518Z Inserted aircraft batch. Total aircraft inserted: 107000 / 240000.
+2026-10-11T14:06:09.1682518Z Inserted aircraft batch. Total aircraft inserted: 108000 / 240000.
+2026-10-11T14:06:09.2924206Z Inserted aircraft batch. Total aircraft inserted: 109000 / 240000.
+2026-10-11T14:06:09.3845195Z Inserted aircraft batch. Total aircraft inserted: 110000 / 240000.
+2026-10-11T14:06:09.4693519Z Inserted aircraft batch. Total aircraft inserted: 111000 / 240000.
+2026-10-11T14:06:09.5634058Z Inserted aircraft batch. Total aircraft inserted: 112000 / 240000.
+2026-10-11T14:06:09.6360102Z Inserted aircraft batch. Total aircraft inserted: 113000 / 240000.
+2026-10-11T14:06:09.7205111Z Inserted aircraft batch. Total aircraft inserted: 114000 / 240000.
+2026-10-11T14:06:09.8305726Z Inserted aircraft batch. Total aircraft inserted: 115000 / 240000.
+2026-10-11T14:06:09.9219258Z Inserted aircraft batch. Total aircraft inserted: 116000 / 240000.
+2026-10-11T14:06:10.0091739Z Inserted aircraft batch. Total aircraft inserted: 117000 / 240000.
+2026-10-11T14:06:10.0911937Z Inserted aircraft batch. Total aircraft inserted: 118000 / 240000.
+2026-10-11T14:06:10.1722649Z Inserted aircraft batch. Total aircraft inserted: 119000 / 240000.
+2026-10-11T14:06:10.2902243Z Inserted aircraft batch. Total aircraft inserted: 120000 / 240000.
+2026-10-11T14:06:10.4053409Z Inserted aircraft batch. Total aircraft inserted: 121000 / 240000.
+2026-10-11T14:06:10.5110354Z Inserted aircraft batch. Total aircraft inserted: 122000 / 240000.
+2026-10-11T14:06:10.6008995Z Inserted aircraft batch. Total aircraft inserted: 123000 / 240000.
+2026-10-11T14:06:10.6826535Z Inserted aircraft batch. Total aircraft inserted: 124000 / 240000.
+2026-10-11T14:06:10.7612300Z Inserted aircraft batch. Total aircraft inserted: 125000 / 240000.
+2026-10-11T14:06:10.8348160Z Inserted aircraft batch. Total aircraft inserted: 126000 / 240000.
+2026-10-11T14:06:33.4513621Z Inserted aircraft batch. Total aircraft inserted: 127000 / 240000.
+2026-10-11T14:06:33.5543346Z Inserted aircraft batch. Total aircraft inserted: 128000 / 240000.
+2026-10-11T14:06:33.6634329Z Inserted aircraft batch. Total aircraft inserted: 129000 / 240000.
+2026-10-11T14:06:33.7468275Z Inserted aircraft batch. Total aircraft inserted: 130000 / 240000.
+2026-10-11T14:06:33.8554237Z Inserted aircraft batch. Total aircraft inserted: 131000 / 240000.
+2026-10-11T14:06:33.9432886Z Inserted aircraft batch. Total aircraft inserted: 132000 / 240000.
+2026-10-11T14:07:04.8700189Z Inserted aircraft batch. Total aircraft inserted: 133000 / 240000.
+2026-10-11T14:07:04.9757599Z Inserted aircraft batch. Total aircraft inserted: 134000 / 240000.
+2026-10-11T14:07:05.0714325Z Inserted aircraft batch. Total aircraft inserted: 135000 / 240000.
+2026-10-11T14:07:05.1679787Z Inserted aircraft batch. Total aircraft inserted: 136000 / 240000.
+2026-10-11T14:07:05.2780657Z Inserted aircraft batch. Total aircraft inserted: 137000 / 240000.
+2026-10-11T14:07:05.4041069Z Inserted aircraft batch. Total aircraft inserted: 138000 / 240000.
+2026-10-11T14:07:43.8641663Z Inserted aircraft batch. Total aircraft inserted: 139000 / 240000.
+2026-10-11T14:07:44.0271358Z Inserted aircraft batch. Total aircraft inserted: 140000 / 240000.
+2026-10-11T14:07:44.2046506Z Inserted aircraft batch. Total aircraft inserted: 141000 / 240000.
+2026-10-11T14:07:44.3810934Z Inserted aircraft batch. Total aircraft inserted: 142000 / 240000.
+2026-10-11T14:07:44.4847712Z Inserted aircraft batch. Total aircraft inserted: 143000 / 240000.
+2026-10-11T14:08:22.4897390Z Inserted aircraft batch. Total aircraft inserted: 144000 / 240000.
+2026-10-11T14:08:22.5933618Z Inserted aircraft batch. Total aircraft inserted: 145000 / 240000.
+2026-10-11T14:08:22.6799880Z Inserted aircraft batch. Total aircraft inserted: 146000 / 240000.
+2026-10-11T14:08:22.7633904Z Inserted aircraft batch. Total aircraft inserted: 147000 / 240000.
+2026-10-11T14:08:22.8680912Z Inserted aircraft batch. Total aircraft inserted: 148000 / 240000.
+2026-10-11T14:08:22.9747973Z Inserted aircraft batch. Total aircraft inserted: 149000 / 240000.
+2026-10-11T14:09:03.2426808Z Inserted aircraft batch. Total aircraft inserted: 150000 / 240000.
+2026-10-11T14:09:03.4391087Z Inserted aircraft batch. Total aircraft inserted: 151000 / 240000.
+2026-10-11T14:09:03.5576055Z Inserted aircraft batch. Total aircraft inserted: 152000 / 240000.
+2026-10-11T14:09:03.6711429Z Inserted aircraft batch. Total aircraft inserted: 153000 / 240000.
+2026-10-11T14:09:03.7980778Z Inserted aircraft batch. Total aircraft inserted: 154000 / 240000.
+2026-10-11T14:09:27.0129750Z Inserted aircraft batch. Total aircraft inserted: 155000 / 240000.
+2026-10-11T14:09:27.1644903Z Inserted aircraft batch. Total aircraft inserted: 156000 / 240000.
+2026-10-11T14:09:27.3249322Z Inserted aircraft batch. Total aircraft inserted: 157000 / 240000.
+2026-10-11T14:09:27.5527439Z Inserted aircraft batch. Total aircraft inserted: 158000 / 240000.
+2026-10-11T14:09:27.7127248Z Inserted aircraft batch. Total aircraft inserted: 159000 / 240000.
+2026-10-11T14:10:03.3231461Z Inserted aircraft batch. Total aircraft inserted: 160000 / 240000.
+2026-10-11T14:10:03.4633714Z Inserted aircraft batch. Total aircraft inserted: 161000 / 240000.
+2026-10-11T14:10:03.6033113Z Inserted aircraft batch. Total aircraft inserted: 162000 / 240000.
+2026-10-11T14:10:03.7495172Z Inserted aircraft batch. Total aircraft inserted: 163000 / 240000.
+2026-10-11T14:10:03.9051939Z Inserted aircraft batch. Total aircraft inserted: 164000 / 240000.
+2026-10-11T14:10:04.0428617Z Inserted aircraft batch. Total aircraft inserted: 165000 / 240000.
+2026-10-11T14:10:44.7773478Z Inserted aircraft batch. Total aircraft inserted: 166000 / 240000.
+2026-10-11T14:10:44.9989312Z Inserted aircraft batch. Total aircraft inserted: 167000 / 240000.
+2026-10-11T14:10:45.2314555Z Inserted aircraft batch. Total aircraft inserted: 168000 / 240000.
+2026-10-11T14:10:45.4752179Z Inserted aircraft batch. Total aircraft inserted: 169000 / 240000.
+2026-10-11T14:10:45.7067442Z Inserted aircraft batch. Total aircraft inserted: 170000 / 240000.
+2026-10-11T14:10:45.9745966Z Inserted aircraft batch. Total aircraft inserted: 171000 / 240000.
+2026-10-11T14:11:19.6979613Z Inserted aircraft batch. Total aircraft inserted: 172000 / 240000.
+2026-10-11T14:11:19.8692881Z Inserted aircraft batch. Total aircraft inserted: 173000 / 240000.
+2026-10-11T14:11:20.0311518Z Inserted aircraft batch. Total aircraft inserted: 174000 / 240000.
+2026-10-11T14:11:20.1835470Z Inserted aircraft batch. Total aircraft inserted: 175000 / 240000.
+2026-10-11T14:11:20.3640800Z Inserted aircraft batch. Total aircraft inserted: 176000 / 240000.
+2026-10-11T14:11:20.4971197Z Inserted aircraft batch. Total aircraft inserted: 177000 / 240000.
+2026-10-11T14:11:53.7366815Z Inserted aircraft batch. Total aircraft inserted: 178000 / 240000.
+2026-10-11T14:11:54.9255829Z Inserted aircraft batch. Total aircraft inserted: 179000 / 240000.
+2026-10-11T14:11:55.0697240Z Inserted aircraft batch. Total aircraft inserted: 180000 / 240000.
+2026-10-11T14:11:55.1947678Z Inserted aircraft batch. Total aircraft inserted: 181000 / 240000.
+2026-10-11T14:11:55.3387346Z Inserted aircraft batch. Total aircraft inserted: 182000 / 240000.
+2026-10-11T14:11:55.4583119Z Inserted aircraft batch. Total aircraft inserted: 183000 / 240000.
+2026-10-11T14:12:27.7787596Z Inserted aircraft batch. Total aircraft inserted: 184000 / 240000.
+2026-10-11T14:12:27.8760360Z Inserted aircraft batch. Total aircraft inserted: 185000 / 240000.
+2026-10-11T14:12:27.9931263Z Inserted aircraft batch. Total aircraft inserted: 186000 / 240000.
+2026-10-11T14:12:28.1002322Z Inserted aircraft batch. Total aircraft inserted: 187000 / 240000.
+2026-10-11T14:12:28.1967166Z Inserted aircraft batch. Total aircraft inserted: 188000 / 240000.
+2026-10-11T14:12:28.3244861Z Inserted aircraft batch. Total aircraft inserted: 189000 / 240000.
+2026-10-11T14:13:06.2836350Z Inserted aircraft batch. Total aircraft inserted: 190000 / 240000.
+2026-10-11T14:13:06.4061888Z Inserted aircraft batch. Total aircraft inserted: 191000 / 240000.
+2026-10-11T14:13:06.5373255Z Inserted aircraft batch. Total aircraft inserted: 192000 / 240000.
+2026-10-11T14:13:06.6663947Z Inserted aircraft batch. Total aircraft inserted: 193000 / 240000.
+2026-10-11T14:13:06.7720569Z Inserted aircraft batch. Total aircraft inserted: 194000 / 240000.
+2026-10-11T14:13:29.2947005Z Inserted aircraft batch. Total aircraft inserted: 195000 / 240000.
+2026-10-11T14:13:29.4330558Z Inserted aircraft batch. Total aircraft inserted: 196000 / 240000.
+2026-10-11T14:13:29.5579600Z Inserted aircraft batch. Total aircraft inserted: 197000 / 240000.
+2026-10-11T14:13:29.6604076Z Inserted aircraft batch. Total aircraft inserted: 198000 / 240000.
+2026-10-11T14:13:29.7827027Z Inserted aircraft batch. Total aircraft inserted: 199000 / 240000.
+2026-10-11T14:13:29.9078024Z Inserted aircraft batch. Total aircraft inserted: 200000 / 240000.
+2026-10-11T14:14:02.7780552Z Inserted aircraft batch. Total aircraft inserted: 201000 / 240000.
+2026-10-11T14:14:02.9110566Z Inserted aircraft batch. Total aircraft inserted: 202000 / 240000.
+2026-10-11T14:14:03.0188441Z Inserted aircraft batch. Total aircraft inserted: 203000 / 240000.
+2026-10-11T14:14:03.1396517Z Inserted aircraft batch. Total aircraft inserted: 204000 / 240000.
+2026-10-11T14:14:03.2538839Z Inserted aircraft batch. Total aircraft inserted: 205000 / 240000.
+2026-10-11T14:14:03.3716232Z Inserted aircraft batch. Total aircraft inserted: 206000 / 240000.
+2026-10-11T14:14:34.9738008Z Inserted aircraft batch. Total aircraft inserted: 207000 / 240000.
+2026-10-11T14:14:35.1052182Z Inserted aircraft batch. Total aircraft inserted: 208000 / 240000.
+2026-10-11T14:14:35.2381950Z Inserted aircraft batch. Total aircraft inserted: 209000 / 240000.
+2026-10-11T14:14:35.3754219Z Inserted aircraft batch. Total aircraft inserted: 210000 / 240000.
+2026-10-11T14:14:35.4861008Z Inserted aircraft batch. Total aircraft inserted: 211000 / 240000.
+2026-10-11T14:14:35.6193963Z Inserted aircraft batch. Total aircraft inserted: 212000 / 240000.
+2026-10-11T14:15:05.5817955Z Inserted aircraft batch. Total aircraft inserted: 213000 / 240000.
+2026-10-11T14:15:05.7325886Z Inserted aircraft batch. Total aircraft inserted: 214000 / 240000.
+2026-10-11T14:15:05.8711025Z Inserted aircraft batch. Total aircraft inserted: 215000 / 240000.
+2026-10-11T14:15:05.9759860Z Inserted aircraft batch. Total aircraft inserted: 216000 / 240000.
+2026-10-11T14:15:06.0996899Z Inserted aircraft batch. Total aircraft inserted: 217000 / 240000.
+2026-10-11T14:15:06.2235548Z Inserted aircraft batch. Total aircraft inserted: 218000 / 240000.
+2026-10-11T14:15:27.8000235Z Inserted aircraft batch. Total aircraft inserted: 219000 / 240000.
+2026-10-11T14:15:27.9306542Z Inserted aircraft batch. Total aircraft inserted: 220000 / 240000.
+2026-10-11T14:15:28.0437507Z Inserted aircraft batch. Total aircraft inserted: 221000 / 240000.
+2026-10-11T14:15:28.1625721Z Inserted aircraft batch. Total aircraft inserted: 222000 / 240000.
+2026-10-11T14:15:28.3152174Z Inserted aircraft batch. Total aircraft inserted: 223000 / 240000.
+2026-10-11T14:15:28.4528525Z Inserted aircraft batch. Total aircraft inserted: 224000 / 240000.
+2026-10-11T14:15:57.8561863Z Inserted aircraft batch. Total aircraft inserted: 225000 / 240000.
+2026-10-11T14:15:57.9944059Z Inserted aircraft batch. Total aircraft inserted: 226000 / 240000.
+2026-10-11T14:15:58.1342557Z Inserted aircraft batch. Total aircraft inserted: 227000 / 240000.
+2026-10-11T14:15:58.2744429Z Inserted aircraft batch. Total aircraft inserted: 228000 / 240000.
+2026-10-11T14:15:58.3988888Z Inserted aircraft batch. Total aircraft inserted: 229000 / 240000.
+2026-10-11T14:15:58.5198984Z Inserted aircraft batch. Total aircraft inserted: 230000 / 240000.
+2026-10-11T14:16:27.0460884Z Inserted aircraft batch. Total aircraft inserted: 231000 / 240000.
+2026-10-11T14:16:27.2200439Z Inserted aircraft batch. Total aircraft inserted: 232000 / 240000.
+2026-10-11T14:16:27.3322080Z Inserted aircraft batch. Total aircraft inserted: 233000 / 240000.
+2026-10-11T14:16:27.4548330Z Inserted aircraft batch. Total aircraft inserted: 234000 / 240000.
+2026-10-11T14:16:27.5755496Z Inserted aircraft batch. Total aircraft inserted: 235000 / 240000.
+2026-10-11T14:16:27.7054863Z Inserted aircraft batch. Total aircraft inserted: 236000 / 240000.
+2026-10-11T14:17:03.6920275Z Inserted aircraft batch. Total aircraft inserted: 237000 / 240000.
+2026-10-11T14:17:03.8177289Z Inserted aircraft batch. Total aircraft inserted: 238000 / 240000.
+2026-10-11T14:17:03.9501423Z Inserted aircraft batch. Total aircraft inserted: 239000 / 240000.
+2026-10-11T14:17:04.0882768Z Inserted aircraft batch. Total aircraft inserted: 240000 / 240000.
+2026-10-11T14:17:04.1172762Z Aircraft import completed. Inserted 240000 aircraft.
+2026-10-11T14:17:04.2183979Z Generating flights from 30 origin airports, 750 routes, 30 days, 1-2 flights per route/day.
+2026-10-11T14:17:13.0687143Z Prepared 31 flights for origin airport AVK.
+2026-10-11T14:17:13.0711180Z Prepared 410 flights for origin airport BTW.
+2026-10-11T14:17:13.0741981Z Prepared 234 flights for origin airport CBT.
+2026-10-11T14:17:13.0766612Z Prepared 59 flights for origin airport CGN.
+2026-10-11T14:17:13.0792420Z Prepared 20 flights for origin airport CMX.
+2026-10-11T14:17:13.0815412Z Prepared 1 flights for origin airport DBQ.
+2026-10-11T14:17:13.0840195Z Prepared 1 flights for origin airport DIL.
+2026-10-11T14:17:13.0866029Z Prepared 7 flights for origin airport FEG.
+2026-10-11T14:17:13.0890066Z Prepared 2 flights for origin airport FJR.
+2026-10-11T14:17:13.0914869Z Prepared 1 flights for origin airport FND.
+2026-10-11T14:17:13.0942314Z Prepared 22 flights for origin airport HDY.
+2026-10-11T14:17:13.0968588Z Prepared 74 flights for origin airport HFN.
+2026-10-11T14:17:13.0995905Z Prepared 8 flights for origin airport LIL.
+2026-10-11T14:17:13.1023160Z Prepared 2 flights for origin airport MEI.
+2026-10-11T14:17:13.1048641Z Prepared 20 flights for origin airport MIS.
+2026-10-11T14:17:13.1074386Z Prepared 36 flights for origin airport NUP.
+2026-10-11T14:17:13.1097683Z Prepared 137 flights for origin airport PDV.
+2026-10-11T14:17:13.1117032Z Prepared 6 flights for origin airport ROR.
+2026-10-11T14:17:13.1139755Z Prepared 822 flights for origin airport SDN.
+2026-10-11T14:17:13.1164120Z Prepared 2 flights for origin airport SOV.
+2026-10-11T14:17:13.1187836Z Prepared 3 flights for origin airport TMX.
+2026-10-11T14:17:13.1206596Z Prepared 11 flights for origin airport UII.
+2026-10-11T14:17:13.1228437Z Prepared 9 flights for origin airport YBL.
+2026-10-11T14:17:13.7924593Z Saved generated flight batch. Total saved so far: 500 / 1918.
+2026-10-11T14:17:14.4139532Z Saved generated flight batch. Total saved so far: 1000 / 1918.
+2026-10-11T14:17:36.1865826Z Saved generated flight batch. Total saved so far: 1500 / 1918.
+2026-10-11T14:17:36.6758836Z Saved generated flight batch. Total saved so far: 1918 / 1918.
+2026-10-11T14:17:36.6799897Z Flight generation completed. Generated 1918 flights.

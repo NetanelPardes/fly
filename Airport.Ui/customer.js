@@ -1,4 +1,3 @@
-const HOME_AIRPORT = "Tel Aviv";
 const BAGGAGE_PRICE = 45;
 const BOOKING_CUTOFF_HOURS = 5;
 
@@ -106,7 +105,6 @@ function renderFlights() {
   const destination = document.querySelector("#destination").value.trim().toLowerCase();
   const status = document.querySelector("#status").value;
   visibleFlights = flights
-    .filter(f => direction === "outgoing" ? f.origin === HOME_AIRPORT : f.destination === HOME_AIRPORT)
     .filter(f => !origin || f.origin.toLowerCase().includes(origin))
     .filter(f => !destination || f.destination.toLowerCase().includes(destination))
     .filter(f => !status || f.status === status)

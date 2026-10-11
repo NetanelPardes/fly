@@ -25,7 +25,7 @@ function render() {
   document.querySelector("#metricActiveTickets").textContent = `${tickets.filter(t => t.status === "Active").length} active`;
   document.querySelector("#metricBaggage").textContent = baggage.length;
   document.querySelector("#metricFiles").textContent = tickets.filter(t => t.ticketFilePath).length;
-  document.querySelector("#ticketsGrid").innerHTML = tickets.map(ticket => `<article class="ticket-card"><div><small>Ticket #${ticket.id}</small><h3>${Airport.escapeHtml(ticket.flightNumber)} - Seat ${Airport.escapeHtml(ticket.seatNumber)}</h3><p>${ticket.class} - ${Airport.money(ticket.price)} - ${Airport.badge(ticket.status)}</p></div><div class="row-actions"><button class="tiny-button" data-manage-ticket="${ticket.id}">Seat / upgrade / baggage</button>${ticket.status === "Active" ? `<button class="tiny-button" data-cancel-ticket="${ticket.id}">Cancel</button>` : ""}${ticket.ticketFilePath ? `<button class="tiny-button" data-download-ticket="${ticket.id}">Download</button>` : ""}</div></article>`).join("") || Airport.empty("No tickets yet");
+  document.querySelector("#ticketsGrid").innerHTML = tickets.map(ticket => `<article class="ticket-card"><div><small>Ticket #${ticket.id}</small><h3>${Airport.escapeHtml(ticket.flightNumber)} - Seat ${Airport.escapeHtml(ticket.seatNumber)}</h3><p>${ticket.class} - ${ticket.baggageAllowanceKg || 0} kg baggage - ${Airport.money(ticket.price)} - ${Airport.badge(ticket.status)}</p></div><div class="row-actions"><button class="tiny-button" data-manage-ticket="${ticket.id}">Seat / upgrade / baggage</button>${ticket.status === "Active" ? `<button class="tiny-button" data-cancel-ticket="${ticket.id}">Cancel</button>` : ""}${ticket.ticketFilePath ? `<button class="tiny-button" data-download-ticket="${ticket.id}">Download</button>` : ""}</div></article>`).join("") || Airport.empty("No tickets yet");
 }
 
 function openTicket(ticketId) {
@@ -34,8 +34,7 @@ function openTicket(ticketId) {
   document.querySelector("#manageTicketId").value = ticket.id;
   document.querySelector("#manageSeat").value = ticket.seatNumber;
   document.querySelector("#manageClass").value = ticket.class;
-  document.querySelector("#manageBagTag").value = `BAG-${ticket.id}`;
-  document.querySelector("#manageBagWeight").value = "18.5";
+  document.querySelector("#manageBaggage").value = String(ticket.baggageAllowanceKg || 0);
   document.querySelector("#ticketDialog").showModal();
 }
 
@@ -43,10 +42,7 @@ async function updateTicket(event) {
   event.preventDefault();
   const ticketId = document.querySelector("#manageTicketId").value;
   try {
-    await Airport.api(`/api/tickets/${ticketId}/options`, { method: "PUT", body: JSON.stringify({ seatNumber: document.querySelector("#manageSeat").value, class: document.querySelector("#manageClass").value }) });
-    const tag = document.querySelector("#manageBagTag").value.trim();
-    const weight = Number(document.querySelector("#manageBagWeight").value);
-    if (tag && weight) await Airport.api("/api/baggage", { method: "POST", body: JSON.stringify({ ticketId: Number(ticketId), tagNumber: tag, weightKg: weight }) }).catch(() => {});
+    await Airport.api(`/api/tickets/${ticketId}/options`, { method: "PUT", body: JSON.stringify({ seatNumber: document.querySelector("#manageSeat").value, class: document.querySelector("#manageClass").value, baggageAllowanceKg: Number(document.querySelector("#manageBaggage").value) }) });
     document.querySelector("#ticketDialog").close();
     await refresh();
   } catch (error) {

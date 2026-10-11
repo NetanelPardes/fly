@@ -1,5 +1,7 @@
 import json
 import os
+import csv
+import random
 import socket
 import ssl
 import time
@@ -7,33 +9,6 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 from confluent_kafka import Producer
-
-
-AMADEUS_CITY_NAMES = {
-    "TLV": "Tel Aviv",
-    "LHR": "London",
-    "LGW": "London",
-    "LCY": "London",
-    "LTN": "London",
-    "STN": "London",
-    "LON": "London",
-    "CDG": "Paris",
-    "ORY": "Paris",
-    "PAR": "Paris",
-    "ATH": "Athens",
-    "DXB": "Dubai",
-    "FCO": "Rome",
-    "CIA": "Rome",
-    "ROM": "Rome",
-    "AMS": "Amsterdam",
-    "BER": "Berlin",
-    "MAD": "Madrid",
-    "BCN": "Barcelona",
-    "IST": "Istanbul",
-    "JFK": "New York",
-    "EWR": "New York",
-    "NYC": "New York",
-}
 
 
 class ConfigurationError(RuntimeError):
@@ -56,29 +31,143 @@ def utc_iso(value):
 
 
 def demo_flights():
+    airports, aircraft = load_csv_simulation_data()
+    origin, destination = airports[0], airports[1]
+    return_airport = airports[2] if len(airports) > 2 else origin
+    airplane = aircraft[0]
     now = datetime.now(timezone.utc).replace(microsecond=0)
     return [
         {
-            "flightNumber": "PY100",
-            "origin": "Tel Aviv",
-            "destination": "Athens",
+            "flightNumber": f'{origin["code"][:3].upper()}100',
+            "origin": origin["city"],
+            "originAirportCode": origin["code"],
+            "destination": destination["city"],
+            "destinationAirportCode": destination["code"],
+            "aircraftCode": airplane["code"],
             "departureTime": utc_iso(now + timedelta(hours=2)),
             "arrivalTime": utc_iso(now + timedelta(hours=4, minutes=10)),
             "status": "Scheduled",
-            "externalId": f"demo-py100-{now.date().isoformat()}",
+            "externalId": f'demo-{origin["code"]}-{destination["code"]}-{now.date().isoformat()}',
             "source": "PythonDemo",
         },
         {
-            "flightNumber": "PY220",
-            "origin": "Rome",
-            "destination": "Tel Aviv",
+            "flightNumber": f'{destination["code"][:3].upper()}220',
+            "origin": destination["city"],
+            "originAirportCode": destination["code"],
+            "destination": return_airport["city"],
+            "destinationAirportCode": return_airport["code"],
+            "aircraftCode": airplane["code"],
             "departureTime": utc_iso(now + timedelta(hours=5)),
             "arrivalTime": utc_iso(now + timedelta(hours=8, minutes=20)),
             "status": "Delayed",
-            "externalId": f"demo-py220-{now.date().isoformat()}",
+            "externalId": f'demo-{destination["code"]}-{return_airport["code"]}-{now.date().isoformat()}',
             "source": "PythonDemo",
         },
     ]
+
+
+def clean(value):
+    return (value or "").strip()
+
+
+def first(row, *names):
+    for name in names:
+        value = clean(row.get(name))
+        if value:
+            return value
+    return ""
+
+
+def load_csv_simulation_data():
+    data_dir = env("AIRPORT_DATA_DIRECTORY", os.path.join(os.path.dirname(__file__), "Data"))
+    airports_path = os.path.join(data_dir, "airport.csv")
+    if not os.path.exists(airports_path):
+        airports_path = os.path.join(data_dir, "airports.csv")
+    aircraft_path = os.path.join(data_dir, "aircraft.csv")
+
+    with open(airports_path, newline="", encoding="utf-8-sig") as handle:
+        airports = [
+            {
+                "city": first(row, "עיר", "municipality", "city"),
+                "country": first(row, "מדינה", "iso_country", "country"),
+                "name": first(row, "שם השדה", "name"),
+                "code": first(row, "קוד השדה", "iata_code", "ident"),
+            }
+            for row in csv.DictReader(handle)
+        ]
+
+    with open(aircraft_path, newline="", encoding="utf-8-sig") as handle:
+        aircraft = [
+            {
+                "code": first(row, "קוד מטוס", "registration"),
+                "manufacturer": first(row, "חברת ייצור", "manufacturer"),
+                "model": first(row, "דגם", "model"),
+                "seats": int(first(row, "מספר מושבים", "seat_capacity") or "180"),
+                "year": int(first(row, "שנת ייצור", "manufacture_year") or "2020"),
+            }
+            for row in csv.DictReader(handle)
+        ]
+
+    airports = [airport for airport in airports if airport["city"] and airport["code"]]
+    aircraft = [item for item in aircraft if item["code"] and item["seats"] > 0]
+    if len(airports) < 2 or not aircraft:
+        raise RuntimeError("CSV simulation requires at least two airports and one aircraft.")
+    return airports, aircraft
+
+
+def csv_simulation_flights():
+    airports, aircraft = load_csv_simulation_data()
+    rng = random.Random(int(env("AIRPORT_CSV_RANDOM_SEED", "20261011")))
+    days = max(1, min(int(env("AIRPORT_CSV_FLIGHT_DAYS", "30")), 60))
+    max_origins = max(1, min(int(env("AIRPORT_CSV_MAX_ORIGINS", "30")), len(airports)))
+    destinations_per_origin = max(1, min(int(env("AIRPORT_CSV_DESTINATIONS_PER_ORIGIN", "25")), 50))
+    max_route_flights = max(1, min(int(env("AIRPORT_CSV_MAX_FLIGHTS_PER_ROUTE_DAY", "2")), 3))
+    selected_origins = rng.sample(airports, max_origins)
+    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    aircraft_next_available = {item["code"]: start for item in aircraft}
+    occupied_departures = set()
+    flights = []
+
+    for day in range(days):
+        date = start + timedelta(days=day)
+        for route_index, origin in enumerate(selected_origins):
+            destinations = [airport for airport in airports if airport["code"] != origin["code"]]
+            rng.shuffle(destinations)
+            for destination in destinations[:destinations_per_origin]:
+                daily_count = rng.randint(1, max_route_flights)
+                for flight_index in range(daily_count):
+                    departure = date + timedelta(hours=6 + flight_index * 8 + rng.randint(0, 3), minutes=rng.choice([0, 15, 30, 45]))
+                    if departure in occupied_departures:
+                        continue
+                    available_aircraft = [item for item in aircraft if aircraft_next_available[item["code"]] <= departure]
+                    if not available_aircraft:
+                        continue
+
+                    airplane = rng.choice(available_aircraft)
+                    duration = timedelta(minutes=rng.randint(75, 540))
+                    arrival = departure + duration
+                    aircraft_next_available[airplane["code"]] = arrival + timedelta(hours=10)
+                    occupied_departures.add(departure)
+                    flight_number = f'{origin["code"][:3].upper()}{rng.randint(100, 9999)}'
+                    flights.append(
+                        {
+                            "flightNumber": flight_number,
+                            "origin": origin["city"],
+                            "originAirportCode": origin["code"],
+                            "destination": destination["city"],
+                            "destinationAirportCode": destination["code"],
+                            "boardingGate": f'{origin["code"]}-T{rng.randint(1, 5)}-G{rng.randint(1, 30):02d}',
+                            "aircraftCode": airplane["code"],
+                            "departureTime": utc_iso(departure),
+                            "arrivalTime": utc_iso(arrival),
+                            "status": "Scheduled",
+                            "externalId": f'csv-sim-{date:%Y%m%d}-{route_index:04d}-{flight_index:02d}-{origin["code"]}-{destination["code"]}',
+                            "source": "CsvProducerSimulation",
+                            "basePrice": round(min(max(120, 90 + rng.randint(300, 9000) * 0.08), 950), 2),
+                        }
+                    )
+
+    return flights
 
 
 def opensky_flights():
@@ -141,13 +230,18 @@ def amadeus_token():
 
 
 def amadeus_routes():
-    raw_routes = env("AMADEUS_ROUTES", "TLV:LON,TLV:PAR,TLV:ATH,TLV:DXB,LON:TLV,PAR:TLV,ATH:TLV,ROM:TLV")
+    raw_routes = env("AMADEUS_ROUTES", "")
     routes = []
     for route in raw_routes.split(","):
         parts = [part.strip().upper() for part in route.split(":")]
         if len(parts) == 2 and parts[0] and parts[1]:
             routes.append((parts[0], parts[1]))
-    return routes
+    if routes:
+        return routes
+
+    airports, _ = load_csv_simulation_data()
+    max_routes = max(1, min(int(env("AMADEUS_ROUTE_COUNT", "8")), len(airports) - 1))
+    return [(airports[index]["code"].upper(), airports[index + 1]["code"].upper()) for index in range(max_routes)]
 
 
 def amadeus_departure_dates():
@@ -357,7 +451,7 @@ def parse_amadeus_datetime(value):
 
 
 def airport_name(code):
-    return AMADEUS_CITY_NAMES.get((code or "").upper(), code or "Unknown")
+    return code or "Unknown"
 
 
 def publish_once():
@@ -372,6 +466,8 @@ def publish_once():
             flights = amadeus_flights()
         elif mode == "opensky":
             flights = opensky_flights()
+        elif mode in {"csv", "csv-sim", "csv_sim"}:
+            flights = csv_simulation_flights()
         else:
             flights = demo_flights()
     except ConfigurationError:

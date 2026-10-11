@@ -10,18 +10,39 @@
   <main class="page-shell auth-page">
     <header class="portal-header">
       <a class="home-link" href="index.html">Airport Portal</a>
+      <a class="ghost-button" href="admin-login.html">Manager login</a>
     </header>
     <section class="login-screen">
       <div class="login-box">
         <p class="eyebrow">Customer access</p>
         <h1>Welcome aboard</h1>
         <form id="customerLoginForm" class="stack">
-          <label>Email<input id="loginEmail" type="email" value="passenger@airport.local" required></label>
-          <label>Password<input id="loginPassword" type="password" value="Password123!" required></label>
+          <label>Email<input id="loginEmail" type="email" value="altman.elazar@gmail.com" required></label>
+          <label>Password<input id="loginPassword" type="password" value="1234" required></label>
           <button class="primary-button">Enter customer portal</button>
         </form>
+        <div class="auth-switch">
+          <span>New passenger?</span>
+          <button id="openRegister" class="tiny-button" type="button">Create account</button>
+        </div>
       </div>
     </section>
+    <dialog id="registerDialog">
+      <form id="registerForm" method="dialog" class="dialog-form">
+        <h2>Create account</h2>
+        <div class="form-grid compact-grid">
+          <label>ID<input id="registerNationalId" maxlength="9" pattern="[0-9]{9}" required></label>
+          <label>First name<input id="registerFirstName" required></label>
+          <label>Last name<input id="registerLastName" required></label>
+          <label>Email<input id="registerEmail" type="email" required></label>
+          <label>Password<input id="registerPassword" type="password" minlength="4" required></label>
+          <label>Gender<select id="registerGender"><option value="m">m</option><option value="f">f</option></select></label>
+          <label>Address<input id="registerAddress" required></label>
+          <label>Phone<input id="registerPhone" required></label>
+        </div>
+        <div class="dialog-actions"><button type="button" id="closeRegister" class="ghost-button">Close</button><button class="primary-button">Register</button></div>
+      </form>
+    </dialog>
     <div id="toast" class="toast" hidden></div>
   </main>
   <script src="shared.js"></script>

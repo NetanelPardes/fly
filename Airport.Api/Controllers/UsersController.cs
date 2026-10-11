@@ -22,7 +22,13 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
             .Select(user => ToDto(user))
             .ToListAsync(cancellationToken);
 
-        return Ok(users);
+        var employees = await dbContext.Employees
+            .AsNoTracking()
+            .OrderBy(employee => employee.FullName)
+            .Select(employee => ToDto(employee))
+            .ToListAsync(cancellationToken);
+
+        return Ok(users.Concat(employees).OrderBy(user => user.FullName));
     }
 
     [HttpGet("{id:int}")]
@@ -41,11 +47,30 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
             return Conflict("Email already exists.");
         }
 
+        var identity = NormalizeIdentity(request.FullName, request.FirstName, request.LastName);
+        var nationalId = string.IsNullOrWhiteSpace(request.NationalId) ? GenerateNineDigitValue() : request.NationalId.Trim();
+        var phone = string.IsNullOrWhiteSpace(request.PhoneNumber) ? GeneratePhoneValue() : request.PhoneNumber.Trim();
+        if (await dbContext.Users.AnyAsync(user => user.NationalId == nationalId, cancellationToken))
+        {
+            return Conflict("National ID already exists.");
+        }
+
+        if (await dbContext.Users.AnyAsync(user => user.PhoneNumber == phone, cancellationToken))
+        {
+            return Conflict("Phone number already exists.");
+        }
+
         var user = new User
         {
-            FullName = request.FullName.Trim(),
+            NationalId = nationalId,
+            FirstName = identity.FirstName,
+            LastName = identity.LastName,
+            FullName = identity.FullName,
             Email = email,
             Role = request.Role,
+            Gender = string.IsNullOrWhiteSpace(request.Gender) ? "m" : request.Gender.Trim(),
+            Address = string.IsNullOrWhiteSpace(request.Address) ? "Created by admin" : request.Address.Trim(),
+            PhoneNumber = phone,
             CreatedAt = DateTime.UtcNow
         };
         user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
@@ -71,9 +96,25 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
             return Conflict("Email already exists.");
         }
 
+        if (await dbContext.Users.AnyAsync(item => item.Id != id && item.NationalId == request.NationalId.Trim(), cancellationToken))
+        {
+            return Conflict("National ID already exists.");
+        }
+
+        if (await dbContext.Users.AnyAsync(item => item.Id != id && item.PhoneNumber == request.PhoneNumber.Trim(), cancellationToken))
+        {
+            return Conflict("Phone number already exists.");
+        }
+
+        user.NationalId = request.NationalId.Trim();
+        user.FirstName = request.FirstName.Trim();
+        user.LastName = request.LastName.Trim();
         user.FullName = request.FullName.Trim();
         user.Email = email;
         user.Role = request.Role;
+        user.Gender = request.Gender.Trim();
+        user.Address = request.Address.Trim();
+        user.PhoneNumber = request.PhoneNumber.Trim();
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Ok(ToDto(user));
@@ -93,5 +134,49 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
         return NoContent();
     }
 
-    private static UserDto ToDto(User user) => new(user.Id, user.FullName, user.Email, user.Role);
+    private static UserDto ToDto(User user) => new(
+        user.Id,
+        user.NationalId,
+        user.FirstName,
+        user.LastName,
+        user.FullName,
+        user.Email,
+        user.Role,
+        user.Gender,
+        user.Address,
+        user.PhoneNumber);
+
+    private static UserDto ToDto(Employee employee) => new(
+        employee.Id,
+        employee.NationalId,
+        employee.FirstName,
+        employee.LastName,
+        employee.FullName,
+        employee.Email,
+        UserRole.Admin,
+        employee.Gender,
+        employee.Address,
+        employee.PhoneNumber);
+
+    private static (string FirstName, string LastName, string FullName) NormalizeIdentity(
+        string fullName,
+        string? firstName,
+        string? lastName)
+    {
+        if (!string.IsNullOrWhiteSpace(firstName) && !string.IsNullOrWhiteSpace(lastName))
+        {
+            var first = firstName.Trim();
+            var last = lastName.Trim();
+            return (first, last, $"{first} {last}");
+        }
+
+        var parts = fullName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var resolvedFirst = parts.ElementAtOrDefault(0) ?? fullName.Trim();
+        var resolvedLast = parts.ElementAtOrDefault(1) ?? "User";
+        return (resolvedFirst, resolvedLast, $"{resolvedFirst} {resolvedLast}");
+    }
+
+    private static string GenerateNineDigitValue() => Random.Shared.Next(100000000, 999999999).ToString();
+
+    private static string GeneratePhoneValue() => $"05{Random.Shared.Next(10000000, 99999999)}";
 }

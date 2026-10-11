@@ -15,7 +15,7 @@ public class AirportLocationCatalog(IConfiguration configuration, IHostEnvironme
 
     private AirportLocationCatalogDto LoadCatalog()
     {
-        var path = Path.Combine(ResolveDataDirectory(), "airports.csv");
+        var path = ResolveAirportCsvPath();
         var locations = ReadCsv(path)
             .Select(ToLocation)
             .Where(location => location is not null)
@@ -38,12 +38,12 @@ public class AirportLocationCatalog(IConfiguration configuration, IHostEnvironme
 
     private AirportLocationDto? ToLocation(Dictionary<string, string> row)
     {
-        var city = Clean(row.GetValueOrDefault("municipality"));
-        var airportName = Clean(row.GetValueOrDefault("name"));
-        var countryCode = Clean(row.GetValueOrDefault("iso_country"));
+        var city = Clean(First(row, "עיר", "municipality", "city"));
+        var airportName = Clean(First(row, "שם השדה", "name"));
+        var countryCode = Clean(First(row, "מדינה", "iso_country", "country"));
         var country = CountryName(countryCode);
-        var iata = Clean(row.GetValueOrDefault("iata_code"));
-        var icao = Clean(row.GetValueOrDefault("icao_code"));
+        var iata = Clean(First(row, "קוד השדה", "iata_code", "ident"));
+        var icao = Clean(First(row, "icao_code", "ident"));
 
         if (string.IsNullOrWhiteSpace(city) || string.IsNullOrWhiteSpace(country))
         {
@@ -70,6 +70,21 @@ public class AirportLocationCatalog(IConfiguration configuration, IHostEnvironme
         }
 
         return Path.GetFullPath(Path.Combine(environment.ContentRootPath, "..", "Data"));
+    }
+
+    private string ResolveAirportCsvPath()
+    {
+        var configured = configuration["AIRPORT_CSV_PATH"];
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return Path.GetFullPath(configured);
+        }
+
+        var dataDirectory = ResolveDataDirectory();
+        var airportPath = Path.Combine(dataDirectory, "airport.csv");
+        return File.Exists(airportPath)
+            ? airportPath
+            : Path.Combine(dataDirectory, "airports.csv");
     }
 
     private static string CountryName(string countryCode)
@@ -110,6 +125,19 @@ public class AirportLocationCatalog(IConfiguration configuration, IHostEnvironme
     {
         var cleaned = (value ?? string.Empty).Trim();
         return cleaned is @"\N" or "N/A" ? string.Empty : cleaned;
+    }
+
+    private static string First(IReadOnlyDictionary<string, string> row, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (row.TryGetValue(name, out var value) && !string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return string.Empty;
     }
 
     private static string? EmptyToNull(string value) => string.IsNullOrWhiteSpace(value) ? null : value;

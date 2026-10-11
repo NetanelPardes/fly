@@ -1,24 +1,33 @@
 AdminCommon.init("admin-users.html");
 document.querySelector("#refreshButton").addEventListener("click", refresh);
-document.querySelector("#userForm").addEventListener("submit", createUser);
+document.querySelector("#userSearchForm").addEventListener("submit", event => { event.preventDefault(); renderUsers(); });
+
+let users = [];
 refresh();
 
 async function refresh() {
   try {
-    const users = await Airport.api("/api/users");
-    document.querySelector("#usersTable").innerHTML = Airport.table(["ID", "Name", "Email", "Role"], users.map(u => [u.id, Airport.escapeHtml(u.fullName), Airport.escapeHtml(u.email), Airport.badge(u.role)]));
+    users = await Airport.api("/api/users");
+    renderUsers();
   } catch (error) {
     Airport.toast(error.message);
   }
 }
 
-async function createUser(event) {
-  event.preventDefault();
-  try {
-    await Airport.api("/api/users", { method: "POST", body: JSON.stringify({ fullName: document.querySelector("#userFullName").value, email: document.querySelector("#userEmailInput").value, password: document.querySelector("#userPassword").value, role: document.querySelector("#userRole").value }) });
-    event.target.reset();
-    await refresh();
-  } catch (error) {
-    Airport.toast(error.message);
-  }
+function renderUsers() {
+  const nationalId = document.querySelector("#searchNationalId").value.trim();
+  const email = document.querySelector("#searchEmail").value.trim().toLowerCase();
+  const visible = users
+    .filter(user => !nationalId || String(user.nationalId || "").includes(nationalId))
+    .filter(user => !email || String(user.email || "").toLowerCase().includes(email))
+    .sort((a, b) => a.fullName.localeCompare(b.fullName));
+
+  document.querySelector("#usersTable").innerHTML = Airport.table(["ID", "Name", "National ID", "Email", "Phone", "Role"], visible.map(user => [
+    user.id,
+    Airport.escapeHtml(user.fullName),
+    Airport.escapeHtml(user.nationalId || ""),
+    Airport.escapeHtml(user.email),
+    Airport.escapeHtml(user.phoneNumber || ""),
+    Airport.badge(user.role)
+  ]));
 }

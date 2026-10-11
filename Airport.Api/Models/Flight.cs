@@ -15,14 +15,32 @@ public class Flight
     public string Origin { get; set; } = string.Empty;
 
     [Required]
+    [MaxLength(12)]
+    public string OriginAirportCode { get; set; } = string.Empty;
+
+    [Required]
     [MaxLength(80)]
     public string Destination { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(12)]
+    public string DestinationAirportCode { get; set; } = string.Empty;
+
+    [MaxLength(20)]
+    public string BoardingGate { get; set; } = string.Empty;
+
+    [MaxLength(40)]
+    public string AircraftCode { get; set; } = string.Empty;
 
     public DateTime DepartureTime { get; set; }
 
     public DateTime ArrivalTime { get; set; }
 
     public FlightStatus Status { get; set; }
+
+    public int PassengerCount { get; set; }
+
+    public decimal BasePrice { get; set; } = 180m;
 
     public int? GateId { get; set; }
 

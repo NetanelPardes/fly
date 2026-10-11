@@ -7,6 +7,9 @@ namespace Airport.Api.Data;
 public class AirportDbContext(DbContextOptions<AirportDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users => Set<User>();
+    public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<AirportLocation> AirportLocations => Set<AirportLocation>();
+    public DbSet<Aircraft> Aircraft => Set<Aircraft>();
     public DbSet<Gate> Gates => Set<Gate>();
     public DbSet<Flight> Flights => Set<Flight>();
     public DbSet<GeneratedFlightSchedule> GeneratedFlightSchedules => Set<GeneratedFlightSchedule>();
@@ -30,6 +33,27 @@ public class AirportDbContext(DbContextOptions<AirportDbContext> options) : DbCo
             entity.Property(user => user.Role).HasConversion(userRoleConverter).HasMaxLength(30);
             entity.Property(user => user.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
             entity.HasIndex(user => user.Email).IsUnique();
+            entity.HasIndex(user => user.NationalId).IsUnique();
+            entity.HasIndex(user => user.PhoneNumber).IsUnique();
+        });
+
+        modelBuilder.Entity<Employee>(entity =>
+        {
+            entity.Property(employee => employee.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+            entity.HasIndex(employee => employee.Email).IsUnique();
+            entity.HasIndex(employee => employee.NationalId).IsUnique();
+            entity.HasIndex(employee => employee.PhoneNumber).IsUnique();
+        });
+
+        modelBuilder.Entity<AirportLocation>(entity =>
+        {
+            entity.HasIndex(airport => new { airport.City, airport.Country });
+        });
+
+        modelBuilder.Entity<Aircraft>(entity =>
+        {
+            entity.HasIndex(aircraft => aircraft.Manufacturer);
+            entity.HasIndex(aircraft => aircraft.Model);
         });
 
         modelBuilder.Entity<Gate>(entity =>
@@ -45,42 +69,17 @@ public class AirportDbContext(DbContextOptions<AirportDbContext> options) : DbCo
         {
             entity.Property(flight => flight.Status).HasConversion(flightStatusConverter).HasMaxLength(30);
             entity.Property(flight => flight.Source).HasDefaultValue("Local");
+            entity.Property(flight => flight.BasePrice).HasPrecision(10, 2);
             entity.HasIndex(flight => new { flight.Origin, flight.Destination });
+            entity.HasIndex(flight => new { flight.OriginAirportCode, flight.DepartureTime });
+            entity.HasIndex(flight => new { flight.OriginAirportCode, flight.DestinationAirportCode, flight.DepartureTime });
+            entity.HasIndex(flight => new { flight.AircraftCode, flight.DepartureTime });
             entity.HasIndex(flight => flight.Status);
             entity.HasIndex(flight => new { flight.Source, flight.ExternalId }).IsUnique();
             entity.HasOne(flight => flight.Gate)
                 .WithMany(gate => gate.Flights)
                 .HasForeignKey(flight => flight.GateId)
                 .OnDelete(DeleteBehavior.SetNull);
-            entity.HasData(
-                new Flight
-                {
-                    Id = 1,
-                    FlightNumber = "AMS100",
-                    Origin = "Tel Aviv",
-                    Destination = "London",
-                    DepartureTime = new DateTime(2026, 10, 10, 8, 30, 0, DateTimeKind.Utc),
-                    ArrivalTime = new DateTime(2026, 10, 10, 13, 10, 0, DateTimeKind.Utc),
-                    Status = FlightStatus.Scheduled,
-                    GateId = 1,
-                    ExternalId = "demo-ams100-20261010",
-                    Source = "DemoSeed",
-                    LastUpdatedAt = new DateTime(2026, 10, 8, 0, 0, 0, DateTimeKind.Utc)
-                },
-                new Flight
-                {
-                    Id = 2,
-                    FlightNumber = "AMS220",
-                    Origin = "Paris",
-                    Destination = "Tel Aviv",
-                    DepartureTime = new DateTime(2026, 10, 10, 15, 45, 0, DateTimeKind.Utc),
-                    ArrivalTime = new DateTime(2026, 10, 10, 20, 20, 0, DateTimeKind.Utc),
-                    Status = FlightStatus.Boarding,
-                    GateId = 2,
-                    ExternalId = "demo-ams220-20261010",
-                    Source = "DemoSeed",
-                    LastUpdatedAt = new DateTime(2026, 10, 8, 0, 0, 0, DateTimeKind.Utc)
-                });
         });
 
         modelBuilder.Entity<GeneratedFlightSchedule>(entity =>
@@ -99,9 +98,13 @@ public class AirportDbContext(DbContextOptions<AirportDbContext> options) : DbCo
         {
             entity.Property(ticket => ticket.Class).HasConversion(ticketClassConverter).HasMaxLength(30);
             entity.Property(ticket => ticket.Status).HasConversion(ticketStatusConverter).HasMaxLength(30);
+            entity.Property(ticket => ticket.BookingDate).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
             entity.Property(ticket => ticket.ActiveSeatKey)
                 .HasComputedColumnSql("CASE WHEN `Status` = 'Active' THEN CONCAT(`FlightId`, ':', `SeatNumber`) ELSE NULL END", stored: true);
             entity.HasIndex(ticket => ticket.ActiveSeatKey).IsUnique();
+            entity.HasIndex(ticket => ticket.PassengerNationalId);
+            entity.HasIndex(ticket => ticket.PassengerEmail);
+            entity.HasIndex(ticket => ticket.BookingDate);
             entity.HasOne(ticket => ticket.Passenger)
                 .WithMany(user => user.Tickets)
                 .HasForeignKey(ticket => ticket.PassengerId)

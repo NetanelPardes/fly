@@ -35,8 +35,7 @@
         <h2>Manage ticket</h2><input id="manageTicketId" type="hidden">
         <label>Seat<input id="manageSeat" required></label>
         <label>Class<select id="manageClass"><option>Economy</option><option>Business</option><option>First</option></select></label>
-        <label>Baggage tag<input id="manageBagTag" placeholder="BAG-1001"></label>
-        <label>Baggage weight<input id="manageBagWeight" type="number" step="0.1" placeholder="18.5"></label>
+        <label>Baggage<select id="manageBaggage"><option value="0">No baggage</option><option value="10">10 kg</option><option value="20">20 kg</option><option value="35">35 kg</option></select></label>
         <div class="dialog-actions"><button type="button" id="closeTicketDialog" class="ghost-button">Close</button><button class="primary-button">Save changes</button></div>
       </form>
     </dialog>

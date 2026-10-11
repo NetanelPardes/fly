@@ -12,7 +12,7 @@ namespace Airport.Api.Controllers;
 [Authorize]
 public class FlightsController(AirportDbContext dbContext, IConfiguration configuration) : ControllerBase
 {
-    private const string ActiveCsvSource = "CsvGeneratedAllOriginsV3";
+    private const string ActiveCsvSource = "CsvGeneratedAllOriginsV4";
     private static readonly string[] DemoSources = ["DemoSeed", "DemoSchedule", "PythonDemo", "CsvGenerated", "CsvGeneratedAllOrigins", "CsvGeneratedAllOriginsV2"];
 
     [HttpGet("schedule-status")]
@@ -174,7 +174,13 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
             return NotFound();
         }
 
+        var previousStatus = flight.Status;
         Apply(request, flight);
+        if (previousStatus != FlightStatus.Cancelled && flight.Status == FlightStatus.Cancelled)
+        {
+            await ReassignActiveTicketsFromCancelledFlightAsync(flight, cancellationToken);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         await dbContext.Entry(flight).Reference(item => item.Gate).LoadAsync(cancellationToken);
         await dbContext.Entry(flight).Reference(item => item.GeneratedSchedule).LoadAsync(cancellationToken);
@@ -201,10 +207,15 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
     {
         flight.FlightNumber = request.FlightNumber.Trim();
         flight.Origin = request.Origin.Trim();
+        flight.OriginAirportCode = NormalizeCode(request.OriginAirportCode, request.Origin);
         flight.Destination = request.Destination.Trim();
+        flight.DestinationAirportCode = NormalizeCode(request.DestinationAirportCode, request.Destination);
+        flight.BoardingGate = string.IsNullOrWhiteSpace(request.BoardingGate) ? string.Empty : request.BoardingGate.Trim();
+        flight.AircraftCode = string.IsNullOrWhiteSpace(request.AircraftCode) ? string.Empty : request.AircraftCode.Trim();
         flight.DepartureTime = request.DepartureTime;
         flight.ArrivalTime = request.ArrivalTime;
         flight.Status = request.Status;
+        flight.BasePrice = request.BasePrice.GetValueOrDefault(180m);
         flight.GateId = request.GateId;
         flight.ExternalId = string.IsNullOrWhiteSpace(request.ExternalId) ? null : request.ExternalId.Trim();
         flight.Source = request.Source.Trim();
@@ -214,10 +225,15 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
     {
         flight.FlightNumber = request.FlightNumber.Trim();
         flight.Origin = request.Origin.Trim();
+        flight.OriginAirportCode = NormalizeCode(request.OriginAirportCode, request.Origin);
         flight.Destination = request.Destination.Trim();
+        flight.DestinationAirportCode = NormalizeCode(request.DestinationAirportCode, request.Destination);
+        flight.BoardingGate = string.IsNullOrWhiteSpace(request.BoardingGate) ? string.Empty : request.BoardingGate.Trim();
+        flight.AircraftCode = string.IsNullOrWhiteSpace(request.AircraftCode) ? string.Empty : request.AircraftCode.Trim();
         flight.DepartureTime = request.DepartureTime;
         flight.ArrivalTime = request.ArrivalTime;
         flight.Status = request.Status;
+        flight.BasePrice = request.BasePrice.GetValueOrDefault(180m);
         flight.GateId = request.GateId;
         flight.ExternalId = string.IsNullOrWhiteSpace(request.ExternalId) ? null : request.ExternalId.Trim();
         flight.Source = request.Source.Trim();
@@ -227,10 +243,16 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         flight.Id,
         flight.FlightNumber,
         flight.Origin,
+        flight.OriginAirportCode,
         flight.Destination,
+        flight.DestinationAirportCode,
+        flight.BoardingGate,
+        flight.AircraftCode,
         flight.DepartureTime,
         flight.ArrivalTime,
         flight.Status,
+        flight.PassengerCount,
+        flight.BasePrice,
         flight.GateId,
         flight.Gate?.GateNumber,
         flight.ExternalId,
@@ -238,13 +260,100 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         flight.LastUpdatedAt,
         flight.GeneratedSchedule?.AirlineName,
         flight.GeneratedSchedule?.AirlineIata,
+        flight.GeneratedSchedule?.AircraftManufacturer,
         flight.GeneratedSchedule?.AircraftModel,
+        flight.GeneratedSchedule?.SeatCapacity,
+        flight.GeneratedSchedule?.ManufactureYear,
         flight.GeneratedSchedule?.OriginAirportName,
         flight.GeneratedSchedule?.OriginIataCode,
         flight.GeneratedSchedule?.OriginCountry,
         flight.GeneratedSchedule?.DestinationAirportName,
         flight.GeneratedSchedule?.DestinationIataCode,
         flight.GeneratedSchedule?.DestinationCountry);
+
+    private static string NormalizeCode(string? value, string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return value.Trim().ToUpperInvariant();
+        }
+
+        var letters = new string(fallback.Where(char.IsLetterOrDigit).Take(3).ToArray());
+        return letters.ToUpperInvariant();
+    }
+
+    private async Task ReassignActiveTicketsFromCancelledFlightAsync(Flight cancelledFlight, CancellationToken cancellationToken)
+    {
+        var tickets = await dbContext.Tickets
+            .Include(ticket => ticket.Passenger)
+            .Where(ticket => ticket.FlightId == cancelledFlight.Id && ticket.Status == TicketStatus.Active)
+            .OrderBy(ticket => ticket.BookingDate)
+            .ToListAsync(cancellationToken);
+
+        if (tickets.Count == 0)
+        {
+            return;
+        }
+
+        var candidates = await dbContext.Flights
+            .Include(flight => flight.GeneratedSchedule)
+            .Include(flight => flight.Tickets)
+            .Where(flight =>
+                flight.Id != cancelledFlight.Id
+                && flight.Status != FlightStatus.Cancelled
+                && flight.DepartureTime > cancelledFlight.DepartureTime
+                && flight.OriginAirportCode == cancelledFlight.OriginAirportCode
+                && flight.DestinationAirportCode == cancelledFlight.DestinationAirportCode)
+            .OrderBy(flight => flight.DepartureTime)
+            .ToListAsync(cancellationToken);
+
+        foreach (var ticket in tickets)
+        {
+            var reassigned = false;
+            foreach (var candidate in candidates)
+            {
+                var seat = PickAvailableSeat(candidate);
+                if (seat is null)
+                {
+                    continue;
+                }
+
+                ticket.FlightId = candidate.Id;
+                ticket.SeatNumber = seat;
+                candidate.PassengerCount += 1;
+                reassigned = true;
+                break;
+            }
+
+            if (!reassigned)
+            {
+                ticket.Status = TicketStatus.Cancelled;
+            }
+        }
+
+        cancelledFlight.PassengerCount = 0;
+    }
+
+    private static string? PickAvailableSeat(Flight flight)
+    {
+        var capacity = flight.GeneratedSchedule?.SeatCapacity > 0 ? flight.GeneratedSchedule.SeatCapacity : 180;
+        var occupied = flight.Tickets
+            .Where(ticket => ticket.Status == TicketStatus.Active)
+            .Select(ticket => ticket.SeatNumber)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        for (var index = 0; index < capacity; index++)
+        {
+            var seat = $"{index / 6 + 1}{"ABCDEF"[index % 6]}";
+            if (!occupied.Contains(seat))
+            {
+                occupied.Add(seat);
+                return seat;
+            }
+        }
+
+        return null;
+    }
 
     private static DateTime EnsureUtc(DateTime value)
     {

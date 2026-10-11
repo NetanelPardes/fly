@@ -91,12 +91,28 @@ static async Task UpsertFlightAsync(AirportDbContext dbContext, FlightUpdateMess
 
     flight.FlightNumber = update.FlightNumber.Trim();
     flight.Origin = update.Origin.Trim();
+    flight.OriginAirportCode = NormalizeCode(update.OriginAirportCode, update.Origin);
     flight.Destination = update.Destination.Trim();
+    flight.DestinationAirportCode = NormalizeCode(update.DestinationAirportCode, update.Destination);
+    flight.BoardingGate = string.IsNullOrWhiteSpace(update.BoardingGate) ? string.Empty : update.BoardingGate.Trim();
+    flight.AircraftCode = string.IsNullOrWhiteSpace(update.AircraftCode) ? string.Empty : update.AircraftCode.Trim();
     flight.DepartureTime = ToUtc(update.DepartureTime);
     flight.ArrivalTime = ToUtc(update.ArrivalTime);
     flight.Status = update.Status;
+    flight.BasePrice = update.BasePrice.GetValueOrDefault(180m);
 
     await dbContext.SaveChangesAsync(cancellationToken);
+}
+
+static string NormalizeCode(string? value, string fallback)
+{
+    if (!string.IsNullOrWhiteSpace(value))
+    {
+        return value.Trim().ToUpperInvariant();
+    }
+
+    var letters = new string((fallback ?? string.Empty).Where(char.IsLetterOrDigit).Take(3).ToArray());
+    return string.IsNullOrWhiteSpace(letters) ? "UNK" : letters.ToUpperInvariant();
 }
 
 static DateTime ToUtc(DateTime value)

@@ -4,8 +4,6 @@ const AdminCommon = (() => {
     ["admin-dashboard.html", "Overview"],
     ["admin-flights.html", "Flights"],
     ["admin-tickets.html", "Tickets"],
-    ["admin-baggage.html", "Baggage"],
-    ["admin-gates.html", "Gates"],
     ["admin-users.html", "Users"],
   ];
 

@@ -22,6 +22,65 @@ namespace Airport.Api.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Airport.Api.Models.Aircraft", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<int>("ManufactureYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Manufacturer")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<int>("SeatCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("Manufacturer");
+
+                    b.HasIndex("Model");
+
+                    b.ToTable("Aircraft");
+                });
+
+            modelBuilder.Entity("Airport.Api.Models.AirportLocation", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(12)
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("City", "Country");
+
+                    b.ToTable("AirportLocations");
+                });
+
             modelBuilder.Entity("Airport.Api.Models.Baggage", b =>
                 {
                     b.Property<int>("Id")
@@ -60,6 +119,83 @@ namespace Airport.Api.Migrations
                     b.ToTable("Baggage");
                 });
 
+            modelBuilder.Entity("Airport.Api.Models.Employee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("varchar(240)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("NationalId")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("varchar(9)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Rank")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("NationalId")
+                        .IsUnique();
+
+                    b.HasIndex("PhoneNumber")
+                        .IsUnique();
+
+                    b.ToTable("Employees");
+                });
+
             modelBuilder.Entity("Airport.Api.Models.Flight", b =>
                 {
                     b.Property<int>("Id")
@@ -68,8 +204,22 @@ namespace Airport.Api.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AircraftCode")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
                     b.Property<DateTime>("ArrivalTime")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("BasePrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("BoardingGate")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<DateTime>("DepartureTime")
                         .HasColumnType("datetime(6)");
@@ -78,6 +228,11 @@ namespace Airport.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("varchar(80)");
+
+                    b.Property<string>("DestinationAirportCode")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("varchar(12)");
 
                     b.Property<string>("ExternalId")
                         .HasMaxLength(120)
@@ -99,6 +254,14 @@ namespace Airport.Api.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("varchar(80)");
 
+                    b.Property<string>("OriginAirportCode")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<int>("PassengerCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -117,42 +280,18 @@ namespace Airport.Api.Migrations
 
                     b.HasIndex("Status");
 
+                    b.HasIndex("AircraftCode", "DepartureTime");
+
                     b.HasIndex("Origin", "Destination");
+
+                    b.HasIndex("OriginAirportCode", "DepartureTime");
 
                     b.HasIndex("Source", "ExternalId")
                         .IsUnique();
 
-                    b.ToTable("Flights");
+                    b.HasIndex("OriginAirportCode", "DestinationAirportCode", "DepartureTime");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            ArrivalTime = new DateTime(2026, 10, 10, 13, 10, 0, 0, DateTimeKind.Utc),
-                            DepartureTime = new DateTime(2026, 10, 10, 8, 30, 0, 0, DateTimeKind.Utc),
-                            Destination = "London",
-                            ExternalId = "demo-ams100-20261010",
-                            FlightNumber = "AMS100",
-                            GateId = 1,
-                            LastUpdatedAt = new DateTime(2026, 10, 8, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Origin = "Tel Aviv",
-                            Source = "DemoSeed",
-                            Status = "Scheduled"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            ArrivalTime = new DateTime(2026, 10, 10, 20, 20, 0, 0, DateTimeKind.Utc),
-                            DepartureTime = new DateTime(2026, 10, 10, 15, 45, 0, 0, DateTimeKind.Utc),
-                            Destination = "Tel Aviv",
-                            ExternalId = "demo-ams220-20261010",
-                            FlightNumber = "AMS220",
-                            GateId = 2,
-                            LastUpdatedAt = new DateTime(2026, 10, 8, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Origin = "Paris",
-                            Source = "DemoSeed",
-                            Status = "Boarding"
-                        });
+                    b.ToTable("Flights");
                 });
 
             modelBuilder.Entity("Airport.Api.Models.Gate", b =>
@@ -409,6 +548,14 @@ namespace Airport.Api.Migrations
                         .HasColumnType("varchar(80)")
                         .HasComputedColumnSql("CASE WHEN `Status` = 'Active' THEN CONCAT(`FlightId`, ':', `SeatNumber`) ELSE NULL END", true);
 
+                    b.Property<int>("BaggageAllowanceKg")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("BookingDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+
                     b.Property<string>("Class")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -417,8 +564,18 @@ namespace Airport.Api.Migrations
                     b.Property<int>("FlightId")
                         .HasColumnType("int");
 
+                    b.Property<string>("PassengerEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)");
+
                     b.Property<int>("PassengerId")
                         .HasColumnType("int");
+
+                    b.Property<string>("PassengerNationalId")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("varchar(9)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(10,2)");
@@ -442,9 +599,15 @@ namespace Airport.Api.Migrations
                     b.HasIndex("ActiveSeatKey")
                         .IsUnique();
 
+                    b.HasIndex("BookingDate");
+
                     b.HasIndex("FlightId");
 
+                    b.HasIndex("PassengerEmail");
+
                     b.HasIndex("PassengerId");
+
+                    b.HasIndex("PassengerNationalId");
 
                     b.ToTable("Tickets");
                 });
@@ -457,6 +620,11 @@ namespace Airport.Api.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("varchar(240)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
@@ -467,15 +635,40 @@ namespace Airport.Api.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("varchar(254)");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("varchar(120)");
 
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("NationalId")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("varchar(9)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -485,6 +678,12 @@ namespace Airport.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("NationalId")
+                        .IsUnique();
+
+                    b.HasIndex("PhoneNumber")
                         .IsUnique();
 
                     b.ToTable("Users");
