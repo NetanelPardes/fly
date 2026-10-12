@@ -271,9 +271,17 @@ function renderFlights() {
 function locationMatches(flight, side, value) {
   if (!value) return true;
   const queries = clientSearchTerms(searchTermFromValue(value));
+  const codeFields = side === "origin"
+    ? [flight.originAirportCode, flight.originIataCode]
+    : [flight.destinationAirportCode, flight.destinationIataCode];
   const fields = side === "origin"
-    ? [flight.origin, flight.originCountry, flight.originIataCode, flight.originAirportName]
-    : [flight.destination, flight.destinationCountry, flight.destinationIataCode, flight.destinationAirportName];
+    ? [flight.origin, flight.originCountry, flight.originAirportName]
+    : [flight.destination, flight.destinationCountry, flight.destinationAirportName];
+  const codeQuery = queries.find(isAirportCodeQuery);
+  if (codeQuery) {
+    return codeFields.some(field => String(field || "").toLowerCase() === codeQuery);
+  }
+
   return queries.some(query => fields.some(field => String(field || "").toLowerCase().includes(query)));
 }
 
@@ -282,6 +290,10 @@ function clientSearchTerms(value) {
   return [...withoutCode.split(","), withoutCode]
     .map(term => term.trim().toLowerCase())
     .filter(Boolean);
+}
+
+function isAirportCodeQuery(value) {
+  return /^[a-z0-9]{2,4}$/.test(value);
 }
 
 function compareFlights(a, b) {
@@ -421,19 +433,23 @@ function dateOnly(value) {
 
 async function bookTicket(event) {
   event.preventDefault();
+  const payload = {
+    flightId: Number(document.querySelector("#bookingFlightId").value),
+    class: document.querySelector("#bookingClass").value,
+    baggageAllowanceKg: document.querySelector("#addBaggage").checked ? Number(document.querySelector("#bookingBaggage").value) : 0
+  };
+
+  const passengerNationalId = document.querySelector("#bookingPassengerId").value.trim();
+  const passengerEmail = document.querySelector("#bookingPassengerEmail").value.trim();
+  const seatNumber = document.querySelector("#chooseSeat").checked ? document.querySelector("#bookingSeat").value.trim() : "";
+  if (passengerNationalId) payload.passengerNationalId = passengerNationalId;
+  if (passengerEmail) payload.passengerEmail = passengerEmail;
+  if (seatNumber) payload.seatNumber = seatNumber;
+
   try {
     await Airport.api("/api/tickets", {
       method: "POST",
-      body: JSON.stringify({
-        passengerId: null,
-        flightId: Number(document.querySelector("#bookingFlightId").value),
-        passengerNationalId: document.querySelector("#bookingPassengerId").value.trim(),
-        passengerEmail: document.querySelector("#bookingPassengerEmail").value.trim(),
-        seatNumber: document.querySelector("#chooseSeat").checked ? document.querySelector("#bookingSeat").value.trim() : null,
-        baggageAllowanceKg: document.querySelector("#addBaggage").checked ? Number(document.querySelector("#bookingBaggage").value) : 0,
-        class: document.querySelector("#bookingClass").value,
-        price: Number(document.querySelector("#bookingPrice").value)
-      })
+      body: JSON.stringify(payload)
     });
     document.querySelector("#bookingDialog").close();
     Airport.toast("Ticket booked.");

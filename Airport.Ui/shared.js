@@ -45,7 +45,13 @@ const Airport = (() => {
     if (!text) return fallback;
     try {
       const parsed = JSON.parse(text);
-      return parsed.title || parsed.detail || JSON.stringify(parsed.errors || parsed);
+      if (parsed.errors) {
+        const messages = Object.entries(parsed.errors)
+          .flatMap(([field, errors]) => (Array.isArray(errors) ? errors : [errors]).map(error => `${field}: ${error}`));
+        if (messages.length) return messages.join(" ");
+      }
+
+      return parsed.detail || parsed.title || JSON.stringify(parsed);
     } catch {
       return text;
     }

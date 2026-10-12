@@ -110,79 +110,83 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
             return ValidationProblem("Booking closes 5 hours before departure.");
         }
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-        var seatNumber = string.IsNullOrWhiteSpace(request.SeatNumber)
-            ? await PickRandomSeatAsync(flight, cancellationToken)
-            : request.SeatNumber.Trim().ToUpperInvariant();
-        if (string.IsNullOrWhiteSpace(seatNumber))
+        var executionStrategy = dbContext.Database.CreateExecutionStrategy();
+        return await executionStrategy.ExecuteAsync<ActionResult<TicketDto>>(async () =>
         {
-            return ValidationProblem("No available seats on this flight.");
-        }
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        if (!await IsSeatAvailableAsync(flight, seatNumber, cancellationToken))
-        {
-            return ValidationProblem("Seat is not available on this flight.");
-        }
+            var seatNumber = string.IsNullOrWhiteSpace(request.SeatNumber)
+                ? await PickRandomSeatAsync(flight, cancellationToken)
+                : request.SeatNumber.Trim().ToUpperInvariant();
+            if (string.IsNullOrWhiteSpace(seatNumber))
+            {
+                return ValidationProblem("No available seats on this flight.");
+            }
 
-        var baggageAllowanceKg = request.BaggageAllowanceKg.GetValueOrDefault(0);
-        if (baggageAllowanceKg is not (0 or 10 or 20 or 35))
-        {
-            return ValidationProblem("Baggage allowance must be 0, 10, 20, or 35 kg.");
-        }
+            if (!await IsSeatAvailableAsync(flight, seatNumber, cancellationToken))
+            {
+                return ValidationProblem("Seat is not available on this flight.");
+            }
 
-        var ticket = new Ticket
-        {
-            PassengerId = passenger.Id,
-            FlightId = request.FlightId,
-            PassengerNationalId = string.IsNullOrWhiteSpace(request.PassengerNationalId)
-                ? passenger.NationalId
-                : request.PassengerNationalId.Trim(),
-            PassengerEmail = string.IsNullOrWhiteSpace(request.PassengerEmail)
-                ? passenger.Email
-                : request.PassengerEmail.Trim().ToLowerInvariant(),
-            SeatNumber = seatNumber,
-            BaggageAllowanceKg = baggageAllowanceKg,
-            Class = request.Class,
-            Price = request.Price ?? CalculatePrice(flight, request.Class, baggageAllowanceKg, !string.IsNullOrWhiteSpace(request.SeatNumber)),
-            Status = TicketStatus.Active,
-            BookingDate = DateTime.UtcNow
-        };
+            var baggageAllowanceKg = request.BaggageAllowanceKg.GetValueOrDefault(0);
+            if (baggageAllowanceKg is not (0 or 10 or 20 or 35))
+            {
+                return ValidationProblem("Baggage allowance must be 0, 10, 20, or 35 kg.");
+            }
 
-        dbContext.Tickets.Add(ticket);
-        flight.PassengerCount += 1;
-        await dbContext.SaveChangesAsync(cancellationToken);
+            var ticket = new Ticket
+            {
+                PassengerId = passenger.Id,
+                FlightId = request.FlightId,
+                PassengerNationalId = string.IsNullOrWhiteSpace(request.PassengerNationalId)
+                    ? passenger.NationalId
+                    : request.PassengerNationalId.Trim(),
+                PassengerEmail = string.IsNullOrWhiteSpace(request.PassengerEmail)
+                    ? passenger.Email
+                    : request.PassengerEmail.Trim().ToLowerInvariant(),
+                SeatNumber = seatNumber,
+                BaggageAllowanceKg = baggageAllowanceKg,
+                Class = request.Class,
+                Price = request.Price ?? CalculatePrice(flight, request.Class, baggageAllowanceKg, !string.IsNullOrWhiteSpace(request.SeatNumber)),
+                Status = TicketStatus.Active,
+                BookingDate = DateTime.UtcNow
+            };
 
-        var eventId = Guid.NewGuid();
-        var task = new TicketGenerationTask(
-            eventId,
-            ticket.Id,
-            passenger.Id,
-            flight.Id,
-            passenger.FullName,
-            flight.FlightNumber,
-            flight.Origin,
-            flight.Destination,
-            flight.DepartureTime,
-            ticket.SeatNumber,
-            ticket.Class.ToString(),
-            ticket.Price);
+            dbContext.Tickets.Add(ticket);
+            flight.PassengerCount += 1;
+            await dbContext.SaveChangesAsync(cancellationToken);
 
-        dbContext.OutboxMessages.Add(new OutboxMessage
-        {
-            EventId = eventId,
-            Type = nameof(TicketGenerationTask),
-            Payload = JsonSerializer.Serialize(task),
-            CreatedAt = DateTime.UtcNow
+            var eventId = Guid.NewGuid();
+            var task = new TicketGenerationTask(
+                eventId,
+                ticket.Id,
+                passenger.Id,
+                flight.Id,
+                passenger.FullName,
+                flight.FlightNumber,
+                flight.Origin,
+                flight.Destination,
+                flight.DepartureTime,
+                ticket.SeatNumber,
+                ticket.Class.ToString(),
+                ticket.Price);
+
+            dbContext.OutboxMessages.Add(new OutboxMessage
+            {
+                EventId = eventId,
+                Type = nameof(TicketGenerationTask),
+                Payload = JsonSerializer.Serialize(task),
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            await dbContext.Entry(ticket).Reference(item => item.Passenger).LoadAsync(cancellationToken);
+            await dbContext.Entry(ticket).Reference(item => item.Flight).LoadAsync(cancellationToken);
+
+            return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ToDto(ticket));
         });
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        await dbContext.Entry(ticket).Reference(item => item.Passenger).LoadAsync(cancellationToken);
-        await dbContext.Entry(ticket).Reference(item => item.Flight).LoadAsync(cancellationToken);
-
-        return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ToDto(ticket));
     }
 
     [HttpPost("{id:int}/cancel")]

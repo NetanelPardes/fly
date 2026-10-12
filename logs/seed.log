@@ -274,3 +274,134 @@
 2026-10-11T14:17:36.1865826Z Saved generated flight batch. Total saved so far: 1500 / 1918.
 2026-10-11T14:17:36.6758836Z Saved generated flight batch. Total saved so far: 1918 / 1918.
 2026-10-11T14:17:36.6799897Z Flight generation completed. Generated 1918 flights.
+2026-10-12T07:53:43.4041002Z CSV schedule seeding started.
+2026-10-12T07:53:43.5033156Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T07:53:43.5176144Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T07:53:44.0219582Z Generating flights from 3856 origin airports for 30 days. High traffic origins: 356 x 50 flights/day. Other origins: 2 flights/day.
+2026-10-12T07:53:47.7199892Z Saved generated flight batch. Total saved so far: 500.
+2026-10-12T07:53:49.9244763Z Saved generated flight batch. Total saved so far: 1000.
+2026-10-12T07:53:52.0567819Z Saved generated flight batch. Total saved so far: 1500.
+2026-10-12T07:53:53.9248487Z Saved generated flight batch. Total saved so far: 2000.
+2026-10-12T07:53:56.1507724Z Saved generated flight batch. Total saved so far: 2500.
+2026-10-12T07:53:58.2608613Z Saved generated flight batch. Total saved so far: 3000.
+2026-10-12T07:54:00.8993273Z Saved generated flight batch. Total saved so far: 3500.
+2026-10-12T07:54:03.2071790Z Saved generated flight batch. Total saved so far: 4000.
+2026-10-12T07:54:05.3359709Z Saved generated flight batch. Total saved so far: 4500.
+2026-10-12T07:54:08.0357805Z Saved generated flight batch. Total saved so far: 5000.
+2026-10-12T07:54:10.1695394Z Saved generated flight batch. Total saved so far: 5500.
+2026-10-12T07:54:12.2211890Z Saved generated flight batch. Total saved so far: 6000.
+2026-10-12T07:54:14.8757655Z Saved generated flight batch. Total saved so far: 6500.
+2026-10-12T07:54:16.8722368Z Saved generated flight batch. Total saved so far: 7000.
+2026-10-12T07:54:18.9171651Z Saved generated flight batch. Total saved so far: 7500.
+2026-10-12T07:54:20.8979630Z Saved generated flight batch. Total saved so far: 8000.
+2026-10-12T07:54:23.1599215Z Saved generated flight batch. Total saved so far: 8500.
+2026-10-12T07:54:25.7455977Z Saved generated flight batch. Total saved so far: 9000.
+2026-10-12T07:54:28.1564568Z Saved generated flight batch. Total saved so far: 9500.
+2026-10-12T07:54:30.1492414Z Saved generated flight batch. Total saved so far: 10000.
+2026-10-12T07:54:31.9940962Z Saved generated flight batch. Total saved so far: 10500.
+2026-10-12T07:54:34.7029326Z Saved generated flight batch. Total saved so far: 11000.
+2026-10-12T07:54:37.5343329Z Saved generated flight batch. Total saved so far: 11500.
+2026-10-12T07:54:40.2349359Z Saved generated flight batch. Total saved so far: 12000.
+2026-10-12T07:54:42.2743672Z Saved generated flight batch. Total saved so far: 12500.
+2026-10-12T07:54:44.7258099Z Saved generated flight batch. Total saved so far: 13000.
+2026-10-12T07:54:46.9998751Z Saved generated flight batch. Total saved so far: 13500.
+2026-10-12T07:54:49.6933706Z Saved generated flight batch. Total saved so far: 14000.
+2026-10-12T07:54:51.8284558Z Saved generated flight batch. Total saved so far: 14500.
+2026-10-12T07:54:53.7733741Z Saved generated flight batch. Total saved so far: 15000.
+2026-10-12T07:54:55.8758320Z Saved generated flight batch. Total saved so far: 15500.
+2026-10-12T07:54:57.8222521Z Saved generated flight batch. Total saved so far: 16000.
+2026-10-12T07:55:00.3196943Z Saved generated flight batch. Total saved so far: 16500.
+2026-10-12T07:55:02.2932748Z Saved generated flight batch. Total saved so far: 17000.
+2026-10-12T07:55:04.1316045Z Saved generated flight batch. Total saved so far: 17500.
+2026-10-12T07:55:06.8792856Z Saved generated flight batch. Total saved so far: 18000.
+2026-10-12T07:55:08.9789260Z Saved generated flight batch. Total saved so far: 18500.
+2026-10-12T07:55:11.3644865Z Saved generated flight batch. Total saved so far: 19000.
+2026-10-12T07:55:13.5268842Z Saved generated flight batch. Total saved so far: 19500.
+2026-10-12T07:55:15.7196099Z Saved generated flight batch. Total saved so far: 20000.
+2026-10-12T07:55:17.6431980Z Saved generated flight batch. Total saved so far: 20500.
+2026-10-12T07:55:19.5993067Z Saved generated flight batch. Total saved so far: 21000.
+2026-10-12T07:55:21.7810977Z Saved generated flight batch. Total saved so far: 21500.
+2026-10-12T07:55:23.7001285Z Saved generated flight batch. Total saved so far: 22000.
+2026-10-12T07:55:25.9387284Z Saved generated flight batch. Total saved so far: 22500.
+2026-10-12T07:55:28.0082866Z Saved generated flight batch. Total saved so far: 23000.
+2026-10-12T07:55:30.1353037Z Saved generated flight batch. Total saved so far: 23500.
+2026-10-12T07:55:32.8562864Z Saved generated flight batch. Total saved so far: 24000.
+2026-10-12T07:55:36.0484486Z Saved generated flight batch. Total saved so far: 24500.
+2026-10-12T07:55:38.5347418Z Saved generated flight batch. Total saved so far: 25000.
+2026-10-12T07:55:41.0272936Z Saved generated flight batch. Total saved so far: 25500.
+2026-10-12T07:55:43.6324959Z Saved generated flight batch. Total saved so far: 26000.
+2026-10-12T07:55:46.2342981Z Saved generated flight batch. Total saved so far: 26500.
+2026-10-12T07:55:48.3666945Z Saved generated flight batch. Total saved so far: 27000.
+2026-10-12T07:55:50.9857074Z Saved generated flight batch. Total saved so far: 27500.
+2026-10-12T07:55:53.4018935Z Saved generated flight batch. Total saved so far: 28000.
+2026-10-12T07:55:55.9932433Z Saved generated flight batch. Total saved so far: 28500.
+2026-10-12T07:55:58.3275801Z Saved generated flight batch. Total saved so far: 29000.
+2026-10-12T07:56:00.8456116Z Saved generated flight batch. Total saved so far: 29500.
+2026-10-12T07:56:03.3598335Z Saved generated flight batch. Total saved so far: 30000.
+2026-10-12T07:56:06.0927484Z Saved generated flight batch. Total saved so far: 30500.
+2026-10-12T07:56:08.3620138Z Saved generated flight batch. Total saved so far: 31000.
+2026-10-12T07:56:10.9295193Z Saved generated flight batch. Total saved so far: 31500.
+2026-10-12T07:56:12.9427304Z Saved generated flight batch. Total saved so far: 32000.
+2026-10-12T07:56:15.1276994Z Saved generated flight batch. Total saved so far: 32500.
+2026-10-12T07:56:17.9392817Z Saved generated flight batch. Total saved so far: 33000.
+2026-10-12T07:56:20.5782495Z Saved generated flight batch. Total saved so far: 33500.
+2026-10-12T07:56:22.9683270Z Saved generated flight batch. Total saved so far: 34000.
+2026-10-12T07:56:25.3107342Z Saved generated flight batch. Total saved so far: 34500.
+2026-10-12T07:56:27.3411751Z Saved generated flight batch. Total saved so far: 35000.
+2026-10-12T07:56:29.2928785Z Saved generated flight batch. Total saved so far: 35500.
+2026-10-12T07:56:31.1250882Z Saved generated flight batch. Total saved so far: 36000.
+2026-10-12T07:56:32.9060660Z Saved generated flight batch. Total saved so far: 36500.
+2026-10-12T07:56:34.9163369Z Saved generated flight batch. Total saved so far: 37000.
+2026-10-12T07:56:36.8209182Z Saved generated flight batch. Total saved so far: 37500.
+2026-10-12T07:56:38.9200711Z Saved generated flight batch. Total saved so far: 38000.
+2026-10-12T07:56:40.9630818Z Saved generated flight batch. Total saved so far: 38500.
+2026-10-12T07:56:43.1656890Z Saved generated flight batch. Total saved so far: 39000.
+2026-10-12T07:56:45.2763387Z Saved generated flight batch. Total saved so far: 39500.
+2026-10-12T07:56:47.5685304Z Saved generated flight batch. Total saved so far: 40000.
+2026-10-12T07:56:50.1508210Z Saved generated flight batch. Total saved so far: 40500.
+2026-10-12T07:56:52.5420949Z Saved generated flight batch. Total saved so far: 41000.
+2026-10-12T07:56:54.5702011Z Saved generated flight batch. Total saved so far: 41500.
+2026-10-12T07:56:56.6112573Z Saved generated flight batch. Total saved so far: 42000.
+2026-10-12T07:56:58.6817809Z Saved generated flight batch. Total saved so far: 42500.
+2026-10-12T07:57:01.4852279Z Saved generated flight batch. Total saved so far: 43000.
+2026-10-12T07:57:03.6753213Z Saved generated flight batch. Total saved so far: 43500.
+2026-10-12T07:57:06.3418851Z Saved generated flight batch. Total saved so far: 44000.
+2026-10-12T07:57:08.7176337Z Saved generated flight batch. Total saved so far: 44500.
+2026-10-12T07:57:10.7929129Z Saved generated flight batch. Total saved so far: 45000.
+2026-10-12T07:57:13.2149725Z Saved generated flight batch. Total saved so far: 45500.
+2026-10-12T07:57:15.4864959Z Saved generated flight batch. Total saved so far: 46000.
+2026-10-12T07:57:17.5446844Z Saved generated flight batch. Total saved so far: 46500.
+2026-10-12T07:57:19.4621736Z Saved generated flight batch. Total saved so far: 47000.
+2026-10-12T07:57:21.2383283Z Saved generated flight batch. Total saved so far: 47500.
+2026-10-12T07:57:23.3402093Z Saved generated flight batch. Total saved so far: 48000.
+2026-10-12T07:57:25.2518361Z Saved generated flight batch. Total saved so far: 48500.
+2026-10-12T07:57:27.6943727Z Saved generated flight batch. Total saved so far: 49000.
+2026-10-12T07:57:29.9904775Z Saved generated flight batch. Total saved so far: 49500.
+2026-10-12T07:57:31.9801577Z Saved generated flight batch. Total saved so far: 50000.
+2026-10-12T07:57:34.5684903Z Saved generated flight batch. Total saved so far: 50500.
+2026-10-12T07:57:36.9321956Z Saved generated flight batch. Total saved so far: 51000.
+2026-10-12T07:57:39.2355564Z Saved generated flight batch. Total saved so far: 51500.
+2026-10-12T07:57:41.1772485Z Saved generated flight batch. Total saved so far: 52000.
+2026-10-12T07:57:43.4382500Z Saved generated flight batch. Total saved so far: 52500.
+2026-10-12T07:57:46.1755736Z Saved generated flight batch. Total saved so far: 53000.
+2026-10-12T07:57:48.2516157Z Saved generated flight batch. Total saved so far: 53500.
+2026-10-12T07:57:50.1205237Z Saved generated flight batch. Total saved so far: 54000.
+2026-10-12T07:57:52.0195758Z Saved generated flight batch. Total saved so far: 54500.
+2026-10-12T07:57:53.9390325Z Saved generated flight batch. Total saved so far: 55000.
+2026-10-12T07:57:55.9387580Z Saved generated flight batch. Total saved so far: 55500.
+2026-10-12T07:58:12.3757979Z Saved generated flight batch. Total saved so far: 56000.
+2026-10-12T07:59:02.6489658Z Saved generated flight batch. Total saved so far: 56500.
+2026-10-12T07:59:25.2971306Z Saved generated flight batch. Total saved so far: 57000.
+2026-10-12T07:59:50.4870907Z Saved generated flight batch. Total saved so far: 57500.
+2026-10-12T08:00:17.9518443Z Saved generated flight batch. Total saved so far: 58000.
+2026-10-12T08:01:07.6734829Z Saved generated flight batch. Total saved so far: 58500.
+2026-10-12T08:01:34.4073696Z Saved generated flight batch. Total saved so far: 59000.
+2026-10-12T08:02:03.0332647Z Saved generated flight batch. Total saved so far: 59500.
+2026-10-12T08:02:49.4124723Z CSV schedule seeding started.
+2026-10-12T08:02:49.5449165Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T08:02:49.5575489Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T08:02:49.5681158Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T08:32:46.2461852Z CSV schedule seeding started.
+2026-10-12T08:32:46.3262662Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T08:32:46.3356577Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T08:32:46.3460928Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.

@@ -7,7 +7,38 @@ namespace Airport.Api.Services;
 
 public static class CsvFlightScheduleSeeder
 {
-    private const string Source = "CsvGeneratedTrafficProfileV1";
+    public const string Source = "CsvGeneratedTrafficProfileV2";
+    private static readonly string[] PreferredHighTrafficOriginTerms =
+    [
+        "Paris", "Nice", "Lyon", "Marseille", "Bordeaux", "Strasbourg", "Toulouse", "Lille", "Nantes", "Montpellier",
+        "Rome", "Venice", "Florence", "Milan", "Naples", "Verona", "Bologna", "Turin", "Genoa", "Pisa", "Palermo",
+        "Madrid", "Barcelona", "Seville", "Valencia", "Granada", "Cordoba", "Malaga", "Bilbao", "Alicante",
+        "Lisbon", "Porto", "Faro", "Funchal", "London", "Edinburgh", "Manchester", "Liverpool", "Bristol", "Birmingham",
+        "Dublin", "Cork", "Berlin", "Munich", "Hamburg", "Frankfurt", "Cologne", "Dresden", "Leipzig", "Stuttgart",
+        "Amsterdam", "Rotterdam", "Brussels", "Antwerp", "Zurich", "Geneva", "Lucerne", "Bern", "Basel", "Vienna",
+        "Salzburg", "Prague", "Krakow", "Warsaw", "Gdansk", "Budapest", "Bratislava", "Ljubljana", "Dubrovnik",
+        "Split", "Zagreb", "Athens", "Thessaloniki", "Heraklion", "Rhodes", "Corfu", "Copenhagen", "Stockholm",
+        "Gothenburg", "Oslo", "Bergen", "Helsinki", "Reykjavik", "Tallinn", "Riga", "Vilnius", "Bucharest", "Sofia",
+        "Belgrade", "Sarajevo", "Tirana", "Skopje", "Valletta", "Paphos", "Larnaca", "Istanbul", "Antalya", "Izmir",
+        "Ankara", "Bodrum", "Tbilisi", "Batumi", "Yerevan", "Baku", "Samarkand", "Tashkent", "Almaty", "Tel Aviv",
+        "Eilat", "Amman", "Aqaba", "Dubai", "Abu Dhabi", "Doha", "Riyadh", "Jeddah", "Muscat", "Cairo", "Alexandria",
+        "Luxor", "Aswan", "Sharm", "Hurghada", "Marrakesh", "Marrakech", "Fes", "Casablanca", "Rabat", "Tangier",
+        "Tunis", "Algiers", "Cape Town", "Johannesburg", "Durban", "Pretoria", "Nairobi", "Mombasa", "Dar es Salaam",
+        "Arusha", "Zanzibar", "Kigali", "Kampala", "Addis Ababa", "Dakar", "Accra", "Port Louis", "Victoria",
+        "Delhi", "Mumbai", "Agra", "Jaipur", "Udaipur", "Jodhpur", "Varanasi", "Kolkata", "Chennai", "Bengaluru",
+        "Bangalore", "Hyderabad", "Kochi", "Amritsar", "Kathmandu", "Pokhara", "Colombo", "Male", "Lahore",
+        "Islamabad", "Bangkok", "Chiang Mai", "Pattaya", "Phuket", "Krabi", "Hanoi", "Ho Chi Minh", "Da Nang",
+        "Hoi An", "Nha Trang", "Siem Reap", "Phnom Penh", "Luang Prabang", "Vientiane", "Kuala Lumpur", "George Town",
+        "Malacca", "Kota Kinabalu", "Singapore", "Jakarta", "Yogyakarta", "Denpasar", "Bandung", "Manila", "Cebu",
+        "Tokyo", "Kyoto", "Osaka", "Nara", "Hiroshima", "Sapporo", "Fukuoka", "Yokohama", "Nagasaki", "Seoul",
+        "Busan", "Jeju", "Beijing", "Shanghai", "Xi'an", "Chengdu", "Guangzhou", "Shenzhen", "Hangzhou", "Xiamen",
+        "Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Auckland", "Wellington", "Christchurch", "New York",
+        "Los Angeles", "Las Vegas", "Orlando", "Miami", "San Francisco", "Washington", "Chicago", "Boston",
+        "New Orleans", "San Diego", "Seattle", "Honolulu", "Nashville", "Savannah", "Toronto", "Vancouver",
+        "Montreal", "Quebec", "Mexico City", "Cancun", "Puerto Vallarta", "Oaxaca", "Rio de Janeiro", "Salvador",
+        "Buenos Aires", "Lima", "Cusco", "Cartagena", "Medellin", "Santiago", "Quito", "Montevideo", "Havana",
+        "Santo Domingo"
+    ];
 
     public static async Task SeedAsync(
         AirportDbContext dbContext,
@@ -55,7 +86,7 @@ public static class CsvFlightScheduleSeeder
         var lowTrafficFlightsPerDay = Math.Clamp(configuration.GetValue("AIRPORT_CSV_LOW_TRAFFIC_FLIGHTS_PER_DAY", 2), 1, 20);
         var destinationsPerOrigin = Math.Clamp(configuration.GetValue("AIRPORT_CSV_DESTINATIONS_PER_ORIGIN", 25), 1, 50);
 
-        var highTrafficOrigins = airports.OrderBy(_ => random.Next()).Take(highTrafficOriginCount).ToHashSet();
+        var highTrafficOrigins = PickHighTrafficOrigins(airports, highTrafficOriginCount, random).ToHashSet();
         var origins = airports.OrderBy(_ => random.Next()).ToList();
         LogSeed(configuration, $"Generating flights from {origins.Count} origin airports for {days} days. High traffic origins: {highTrafficOrigins.Count} x {highTrafficFlightsPerDay} flights/day. Other origins: {lowTrafficFlightsPerDay} flights/day.");
         var generatedAt = DateTime.UtcNow;
@@ -210,7 +241,10 @@ public static class CsvFlightScheduleSeeder
             return;
         }
 
-        var aircraft = LoadAircraft(Path.Combine(ResolveDataDirectory(configuration, environment), "aircraft.csv"));
+        var maxAircraft = Math.Clamp(configuration.GetValue("AIRPORT_CSV_MAX_AIRCRAFT_IMPORT", 50000), 100, 50000);
+        var aircraft = LoadAircraft(Path.Combine(ResolveDataDirectory(configuration, environment), "aircraft.csv"))
+            .Take(maxAircraft)
+            .ToList();
         var existingCodes = await dbContext.Aircraft.Select(item => item.Code).ToListAsync(cancellationToken);
         var existingCodeSet = existingCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
         var batchSize = Math.Clamp(configuration.GetValue("AIRPORT_CSV_REFERENCE_BATCH_SIZE", 1000), 100, 5000);
@@ -372,6 +406,50 @@ public static class CsvFlightScheduleSeeder
             .Take(destinationsPerOrigin)
             .ToList();
     }
+
+    private static List<AirportRecord> PickHighTrafficOrigins(List<AirportRecord> airports, int maxCount, Random random)
+    {
+        var matches = new List<AirportRecord>();
+        var usedCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var term in PreferredHighTrafficOriginTerms)
+        {
+            var termMatches = airports
+                .Where(airport => !usedCodes.Contains(airport.Iata) && MatchesHighTrafficTerm(airport, term))
+                .OrderBy(airport => airport.Iata.Length == term.Length && airport.Iata.Equals(term, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(airport => airport.DisplayCity.Length)
+                .ThenBy(airport => airport.Name.Length)
+                .Take(maxCount - matches.Count)
+                .ToList();
+
+            foreach (var airport in termMatches)
+            {
+                matches.Add(airport);
+                usedCodes.Add(airport.Iata);
+            }
+
+            if (matches.Count >= maxCount)
+            {
+                break;
+            }
+        }
+
+        return matches
+            .OrderBy(_ => random.Next())
+            .ToList();
+    }
+
+    private static bool MatchesHighTrafficTerm(AirportRecord airport, string term)
+    {
+        return ContainsTerm(airport.DisplayCity, term)
+            || ContainsTerm(airport.Name, term)
+            || ContainsTerm(airport.Country, term)
+            || airport.Iata.Equals(term, StringComparison.OrdinalIgnoreCase)
+            || (!string.IsNullOrWhiteSpace(airport.Icao) && airport.Icao.Equals(term, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ContainsTerm(string? value, string term) =>
+        !string.IsNullOrWhiteSpace(value) && value.Contains(term, StringComparison.OrdinalIgnoreCase);
 
     private static DateTime BuildDeparture(DateTime date, int flightIndex, int dailyFlights, Random random)
     {
