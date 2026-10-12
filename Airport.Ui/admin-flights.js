@@ -90,7 +90,8 @@ async function handleActions(event) {
   if (!flight) return;
   const status = event.target.dataset.delayFlight ? "Delayed" : "Cancelled";
   try {
-    await Airport.api(`/api/flights/${flight.id}`, {
+    Airport.setPlaneLoading(true, status === "Delayed" ? "Updating flight delay" : "Cancelling flight");
+    await Promise.all([Airport.api(`/api/flights/${flight.id}`, {
       method: "PUT",
       body: JSON.stringify({
         flightNumber: flight.flightNumber,
@@ -108,9 +109,11 @@ async function handleActions(event) {
         externalId: flight.externalId,
         source: flight.source || "Admin"
       })
-    });
+    }), Airport.delay(1200)]);
     await refresh();
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
   }
 }

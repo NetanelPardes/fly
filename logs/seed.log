@@ -501,3 +501,11 @@
 2026-10-12T14:18:26.9506205Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
 2026-10-12T14:18:26.9655990Z Aircraft import skipped. Existing aircraft rows found.
 2026-10-12T14:18:26.9822980Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T14:22:38.1573645Z CSV schedule seeding started.
+2026-10-12T14:22:38.3453118Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T14:22:38.3635271Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T14:22:38.3785992Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T14:43:38.1438604Z CSV schedule seeding started.
+2026-10-12T14:43:38.2625313Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T14:43:38.2843735Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T14:43:38.3148210Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.

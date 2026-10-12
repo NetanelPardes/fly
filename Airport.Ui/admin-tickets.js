@@ -67,11 +67,17 @@ function openTicket(id) {
 async function updateTicket(event) {
   event.preventDefault();
   try {
-    await Airport.api(`/api/tickets/${document.querySelector("#manageTicketId").value}/options`, { method: "PUT", body: JSON.stringify({ seatNumber: document.querySelector("#manageSeat").value, class: document.querySelector("#manageClass").value, baggageAllowanceKg: Number(document.querySelector("#manageBaggage").value) }) });
+    Airport.setPlaneLoading(true, "Updating ticket details");
+    await Promise.all([
+      Airport.api(`/api/tickets/${document.querySelector("#manageTicketId").value}/options`, { method: "PUT", body: JSON.stringify({ seatNumber: document.querySelector("#manageSeat").value, class: document.querySelector("#manageClass").value, baggageAllowanceKg: Number(document.querySelector("#manageBaggage").value) }) }),
+      Airport.delay(1200)
+    ]);
     document.querySelector("#ticketDialog").close();
     await refresh();
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
   }
 }
 
@@ -79,10 +85,16 @@ async function handleActions(event) {
   try {
     if (event.target.dataset.manageTicket) openTicket(event.target.dataset.manageTicket);
     if (event.target.dataset.cancelTicket) {
-      await Airport.api(`/api/tickets/${event.target.dataset.cancelTicket}/cancel`, { method: "POST" });
+      Airport.setPlaneLoading(true, "Cancelling ticket");
+      await Promise.all([
+        Airport.api(`/api/tickets/${event.target.dataset.cancelTicket}/cancel`, { method: "POST" }),
+        Airport.delay(1200)
+      ]);
       await refresh();
     }
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
   }
 }

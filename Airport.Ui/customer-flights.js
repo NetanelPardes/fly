@@ -190,16 +190,16 @@ async function saveProfile(event) {
   event.preventDefault();
   const payload = profilePayload();
   try {
-    Airport.setPlaneLoading(true, "Saving details");
-    const updated = await Airport.api("/api/users/me", {
+    document.querySelector("#profileDialog").close();
+    Airport.setPlaneLoading(true, "Your details are being updated");
+    const [updated] = await Promise.all([Airport.api("/api/users/me", {
       method: "PUT",
       body: JSON.stringify(payload)
-    });
+    }), Airport.delay(1200)]);
     user = { ...user, ...updated };
     localStorage.setItem("airport_ui_user", JSON.stringify(user));
     document.querySelector("#userName").textContent = user.fullName;
     document.querySelector("#userEmail").textContent = user.email;
-    document.querySelector("#profileDialog").close();
     Airport.toast("Your details were updated.");
   } catch (error) {
     Airport.toast(error.message);
@@ -630,6 +630,8 @@ async function bookTicket(event) {
 
 function openPurchaseOverlay() {
   const overlay = document.querySelector("#purchaseOverlay");
+  const progressText = document.querySelector("#purchaseAnimation strong");
+  if (progressText) progressText.textContent = "We are booking your flight";
   document.querySelector("#purchaseAnimation").hidden = false;
   document.querySelector("#purchaseSuccess").hidden = true;
   overlay.hidden = false;

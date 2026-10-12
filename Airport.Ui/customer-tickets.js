@@ -66,8 +66,9 @@ function fillProfile(profile) {
 async function saveProfile(event) {
   event.preventDefault();
   try {
-    Airport.setPlaneLoading(true, "Saving details");
-    const updated = await Airport.api("/api/users/me", {
+    document.querySelector("#profileDialog").close();
+    Airport.setPlaneLoading(true, "Your details are being updated");
+    const [updated] = await Promise.all([Airport.api("/api/users/me", {
       method: "PUT",
       body: JSON.stringify({
         nationalId: document.querySelector("#profileNationalId").value.trim(),
@@ -79,12 +80,11 @@ async function saveProfile(event) {
         gender: document.querySelector("#profileGender").value.trim(),
         address: document.querySelector("#profileAddress").value.trim()
       })
-    });
+    }), Airport.delay(1200)]);
     user = { ...user, ...updated };
     localStorage.setItem("airport_ui_user", JSON.stringify(user));
     document.querySelector("#userName").textContent = user.fullName;
     document.querySelector("#userEmail").textContent = user.email;
-    document.querySelector("#profileDialog").close();
     Airport.toast("Your details were updated.");
   } catch (error) {
     Airport.toast(error.message);
@@ -153,15 +153,15 @@ async function updateTicket(event) {
   event.preventDefault();
   const ticketId = document.querySelector("#manageTicketId").value;
   try {
-    Airport.setPlaneLoading(true, "Saving ticket");
-    await Airport.api(`/api/tickets/${ticketId}/options`, {
+    Airport.setPlaneLoading(true, "Updating ticket details");
+    await Promise.all([Airport.api(`/api/tickets/${ticketId}/options`, {
       method: "PUT",
       body: JSON.stringify({
         seatNumber: document.querySelector("#manageSeat").value.trim(),
         class: document.querySelector("#manageClass").value,
         baggageAllowanceKg: Number(document.querySelector("#manageBaggage").value)
       })
-    });
+    }), Airport.delay(1200)]);
     document.querySelector("#ticketDialog").close();
     await refresh();
     Airport.toast("Ticket details updated.");
@@ -177,7 +177,10 @@ async function handleActions(event) {
     if (event.target.dataset.manageTicket && !event.target.disabled) openTicket(event.target.dataset.manageTicket);
     if (event.target.dataset.cancelTicket) {
       Airport.setPlaneLoading(true, "Cancelling ticket");
-      await Airport.api(`/api/tickets/${event.target.dataset.cancelTicket}/cancel`, { method: "POST" });
+      await Promise.all([
+        Airport.api(`/api/tickets/${event.target.dataset.cancelTicket}/cancel`, { method: "POST" }),
+        Airport.delay(1200)
+      ]);
       await refresh();
     }
     if (event.target.dataset.downloadTicket) await Airport.downloadTicket(event.target.dataset.downloadTicket);

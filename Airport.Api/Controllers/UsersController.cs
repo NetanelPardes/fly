@@ -100,37 +100,54 @@ public class UsersController(
             return NotFound();
         }
 
+        var nationalId = request.NationalId.Trim();
+        var firstName = request.FirstName.Trim();
+        var lastName = request.LastName.Trim();
+        var fullName = request.FullName.Trim();
         var email = request.Email.Trim().ToLowerInvariant();
+        var gender = request.Gender.Trim();
+        var address = request.Address.Trim();
+        var phoneNumber = request.PhoneNumber.Trim();
+
         if (await dbContext.Users.AnyAsync(item => item.Id != id && item.Email == email, cancellationToken))
         {
             return Conflict("Email already exists.");
         }
 
-        if (await dbContext.Users.AnyAsync(item => item.Id != id && item.NationalId == request.NationalId.Trim(), cancellationToken))
+        if (await dbContext.Users.AnyAsync(item => item.Id != id && item.NationalId == nationalId, cancellationToken))
         {
             return Conflict("National ID already exists.");
         }
 
-        if (await dbContext.Users.AnyAsync(item => item.Id != id && item.PhoneNumber == request.PhoneNumber.Trim(), cancellationToken))
+        if (await dbContext.Users.AnyAsync(item => item.Id != id && item.PhoneNumber == phoneNumber, cancellationToken))
         {
             return Conflict("Phone number already exists.");
         }
 
-        user.NationalId = request.NationalId.Trim();
-        user.FirstName = request.FirstName.Trim();
-        user.LastName = request.LastName.Trim();
-        user.FullName = request.FullName.Trim();
+        var changed = user.NationalId != nationalId
+            || user.FirstName != firstName
+            || user.LastName != lastName
+            || user.FullName != fullName
+            || user.Email != email
+            || user.Role != request.Role
+            || user.Gender != gender
+            || user.Address != address
+            || user.PhoneNumber != phoneNumber;
+
+        user.NationalId = nationalId;
+        user.FirstName = firstName;
+        user.LastName = lastName;
+        user.FullName = fullName;
         user.Email = email;
         user.Role = request.Role;
-        user.Gender = request.Gender.Trim();
-        user.Address = request.Address.Trim();
-        user.PhoneNumber = request.PhoneNumber.Trim();
+        user.Gender = gender;
+        user.Address = address;
+        user.PhoneNumber = phoneNumber;
         await dbContext.SaveChangesAsync(cancellationToken);
-        await TrySendEmailAsync(
-            user.Email,
-            "עדכון פרטים",
-            BuildProfileUpdatedEmail(user.FullName),
-            cancellationToken);
+        if (changed)
+        {
+            await TrySendEmailAsync(ProfileUpdatedEmailTemplate.Create(user), cancellationToken);
+        }
 
         return Ok(ToDto(user));
     }
@@ -170,8 +187,13 @@ public class UsersController(
         }
 
         var nationalId = request.NationalId.Trim();
+        var firstName = request.FirstName.Trim();
+        var lastName = request.LastName.Trim();
+        var fullName = request.FullName.Trim();
         var email = request.Email.Trim().ToLowerInvariant();
         var phoneNumber = request.PhoneNumber.Trim();
+        var gender = request.Gender.Trim();
+        var address = request.Address.Trim();
 
         if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.Email == email, cancellationToken))
         {
@@ -188,21 +210,29 @@ public class UsersController(
             return Conflict("Phone number already exists.");
         }
 
+        var changed = user.NationalId != nationalId
+            || user.FirstName != firstName
+            || user.LastName != lastName
+            || user.FullName != fullName
+            || user.Email != email
+            || user.Gender != gender
+            || user.Address != address
+            || user.PhoneNumber != phoneNumber;
+
         user.NationalId = nationalId;
-        user.FirstName = request.FirstName.Trim();
-        user.LastName = request.LastName.Trim();
-        user.FullName = request.FullName.Trim();
+        user.FirstName = firstName;
+        user.LastName = lastName;
+        user.FullName = fullName;
         user.Email = email;
-        user.Gender = request.Gender.Trim();
-        user.Address = request.Address.Trim();
+        user.Gender = gender;
+        user.Address = address;
         user.PhoneNumber = phoneNumber;
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await TrySendEmailAsync(
-            user.Email,
-            "עדכון פרטים",
-            BuildProfileUpdatedEmail(user.FullName),
-            cancellationToken);
+        if (changed)
+        {
+            await TrySendEmailAsync(ProfileUpdatedEmailTemplate.Create(user), cancellationToken);
+        }
 
         return Ok(ToDto(user));
     }
@@ -255,21 +285,18 @@ public class UsersController(
 
     private async Task TrySendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken)
     {
+        await TrySendEmailAsync(new EmailMessage(to, subject, body), cancellationToken);
+    }
+
+    private async Task TrySendEmailAsync(EmailMessage message, CancellationToken cancellationToken)
+    {
         try
         {
-            await emailSender.SendAsync(to, subject, body, cancellationToken);
+            await emailSender.SendAsync(message, cancellationToken);
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "User email could not be sent to {Recipient}.", to);
+            logger.LogWarning(exception, "User email could not be sent to {Recipient}.", message.To);
         }
     }
-
-    private static string BuildProfileUpdatedEmail(string fullName) =>
-        $"""
-        שלום {fullName}
-        הפרטים שלך עודכנו בהצלחה במערכת.
-
-        צוות דאטהפליי
-        """;
 }

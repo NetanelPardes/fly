@@ -17,6 +17,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   min-width: 320px;
 }
@@ -1630,7 +1634,7 @@ dialog::backdrop {
 
 .purchase-card {
   width: min(360px, calc(100vw - 48px));
-  min-height: 260px;
+  min-height: 320px;
   display: grid;
   place-items: center;
   padding: 28px;
@@ -1646,6 +1650,19 @@ dialog::backdrop {
   height: 180px;
   border: 2px dashed rgba(18, 97, 166, 0.45);
   border-radius: 50%;
+}
+
+.orbit-stage strong {
+  position: absolute;
+  top: 205px;
+  left: 50%;
+  width: min(280px, calc(100vw - 96px));
+  transform: translateX(-50%);
+  color: var(--navy);
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 900;
+  text-align: center;
 }
 
 .orbit-plane {
