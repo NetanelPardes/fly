@@ -161,3 +161,4 @@ C:\Users\sendi\Desktop\fly\Airport.FlightUpdates.Consumer\obj\Debug\net8.0\Airpo
 C:\Users\sendi\Desktop\fly\Airport.FlightUpdates.Consumer\obj\Debug\net8.0\Airport.FlightUpdates.Consumer.genruntimeconfig.cache
 C:\Users\sendi\Desktop\fly\Airport.FlightUpdates.Consumer\obj\Debug\net8.0\ref\Airport.FlightUpdates.Consumer.dll
 C:\Users\sendi\Desktop\fly\Airport.FlightUpdates.Consumer\bin\Debug\net8.0\Data\airport.csv
+C:\Users\sendi\Desktop\fly\Airport.FlightUpdates.Consumer\bin\Debug\net8.0\Assets\kodfly-logo.png

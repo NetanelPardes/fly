@@ -56,17 +56,22 @@ async function showApp() {
 }
 
 async function refresh() {
-  const route = document.querySelector("#origin").value.trim();
-  const params = Airport.flightQuery();
-  if (route) params.set("origin", route);
-  [flights, gates, tickets, baggage] = await Promise.all([
-    Airport.api(`/api/flights?${params}`),
-    Airport.api("/api/gates"),
-    Airport.api("/api/tickets"),
-    Airport.api("/api/baggage"),
-  ]);
-  users = user.role === "Admin" ? await Airport.api("/api/users").catch(() => []) : [];
-  render();
+  Airport.setPlaneLoading(true, "Searching");
+  try {
+    const route = document.querySelector("#origin").value.trim();
+    const params = Airport.flightQuery();
+    if (route) params.set("origin", route);
+    [flights, gates, tickets, baggage] = await Promise.all([
+      Airport.api(`/api/flights?${params}`),
+      Airport.api("/api/gates"),
+      Airport.api("/api/tickets"),
+      Airport.api("/api/baggage"),
+    ]);
+    users = user.role === "Admin" ? await Airport.api("/api/users").catch(() => []) : [];
+    render();
+  } finally {
+    Airport.setPlaneLoading(false);
+  }
 }
 
 function render() {

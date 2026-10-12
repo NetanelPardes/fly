@@ -13,7 +13,12 @@ namespace Airport.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class TicketsController(AirportDbContext dbContext, ICurrentUserService currentUser) : ControllerBase
+public class TicketsController(
+    AirportDbContext dbContext,
+    ICurrentUserService currentUser,
+    IEmailSender emailSender,
+    IWebHostEnvironment environment,
+    ILogger<TicketsController> logger) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TicketDto>>> GetTickets(CancellationToken cancellationToken)
@@ -188,7 +193,10 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
             await dbContext.Entry(ticket).Reference(item => item.Flight).LoadAsync(cancellationToken);
             await dbContext.Entry(ticket.Flight).Reference(item => item.GeneratedSchedule).LoadAsync(cancellationToken);
 
-            return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ToDto(ticket));
+            var dto = ToDto(ticket);
+            await TrySendEmailAsync(BookingConfirmationEmailTemplate.Create(dto, environment), cancellationToken);
+
+            return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, dto);
         });
     }
 
@@ -218,7 +226,14 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
 
         ticket.Status = TicketStatus.Cancelled;
         await dbContext.SaveChangesAsync(cancellationToken);
-        return Ok(ToDto(ticket));
+        var dto = ToDto(ticket);
+        await TrySendEmailAsync(
+            dto.PassengerEmail,
+            "KodFly ticket update",
+            BuildChangeEmail(dto, "Your ticket has been cancelled."),
+            cancellationToken);
+
+        return Ok(dto);
     }
 
     [HttpPut("{id:int}/options")]
@@ -268,7 +283,14 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
         ticket.Price = CalculatePrice(ticket.Flight, request.Class, ticket.BaggageAllowanceKg, chooseSeat: true);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(ticket));
+        var dto = ToDto(ticket);
+        await TrySendEmailAsync(
+            dto.PassengerEmail,
+            "KodFly ticket update",
+            BuildChangeEmail(dto, "Your ticket details have been updated."),
+            cancellationToken);
+
+        return Ok(dto);
     }
 
     [HttpGet("{id:int}/file")]
@@ -305,6 +327,7 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
         ticket.PassengerEmail,
         ticket.FlightId,
         ticket.Flight.FlightNumber,
+        ticket.Flight.GeneratedSchedule?.AirlineName,
         ticket.SeatNumber,
         ticket.BaggageAllowanceKg,
         ticket.Class,
@@ -392,4 +415,38 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
 
         return Math.Round(classPrice + baggagePrice + (chooseSeat ? 18m : 0m), 2);
     }
+
+    private async Task TrySendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken)
+    {
+        await TrySendEmailAsync(new EmailMessage(to, subject, body), cancellationToken);
+    }
+
+    private async Task TrySendEmailAsync(EmailMessage message, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await emailSender.SendAsync(message, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Ticket email could not be sent to {Recipient}.", message.To);
+        }
+    }
+
+    private static string BuildChangeEmail(TicketDto ticket, string message) =>
+        $"""
+        Hello {ticket.PassengerName},
+        {message}
+
+        Ticket details:
+        Booking reference: KOD-{ticket.Id:000000}
+        Flight: {ticket.FlightNumber}
+        Route: {ticket.Origin}, {ticket.OriginCountry} -> {ticket.Destination}, {ticket.DestinationCountry}
+        Departure: {ticket.DepartureTime:dd/MM/yyyy HH:mm}
+        Seat: {ticket.SeatNumber}
+        Class: {ticket.Class}
+        Status: {ticket.Status}
+
+        KodFly team
+        """;
 }

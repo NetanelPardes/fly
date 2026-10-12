@@ -15,14 +15,15 @@ async function init() {
 
 async function loadAirportOptions() {
   const catalog = await Airport.api("/api/locations/airports").catch(() => ({ locations: [] }));
-  airportOptions = (catalog.locations || []).map(location => ({
+  airportOptions = uniqueCityLocations(catalog.locations || []).map(location => ({
     value: locationLabel(location),
-    search: location.city || location.airportName || location.iataCode || "",
+    search: location.city || location.country || location.iataCode || "",
   })).sort((a, b) => a.value.localeCompare(b.value));
   document.querySelector("#originOptions").innerHTML = airportOptions.map(option => `<option value="${Airport.escapeHtml(option.value)}"></option>`).join("");
 }
 
 async function refresh() {
+  Airport.setPlaneLoading(true, "Searching flights");
   try {
     const query = adminFlightQuery();
     flights = await Airport.api(`/api/flights?${query}`);
@@ -42,6 +43,8 @@ async function refresh() {
       ]));
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
   }
 }
 
@@ -63,7 +66,17 @@ function adminFlightQuery() {
 }
 
 function locationLabel(location) {
-  return `${location.country || ""}, ${location.city || ""} (${location.airportName || location.iataCode || ""})`;
+  return [location.country, location.city].filter(Boolean).join(", ");
+}
+
+function uniqueCityLocations(locations) {
+  const byCity = new Map();
+  locations.forEach(location => {
+    if (!location.country && !location.city) return;
+    const key = `${location.country || ""}|${location.city || ""}`.toLowerCase();
+    if (!byCity.has(key)) byCity.set(key, location);
+  });
+  return [...byCity.values()];
 }
 
 function timeOnly(value) {

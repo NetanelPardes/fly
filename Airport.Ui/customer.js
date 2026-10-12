@@ -19,7 +19,7 @@ function boot() {
   document.querySelector("#refreshButton").addEventListener("click", () => refresh().catch(e => Airport.toast(e.message)));
   document.querySelector("#flightFilters").addEventListener("submit", event => {
     event.preventDefault();
-    renderFlights();
+    searchLocalFlights();
   });
   document.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => {
@@ -75,14 +75,29 @@ async function showApp() {
 }
 
 async function refresh() {
-  const params = Airport.flightQuery();
-  [flights, tickets, baggage] = await Promise.all([
-    Airport.api(`/api/flights?${params}`),
-    Airport.api("/api/tickets"),
-    Airport.api("/api/baggage"),
-  ]);
-  renderAutocomplete();
-  render();
+  Airport.setPlaneLoading(true, "Loading flights");
+  try {
+    const params = Airport.flightQuery();
+    [flights, tickets, baggage] = await Promise.all([
+      Airport.api(`/api/flights?${params}`),
+      Airport.api("/api/tickets"),
+      Airport.api("/api/baggage"),
+    ]);
+    renderAutocomplete();
+    render();
+  } finally {
+    Airport.setPlaneLoading(false);
+  }
+}
+
+async function searchLocalFlights() {
+  Airport.setPlaneLoading(true, "Searching flights");
+  try {
+    await Airport.delay(450);
+    renderFlights();
+  } finally {
+    Airport.setPlaneLoading(false);
+  }
 }
 
 function render() {
@@ -186,6 +201,8 @@ function basePriceForFlight(flight) {
 async function bookTicket(event) {
   event.preventDefault();
   try {
+    Airport.setPlaneLoading(true, "Processing purchase");
+    await Airport.delay(2200);
     const created = await Airport.api("/api/tickets", {
       method: "POST",
       body: JSON.stringify({
@@ -207,6 +224,8 @@ async function bookTicket(event) {
     Airport.toast("Ticket booked.");
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
   }
 }
 

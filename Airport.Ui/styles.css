@@ -73,6 +73,21 @@ a {
   font-weight: 900;
 }
 
+.logo-link {
+  display: inline-flex;
+  align-items: center;
+  width: min(190px, 42vw);
+  min-height: 46px;
+}
+
+.logo-link img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 56px;
+  object-fit: contain;
+}
+
 .page-nav {
   justify-self: center;
   display: flex;
@@ -144,6 +159,16 @@ a {
 
 .identity-card.light small {
   color: var(--muted);
+}
+
+.profile-button {
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-button:hover {
+  border-color: var(--blue);
+  box-shadow: 0 12px 32px rgba(18, 97, 166, 0.16);
 }
 
 #customerApp > .metrics,
@@ -721,21 +746,39 @@ tbody tr:hover {
 
 .board-flight-row {
   display: grid;
-  grid-template-columns: 100px minmax(0, 1fr) 140px 90px;
+  grid-template-columns: 110px minmax(260px, 1fr) 130px 90px 120px;
   gap: 12px;
   align-items: center;
   padding: 14px;
   border-radius: 14px;
-  color: #dce9ef;
-  background: #142c39;
+  color: var(--ink);
+  background: white;
+  border: 1px solid var(--line);
 }
 
 .board-flight-row strong {
-  color: white;
+  display: block;
+  color: var(--navy);
+  font-size: 16px;
 }
 
 .board-flight-row small {
-  color: #95aab6;
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.board-route {
+  min-width: 0;
+}
+
+.board-route strong,
+.board-route small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gate-grid {
@@ -1503,6 +1546,9 @@ dialog::backdrop {
 }
 
 .compact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   margin-bottom: 0;
 }
 
@@ -1567,6 +1613,79 @@ dialog::backdrop {
   font-weight: 900;
 }
 
+.purchase-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 22;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 31, 47, 0.34);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+}
+
+.purchase-overlay[hidden] {
+  display: none;
+}
+
+.purchase-card {
+  width: min(360px, calc(100vw - 48px));
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: var(--shadow);
+}
+
+.orbit-stage {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border: 2px dashed rgba(18, 97, 166, 0.45);
+  border-radius: 50%;
+}
+
+.orbit-plane {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  color: var(--blue);
+  font-size: 34px;
+  transform-origin: 0 0;
+  animation: purchase-orbit 1.25s linear infinite;
+}
+
+@keyframes purchase-orbit {
+  from {
+    transform: rotate(0deg) translateX(82px) rotate(38deg);
+  }
+
+  to {
+    transform: rotate(360deg) translateX(82px) rotate(38deg);
+  }
+}
+
+.purchase-success {
+  display: grid;
+  gap: 10px;
+  text-align: center;
+  color: var(--navy);
+}
+
+.purchase-success strong {
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.purchase-success span {
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 900;
+}
+
 .dialog-form h2,
 .dialog-form p {
   margin: 0;
@@ -1606,6 +1725,10 @@ dialog::backdrop {
   .flight-row {
     grid-template-columns: 1fr;
     align-items: stretch;
+  }
+
+  .board-flight-row {
+    grid-template-columns: 1fr;
   }
 
   .ticket-details-list {

@@ -1,6 +1,7 @@
 using Airport.Api.Data;
 using Airport.Api.DTOs;
 using Airport.Api.Models;
+using Airport.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,16 @@ namespace Airport.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
-public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> passwordHasher) : ControllerBase
+[Authorize]
+public class UsersController(
+    AirportDbContext dbContext,
+    IPasswordHasher<User> passwordHasher,
+    ICurrentUserService currentUser,
+    IEmailSender emailSender,
+    ILogger<UsersController> logger) : ControllerBase
 {
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers(CancellationToken cancellationToken)
     {
         var users = await dbContext.Users
@@ -32,6 +39,7 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
     }
 
     [HttpGet("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UserDto>> GetUser(int id, CancellationToken cancellationToken)
     {
         var user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
@@ -39,6 +47,7 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UserDto>> CreateUser(CreateUserDto request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim().ToLowerInvariant();
@@ -82,6 +91,7 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UserDto>> UpdateUser(int id, UpdateUserDto request, CancellationToken cancellationToken)
     {
         var user = await dbContext.Users.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
@@ -116,11 +126,17 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
         user.Address = request.Address.Trim();
         user.PhoneNumber = request.PhoneNumber.Trim();
         await dbContext.SaveChangesAsync(cancellationToken);
+        await TrySendEmailAsync(
+            user.Email,
+            "עדכון פרטים",
+            BuildProfileUpdatedEmail(user.FullName),
+            cancellationToken);
 
         return Ok(ToDto(user));
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)
     {
         var user = await dbContext.Users.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
@@ -132,6 +148,63 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
         dbContext.Users.Remove(user);
         await dbContext.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+
+    [HttpGet("me")]
+    public async Task<ActionResult<UserDto>> GetMe(CancellationToken cancellationToken)
+    {
+        var user = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == currentUser.UserId, cancellationToken);
+
+        return user is null ? NotFound() : Ok(ToDto(user));
+    }
+
+    [HttpPut("me")]
+    public async Task<ActionResult<UserDto>> UpdateMe(UpdateMyProfileDto request, CancellationToken cancellationToken)
+    {
+        var user = await dbContext.Users.FirstOrDefaultAsync(item => item.Id == currentUser.UserId, cancellationToken);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        var nationalId = request.NationalId.Trim();
+        var email = request.Email.Trim().ToLowerInvariant();
+        var phoneNumber = request.PhoneNumber.Trim();
+
+        if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.Email == email, cancellationToken))
+        {
+            return Conflict("Email already exists.");
+        }
+
+        if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.NationalId == nationalId, cancellationToken))
+        {
+            return Conflict("National ID already exists.");
+        }
+
+        if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.PhoneNumber == phoneNumber, cancellationToken))
+        {
+            return Conflict("Phone number already exists.");
+        }
+
+        user.NationalId = nationalId;
+        user.FirstName = request.FirstName.Trim();
+        user.LastName = request.LastName.Trim();
+        user.FullName = request.FullName.Trim();
+        user.Email = email;
+        user.Gender = request.Gender.Trim();
+        user.Address = request.Address.Trim();
+        user.PhoneNumber = phoneNumber;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await TrySendEmailAsync(
+            user.Email,
+            "עדכון פרטים",
+            BuildProfileUpdatedEmail(user.FullName),
+            cancellationToken);
+
+        return Ok(ToDto(user));
     }
 
     private static UserDto ToDto(User user) => new(
@@ -179,4 +252,24 @@ public class UsersController(AirportDbContext dbContext, IPasswordHasher<User> p
     private static string GenerateNineDigitValue() => Random.Shared.Next(100000000, 999999999).ToString();
 
     private static string GeneratePhoneValue() => $"05{Random.Shared.Next(10000000, 99999999)}";
+
+    private async Task TrySendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await emailSender.SendAsync(to, subject, body, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "User email could not be sent to {Recipient}.", to);
+        }
+    }
+
+    private static string BuildProfileUpdatedEmail(string fullName) =>
+        $"""
+        שלום {fullName}
+        הפרטים שלך עודכנו בהצלחה במערכת.
+
+        צוות דאטהפליי
+        """;
 }

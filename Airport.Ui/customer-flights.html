@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Customer Flights</title>
-  <link rel="stylesheet" href="styles.css?v=20261012-10">
+  <link rel="stylesheet" href="styles.css?v=20261012-12">
 </head>
 <body>
   <main class="page-shell">
     <header class="portal-header">
-      <a class="home-link" href="index.html">Airport Portal</a>
+      <a class="home-link logo-link" href="index.html"><img src="assets/kodfly-logo.png" alt="KodFly"></a>
       <nav class="page-nav">
         <a class="active" href="customer-flights.html">Flights</a>
         <a href="customer-tickets.html">My tickets</a>
@@ -24,7 +24,7 @@
         <h1>Plan your next flight</h1>
         <p class="lead">Search exact airport routes and book flights until 1 hour before departure.</p>
       </div>
-      <div class="identity-card light"><span id="roleBadge">Passenger</span><strong id="userName">Passenger</strong><small id="userEmail">-</small></div>
+      <button id="profileButton" class="identity-card light profile-button" type="button"><span id="roleBadge">Passenger</span><strong id="userName">Passenger</strong><small id="userEmail">-</small></button>
     </section>
     <section class="metrics">
       <article><small>Flights shown</small><strong id="metricFlights">0</strong><span>filtered schedule</span></article>
@@ -37,8 +37,8 @@
       <form id="flightFilters" class="form-grid">
         <label>From date<input id="fromDate" type="date" lang="en-GB"></label>
         <label>To date<input id="toDate" type="date" lang="en-GB"></label>
-        <label>Origin<input id="origin" list="originOptions" placeholder="Airport, city, country, code" required><datalist id="originOptions"></datalist></label>
-        <label>Destination<input id="destination" list="destinationOptions" placeholder="Airport, city, country, code"><datalist id="destinationOptions"></datalist></label>
+        <label>Origin<input id="origin" list="originOptions" placeholder="Country or country, city" required><datalist id="originOptions"></datalist></label>
+        <label>Destination<input id="destination" list="destinationOptions" placeholder="Country or country, city"><datalist id="destinationOptions"></datalist></label>
         <label>Sort by<select id="sortBy"><option value="date">Earliest date</option><option value="price">Lowest price</option></select></label>
         <div class="search-action"><button>Search</button></div>
       </form>
@@ -70,11 +70,30 @@
         <div class="dialog-actions"><button type="button" id="closeBooking" class="ghost-button">Close</button><button class="primary-button">Book ticket</button></div>
       </form>
     </dialog>
-    <dialog id="purchaseDialog">
-      <form method="dialog" class="dialog-form">
-        <h2>Purchase confirmed</h2>
-        <div id="purchaseBody" class="confirmation-box"></div>
-        <div class="dialog-actions"><button class="ghost-button" value="close">Close</button><a class="primary-button" href="customer-tickets.html">My tickets</a></div>
+    <div id="purchaseOverlay" class="purchase-overlay" hidden>
+      <section class="purchase-card">
+        <div id="purchaseAnimation" class="orbit-stage" aria-label="Booking in progress">
+          <span class="orbit-plane">&#9992;</span>
+        </div>
+        <div id="purchaseSuccess" class="purchase-success" hidden>
+          <strong>Flight booked</strong>
+        </div>
+      </section>
+    </div>
+    <dialog id="profileDialog">
+      <form id="profileForm" method="dialog" class="dialog-form">
+        <h2>My details</h2>
+        <div class="compact-grid">
+          <label>National ID<input id="profileNationalId" maxlength="9" required></label>
+          <label>First name<input id="profileFirstName" maxlength="80" required></label>
+          <label>Last name<input id="profileLastName" maxlength="80" required></label>
+          <label>Full name<input id="profileFullName" maxlength="120" required></label>
+          <label>Email<input id="profileEmail" type="email" maxlength="254" required></label>
+          <label>Phone<input id="profilePhone" maxlength="30" required></label>
+          <label>Gender<input id="profileGender" maxlength="20" required></label>
+          <label>Address<input id="profileAddress" maxlength="240" required></label>
+        </div>
+        <div class="dialog-actions"><button type="button" id="closeProfile" class="ghost-button">Close</button><button class="primary-button">Save details</button></div>
       </form>
     </dialog>
     <div id="searchLoader" class="search-loader" hidden>
@@ -85,7 +104,7 @@
     </div>
     <div id="toast" class="toast" hidden></div>
   </main>
-  <script src="shared.js?v=20261012-10"></script>
-  <script src="customer-flights.js?v=20261012-10"></script>
+  <script src="shared.js?v=20261012-12"></script>
+  <script src="customer-flights.js?v=20261012-12"></script>
 </body>
 </html>

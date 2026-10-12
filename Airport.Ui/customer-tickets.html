@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>My Tickets</title>
-  <link rel="stylesheet" href="styles.css?v=20261012-2">
+  <link rel="stylesheet" href="styles.css?v=20261012-3">
 </head>
 <body>
   <main class="page-shell">
     <header class="portal-header">
-      <a class="home-link" href="index.html">Airport Portal</a>
+      <a class="home-link logo-link" href="index.html"><img src="assets/kodfly-logo.png" alt="KodFly"></a>
       <nav class="page-nav">
         <a href="customer-flights.html">Flights</a>
         <a class="active" href="customer-tickets.html">My tickets</a>
@@ -21,7 +21,7 @@
     </header>
     <section class="customer-hero">
       <div><p class="eyebrow">Customer portal</p><h1>My tickets</h1><p class="lead">Cancel, upgrade, change your seat, add baggage, or download your ticket.</p></div>
-      <div class="identity-card light"><span id="roleBadge">Passenger</span><strong id="userName">Passenger</strong><small id="userEmail">-</small></div>
+      <button id="profileButton" class="identity-card light profile-button" type="button"><span id="roleBadge">Passenger</span><strong id="userName">Passenger</strong><small id="userEmail">-</small></button>
     </section>
     <section class="metrics">
       <article><small>Tickets</small><strong id="metricTickets">0</strong><span id="metricActiveTickets">0 active</span></article>
@@ -39,9 +39,25 @@
         <div class="dialog-actions"><button type="button" id="closeTicketDialog" class="ghost-button">Close</button><button class="primary-button">Save changes</button></div>
       </form>
     </dialog>
+    <dialog id="profileDialog">
+      <form id="profileForm" method="dialog" class="dialog-form">
+        <h2>My details</h2>
+        <div class="compact-grid">
+          <label>National ID<input id="profileNationalId" maxlength="9" required></label>
+          <label>First name<input id="profileFirstName" maxlength="80" required></label>
+          <label>Last name<input id="profileLastName" maxlength="80" required></label>
+          <label>Full name<input id="profileFullName" maxlength="120" required></label>
+          <label>Email<input id="profileEmail" type="email" maxlength="254" required></label>
+          <label>Phone<input id="profilePhone" maxlength="30" required></label>
+          <label>Gender<input id="profileGender" maxlength="20" required></label>
+          <label>Address<input id="profileAddress" maxlength="240" required></label>
+        </div>
+        <div class="dialog-actions"><button type="button" id="closeProfile" class="ghost-button">Close</button><button class="primary-button">Save details</button></div>
+      </form>
+    </dialog>
     <div id="toast" class="toast" hidden></div>
   </main>
-  <script src="shared.js?v=20261012-2"></script>
-  <script src="customer-tickets.js?v=20261012-2"></script>
+  <script src="shared.js?v=20261012-3"></script>
+  <script src="customer-tickets.js?v=20261012-3"></script>
 </body>
 </html>

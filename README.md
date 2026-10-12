@@ -48,6 +48,35 @@ Open:
 
 The API applies migrations automatically at startup. MySQL data persists in the `mysql-data` Docker volume. Generated ticket files persist in the `ticket-files` Docker volume.
 
+## Email Notifications
+
+Ticket purchase, ticket cancellation, and ticket detail changes can send customer emails through SMTP. Credentials are read only from environment variables and are passed into Docker Compose without committing secrets.
+
+PowerShell example:
+
+```powershell
+$env:SMTP_USER = "flyisr9@gmail.com"
+$env:SMTP_PASSWORD = "your_gmail_app_password"
+$env:SMTP_FROM_EMAIL = "flyisr9@gmail.com"
+docker compose up -d --build airport-api
+```
+
+Gmail often blocks normal account passwords for SMTP. If sending fails, create a Gmail app password and use that value as `SMTP_PASSWORD`.
+
+Docker Compose already passes these variables to `airport-api`:
+
+```text
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER
+SMTP_PASSWORD
+SMTP_FROM_EMAIL
+SMTP_FROM_NAME=DataFly
+SMTP_ENABLE_SSL=true
+```
+
+If SMTP is not configured, booking and ticket updates still work; the API only skips email sending.
+
 On startup, the API reads `Data/aircraft.csv`, `Data/airports.csv`, and `Data/Airlines.csv` and creates a local flight schedule. It stores the enriched CSV-derived details in `GeneratedFlightSchedules` and creates matching `Flights` rows so booking still works.
 
 To rebuild only the standalone UI:

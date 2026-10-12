@@ -259,3 +259,4 @@ C:\Users\sendi\Desktop\fly\Airport.Api\obj\Debug\net8.0\Airport.Api.pdb
 C:\Users\sendi\Desktop\fly\Airport.Api\obj\Debug\net8.0\Airport.Api.genruntimeconfig.cache
 C:\Users\sendi\Desktop\fly\Airport.Api\obj\Debug\net8.0\ref\Airport.Api.dll
 C:\Users\sendi\Desktop\fly\Airport.Api\bin\Debug\net8.0\Data\airport.csv
+C:\Users\sendi\Desktop\fly\Airport.Api\bin\Debug\net8.0\Assets\kodfly-logo.png

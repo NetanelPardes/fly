@@ -52,3 +52,13 @@ public record UpdateUserDto(
     [Required, MaxLength(20)] string Gender,
     [Required, MaxLength(240)] string Address,
     [Required, MaxLength(30)] string PhoneNumber);
+
+public record UpdateMyProfileDto(
+    [Required, MaxLength(9)] string NationalId,
+    [Required, MaxLength(80)] string FirstName,
+    [Required, MaxLength(80)] string LastName,
+    [Required, MaxLength(120)] string FullName,
+    [Required, EmailAddress, MaxLength(254)] string Email,
+    [Required, MaxLength(20)] string Gender,
+    [Required, MaxLength(240)] string Address,
+    [Required, MaxLength(30)] string PhoneNumber);

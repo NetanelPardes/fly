@@ -4,6 +4,7 @@ setInterval(() => document.querySelector("#clock").textContent = new Date().toLo
 refresh();
 
 async function refresh() {
+  Airport.setPlaneLoading(true, "Loading board");
   try {
     const now = new Date();
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
@@ -22,9 +23,25 @@ async function refresh() {
     document.querySelector("#metricActiveTickets").textContent = `${tickets.filter(t => t.status === "Active").length} active`;
     document.querySelector("#metricUsers").textContent = users.length;
     document.querySelector("#departureBoard").innerHTML = boardFlights.length
-      ? boardFlights.map(f => `<div class="board-flight-row"><strong>${Airport.escapeHtml(f.flightNumber)}</strong><div><strong>${Airport.escapeHtml(f.origin)} -> ${Airport.escapeHtml(f.destination)}</strong><small>${Airport.formatDate(f.departureTime)}</small></div>${Airport.badge(f.status)}<strong>${Airport.escapeHtml(f.boardingGate || f.gateNumber || "TBD")}</strong></div>`).join("")
+      ? boardFlights.map(f => `<div class="board-flight-row">
+          <div><small>Flight</small><strong>${Airport.escapeHtml(f.flightNumber)}</strong></div>
+          <div class="board-route"><strong>${Airport.escapeHtml(f.origin)} -> ${Airport.escapeHtml(f.destination)}</strong><small>${Airport.escapeHtml(f.originAirportCode || "")} to ${Airport.escapeHtml(f.destinationAirportCode || "")}</small></div>
+          <div><small>Departure</small><strong>${timeOnly(f.departureTime)}</strong><small>${dateOnly(f.departureTime)}</small></div>
+          <div><small>Gate</small><strong>${Airport.escapeHtml(f.boardingGate || f.gateNumber || "TBD")}</strong></div>
+          ${Airport.badge(f.status)}
+        </div>`).join("")
       : Airport.empty("No flights departing in the next hour");
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
   }
+}
+
+function timeOnly(value) {
+  return new Date(value).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}
+
+function dateOnly(value) {
+  return new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 }

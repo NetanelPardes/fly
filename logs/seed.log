@@ -457,3 +457,47 @@
 2026-10-12T12:37:14.5197254Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
 2026-10-12T12:37:14.5287861Z Aircraft import skipped. Existing aircraft rows found.
 2026-10-12T12:37:14.5364010Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T13:00:35.4705795Z CSV schedule seeding started.
+2026-10-12T13:00:35.5520765Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T13:00:35.5620776Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T13:00:35.5727210Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T13:19:41.9557564Z CSV schedule seeding started.
+2026-10-12T13:19:42.0456160Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T13:19:42.0574991Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T13:19:42.0678691Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T13:25:28.1599337Z CSV schedule seeding started.
+2026-10-12T13:25:28.2771750Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T13:25:28.2870742Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T13:25:28.2957162Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T13:28:37.0293674Z CSV schedule seeding started.
+2026-10-12T13:28:37.1244499Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T13:28:37.1355141Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T13:28:37.1427584Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T13:29:59.7494063Z CSV schedule seeding started.
+2026-10-12T13:29:59.8486712Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T13:29:59.8599880Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T13:29:59.8690928Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T13:31:14.6126997Z CSV schedule seeding started.
+2026-10-12T13:31:14.7669132Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T13:31:14.7906133Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T13:31:14.8030319Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T13:42:36.7678416Z CSV schedule seeding started.
+2026-10-12T13:42:36.8631456Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T13:42:36.8750345Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T13:42:36.8846060Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T13:51:39.0322408Z CSV schedule seeding started.
+2026-10-12T13:51:39.2019490Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T13:51:39.2368790Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T13:51:39.2585431Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T13:57:10.5213561Z CSV schedule seeding started.
+2026-10-12T13:57:10.6162649Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T13:57:10.6286226Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T13:57:10.6382794Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T14:12:08.3231580Z CSV schedule seeding started.
+2026-10-12T14:12:08.4512911Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T14:12:08.4672312Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T14:12:08.4831369Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.
+2026-10-12T14:18:26.8309720Z CSV schedule seeding started.
+2026-10-12T14:18:26.9506205Z Airport import skipped. Existing airport rows found. Updated 0 existing airport details from CSV.
+2026-10-12T14:18:26.9655990Z Aircraft import skipped. Existing aircraft rows found.
+2026-10-12T14:18:26.9822980Z Flight generation skipped. Existing flights found for source CsvGeneratedTrafficProfileV2.

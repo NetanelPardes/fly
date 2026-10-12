@@ -65,6 +65,30 @@ const Airport = (() => {
     toast.timer = setTimeout(() => el.hidden = true, 4200);
   }
 
+  function ensurePlaneLoader() {
+    let loader = document.querySelector("#searchLoader");
+    if (loader) return loader;
+
+    loader = document.createElement("div");
+    loader.id = "searchLoader";
+    loader.className = "search-loader";
+    loader.hidden = true;
+    loader.innerHTML = `<div class="search-loader-box"><div class="plane-track"><span class="plane-icon">&#9992;</span></div><strong id="searchLoaderText">Searching</strong></div>`;
+    document.body.append(loader);
+    return loader;
+  }
+
+  function setPlaneLoading(isLoading, text = "Searching") {
+    const loader = ensurePlaneLoader();
+    const label = loader.querySelector("#searchLoaderText") || loader.querySelector("strong");
+    if (label) label.textContent = text;
+    loader.hidden = !isLoading;
+  }
+
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   function setDefaultDates() {
     const from = new Date();
     from.setMonth(from.getMonth() - 6);
@@ -138,5 +162,5 @@ const Airport = (() => {
     URL.revokeObjectURL(url);
   }
 
-  return { api, setSession, clearSession, getUser, toast, setDefaultDates, flightQuery, badge, empty, table, formatDate, money, escapeHtml, priceForClass, downloadTicket };
+  return { api, setSession, clearSession, getUser, toast, setDefaultDates, flightQuery, badge, empty, table, formatDate, money, escapeHtml, priceForClass, downloadTicket, setPlaneLoading, delay };
 })();

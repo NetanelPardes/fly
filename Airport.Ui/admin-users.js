@@ -1,6 +1,6 @@
 AdminCommon.init("admin-users.html");
 document.querySelector("#refreshButton").addEventListener("click", refresh);
-document.querySelector("#userSearchForm").addEventListener("submit", event => { event.preventDefault(); renderUsers(); });
+document.querySelector("#userSearchForm").addEventListener("submit", event => { event.preventDefault(); searchUsers(); });
 
 let users = [];
 refresh();
@@ -11,6 +11,16 @@ async function refresh() {
     renderUsers();
   } catch (error) {
     Airport.toast(error.message);
+  }
+}
+
+async function searchUsers() {
+  Airport.setPlaneLoading(true, "Searching users");
+  try {
+    await Airport.delay(450);
+    renderUsers();
+  } finally {
+    Airport.setPlaneLoading(false);
   }
 }
 

@@ -11,6 +11,7 @@ public record TicketDto(
     string PassengerEmail,
     int FlightId,
     string FlightNumber,
+    string? AirlineName,
     string SeatNumber,
     int BaggageAllowanceKg,
     TicketClass Class,

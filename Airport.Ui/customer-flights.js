@@ -28,6 +28,9 @@ function init() {
   document.querySelector("#userName").textContent = user.fullName;
   document.querySelector("#userEmail").textContent = user.email;
   document.querySelector("#logoutButton").addEventListener("click", logout);
+  document.querySelector("#profileButton").addEventListener("click", openProfile);
+  document.querySelector("#closeProfile").addEventListener("click", () => document.querySelector("#profileDialog").close());
+  document.querySelector("#profileForm").addEventListener("submit", saveProfile);
   document.querySelector("#flightFilters").addEventListener("submit", e => { e.preventDefault(); searchFlights().catch(error => Airport.toast(error.message)); });
   setupLocationInput("#origin", "#originOptions");
   setupLocationInput("#destination", "#destinationOptions");
@@ -53,8 +56,9 @@ function init() {
   document.querySelector("#closeBooking").addEventListener("click", () => document.querySelector("#bookingDialog").close());
   setupBackdropClose("#detailsDialog");
   setupBackdropClose("#bookingDialog");
-  setupBackdropClose("#purchaseDialog");
+  setupBackdropClose("#profileDialog");
   document.querySelector("#bookingForm").addEventListener("submit", bookTicket);
+  document.querySelector("#purchaseOverlay").addEventListener("click", closePurchaseOverlay);
   document.body.addEventListener("click", event => {
     if (event.target.dataset.flightDetails) openFlightDetails(event.target.dataset.flightDetails);
     if (event.target.dataset.bookFlight) openBooking(event.target.dataset.bookFlight);
@@ -154,7 +158,67 @@ function setSearchLoading(isLoading) {
   const loader = document.querySelector("#searchLoader");
   const button = document.querySelector("#flightFilters button");
   if (loader) loader.hidden = !isLoading;
+  Airport.setPlaneLoading(isLoading, isLoading ? "Searching flights" : "Searching");
   if (button) button.disabled = isLoading;
+}
+
+async function openProfile() {
+  try {
+    Airport.setPlaneLoading(true, "Loading details");
+    const profile = await Airport.api("/api/users/me");
+    fillProfile(profile);
+    document.querySelector("#profileDialog").showModal();
+  } catch (error) {
+    Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
+  }
+}
+
+function fillProfile(profile) {
+  document.querySelector("#profileNationalId").value = profile.nationalId || "";
+  document.querySelector("#profileFirstName").value = profile.firstName || "";
+  document.querySelector("#profileLastName").value = profile.lastName || "";
+  document.querySelector("#profileFullName").value = profile.fullName || "";
+  document.querySelector("#profileEmail").value = profile.email || "";
+  document.querySelector("#profilePhone").value = profile.phoneNumber || "";
+  document.querySelector("#profileGender").value = profile.gender || "";
+  document.querySelector("#profileAddress").value = profile.address || "";
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+  const payload = profilePayload();
+  try {
+    Airport.setPlaneLoading(true, "Saving details");
+    const updated = await Airport.api("/api/users/me", {
+      method: "PUT",
+      body: JSON.stringify(payload)
+    });
+    user = { ...user, ...updated };
+    localStorage.setItem("airport_ui_user", JSON.stringify(user));
+    document.querySelector("#userName").textContent = user.fullName;
+    document.querySelector("#userEmail").textContent = user.email;
+    document.querySelector("#profileDialog").close();
+    Airport.toast("Your details were updated.");
+  } catch (error) {
+    Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
+  }
+}
+
+function profilePayload() {
+  return {
+    nationalId: document.querySelector("#profileNationalId").value.trim(),
+    firstName: document.querySelector("#profileFirstName").value.trim(),
+    lastName: document.querySelector("#profileLastName").value.trim(),
+    fullName: document.querySelector("#profileFullName").value.trim(),
+    email: document.querySelector("#profileEmail").value.trim(),
+    phoneNumber: document.querySelector("#profilePhone").value.trim(),
+    gender: document.querySelector("#profileGender").value.trim(),
+    address: document.querySelector("#profileAddress").value.trim()
+  };
 }
 
 function customerFlightQuery() {
@@ -168,7 +232,7 @@ function customerFlightQuery() {
   }
 
   if (!isExactAirport(origin)) {
-    Airport.toast("Choose an exact origin airport or country from the list.");
+    Airport.toast("Choose an origin country or city from the list.");
     return null;
   }
 
@@ -203,7 +267,7 @@ function customerFlightQuery() {
   const destination = document.querySelector("#destination").value.trim();
   if (destination) {
     if (!isExactAirport(destination)) {
-      Airport.toast("Choose an exact destination airport or country from the list.");
+      Airport.toast("Choose a destination country or city from the list.");
       return null;
     }
     params.set("destinationSearch", searchTermForLocation(document.querySelector("#destination")));
@@ -246,10 +310,10 @@ function renderAutocomplete() {
     const legacyValue = legacyLocationValue(item);
     const codeValue = item.iataCode ? `${item.city || ""}, ${item.country || ""} (${item.iataCode})` : "";
     return {
-      type: "airport",
+      type: "city",
       value,
       label: "",
-      searchValue: item.iataCode || item.icaoCode || item.airportName || item.city || value,
+      searchValue: item.city || item.country || item.iataCode || item.icaoCode || value,
       aliases: [value, legacyValue, codeValue].filter(Boolean).map(text => text.toLowerCase()),
       tokens: [item.city, item.country, item.iataCode, item.icaoCode, item.airportName, value, legacyValue].filter(Boolean)
     };
@@ -274,17 +338,17 @@ function isExactAirport(value) {
 }
 
 function mergeLocations(locations) {
-  const byAirport = new Map();
+  const byCity = new Map();
   locations.forEach(item => {
-    if (!item.city || !item.airportName) return;
-    const key = `${item.country || ""}|${item.city}|${item.airportName}|${item.iataCode || ""}`.toLowerCase();
-    if (!byAirport.has(key)) byAirport.set(key, item);
+    if (!item.country && !item.city) return;
+    const key = `${item.country || ""}|${item.city || ""}`.toLowerCase();
+    if (!byCity.has(key)) byCity.set(key, item);
   });
-  return [...byAirport.values()].sort((a, b) => locationLabel(a).localeCompare(locationLabel(b)));
+  return [...byCity.values()].sort((a, b) => locationLabel(a).localeCompare(locationLabel(b)));
 }
 
 function locationLabel(item) {
-  return `${item.country || ""}, ${item.city || ""} (${item.airportName || ""})`;
+  return [item.country, item.city].filter(Boolean).join(", ");
 }
 
 function locationValue(item) {
@@ -551,27 +615,35 @@ async function bookTicket(event) {
   if (seatNumber) payload.seatNumber = seatNumber;
 
   try {
+    document.querySelector("#bookingDialog").close();
+    openPurchaseOverlay();
     const ticket = await Airport.api("/api/tickets", {
       method: "POST",
       body: JSON.stringify(payload)
     });
-    document.querySelector("#bookingDialog").close();
-    showPurchaseConfirmation(ticket);
+    await showPurchaseConfirmation(ticket);
   } catch (error) {
+    closePurchaseOverlay();
     Airport.toast(error.message);
   }
 }
 
-function showPurchaseConfirmation(ticket) {
-  const dialog = document.querySelector("#purchaseDialog");
-  document.querySelector("#purchaseBody").innerHTML = `
-    <p>Your ticket was booked successfully.</p>
-    <dl class="confirmation-list">
-      <div><dt>Flight</dt><dd>${Airport.escapeHtml(ticket.flightNumber || selectedFlight?.flightNumber || "")}</dd></div>
-      <div><dt>Route</dt><dd>${Airport.escapeHtml(placeLabel(selectedFlight?.origin, selectedFlight?.originCountry))} -> ${Airport.escapeHtml(placeLabel(selectedFlight?.destination, selectedFlight?.destinationCountry))}</dd></div>
-      <div><dt>Seat</dt><dd>${Airport.escapeHtml(ticket.seatNumber || "Assigned")}</dd></div>
-      <div><dt>Class</dt><dd>${Airport.escapeHtml(ticket.class || document.querySelector("#bookingClass").value)}</dd></div>
-      <div><dt>Total</dt><dd>${formatFare(ticket.price || Number(document.querySelector("#bookingPrice").value))}</dd></div>
-    </dl>`;
-  dialog.showModal();
+function openPurchaseOverlay() {
+  const overlay = document.querySelector("#purchaseOverlay");
+  document.querySelector("#purchaseAnimation").hidden = false;
+  document.querySelector("#purchaseSuccess").hidden = true;
+  overlay.hidden = false;
+}
+
+async function showPurchaseConfirmation() {
+  await Airport.delay(5000);
+  document.querySelector("#purchaseAnimation").hidden = true;
+  document.querySelector("#purchaseSuccess").hidden = false;
+}
+
+function closePurchaseOverlay() {
+  const overlay = document.querySelector("#purchaseOverlay");
+  overlay.hidden = true;
+  document.querySelector("#purchaseAnimation").hidden = false;
+  document.querySelector("#purchaseSuccess").hidden = true;
 }

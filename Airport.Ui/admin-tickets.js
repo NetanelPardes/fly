@@ -1,6 +1,6 @@
 AdminCommon.init("admin-tickets.html");
 document.querySelector("#refreshButton").addEventListener("click", refresh);
-document.querySelector("#ticketFilters").addEventListener("submit", event => { event.preventDefault(); renderTickets(); });
+document.querySelector("#ticketFilters").addEventListener("submit", event => { event.preventDefault(); searchTickets(); });
 document.querySelector("#closeTicketDialog").addEventListener("click", () => document.querySelector("#ticketDialog").close());
 document.querySelector("#ticketOptionsForm").addEventListener("submit", updateTicket);
 document.body.addEventListener("click", handleActions);
@@ -13,6 +13,16 @@ async function refresh() {
     renderTickets();
   } catch (error) {
     Airport.toast(error.message);
+  }
+}
+
+async function searchTickets() {
+  Airport.setPlaneLoading(true, "Searching tickets");
+  try {
+    await Airport.delay(450);
+    renderTickets();
+  } finally {
+    Airport.setPlaneLoading(false);
   }
 }
 
