@@ -4,17 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Customer Login</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20261012-9">
 </head>
 <body>
   <main class="page-shell auth-page">
     <header class="portal-header">
       <a class="home-link" href="index.html">Airport Portal</a>
-      <a class="ghost-button" href="admin-login.html">Manager login</a>
     </header>
     <section class="login-screen">
       <div class="login-box">
-        <p class="eyebrow">Customer access</p>
+        <div class="login-box-head">
+          <p class="eyebrow">Customer access</p>
+          <a class="manager-login-link" href="admin-login.html">Manager login</a>
+        </div>
         <h1>Welcome aboard</h1>
         <form id="customerLoginForm" class="stack">
           <label>Email<input id="loginEmail" type="email" value="altman.elazar@gmail.com" required></label>
@@ -45,7 +47,7 @@
     </dialog>
     <div id="toast" class="toast" hidden></div>
   </main>
-  <script src="shared.js"></script>
-  <script src="customer-login.js"></script>
+  <script src="shared.js?v=20261012-9"></script>
+  <script src="customer-login.js?v=20261012-9"></script>
 </body>
 </html>

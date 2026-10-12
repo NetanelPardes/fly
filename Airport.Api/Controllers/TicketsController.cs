@@ -22,6 +22,7 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
             .AsNoTracking()
             .Include(ticket => ticket.Passenger)
             .Include(ticket => ticket.Flight)
+                .ThenInclude(flight => flight.GeneratedSchedule)
             .AsQueryable();
 
         if (User.IsInRole(nameof(UserRole.Passenger)))
@@ -44,6 +45,7 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
             .AsNoTracking()
             .Include(item => item.Passenger)
             .Include(item => item.Flight)
+                .ThenInclude(flight => flight.GeneratedSchedule)
             .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
 
         if (ticket is null)
@@ -93,21 +95,21 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
             return ValidationProblem("Flight does not exist.");
         }
 
-        if (flight.Status == FlightStatus.Cancelled)
+        if (flight.Status is FlightStatus.Cancelled or FlightStatus.Departed)
         {
-            return ValidationProblem("Cannot book a cancelled flight.");
+            return ValidationProblem("Cannot book this flight.");
         }
 
         if (User.IsInRole(nameof(UserRole.Passenger)))
         {
-            if (flight.DepartureTime <= DateTime.UtcNow.AddHours(5))
+            if (flight.DepartureTime <= DateTime.UtcNow.AddHours(1))
             {
-                return ValidationProblem("Booking closes 5 hours before departure.");
+                return ValidationProblem("Booking closes 1 hour before departure.");
             }
         }
-        else if (flight.DepartureTime <= DateTime.UtcNow.AddHours(5))
+        else if (flight.DepartureTime <= DateTime.UtcNow.AddHours(1))
         {
-            return ValidationProblem("Booking closes 5 hours before departure.");
+            return ValidationProblem("Booking closes 1 hour before departure.");
         }
 
         var executionStrategy = dbContext.Database.CreateExecutionStrategy();
@@ -184,6 +186,7 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
 
             await dbContext.Entry(ticket).Reference(item => item.Passenger).LoadAsync(cancellationToken);
             await dbContext.Entry(ticket).Reference(item => item.Flight).LoadAsync(cancellationToken);
+            await dbContext.Entry(ticket.Flight).Reference(item => item.GeneratedSchedule).LoadAsync(cancellationToken);
 
             return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ToDto(ticket));
         });
@@ -195,6 +198,7 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
         var ticket = await dbContext.Tickets
             .Include(item => item.Passenger)
             .Include(item => item.Flight)
+                .ThenInclude(flight => flight.GeneratedSchedule)
             .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
 
         if (ticket is null)
@@ -223,6 +227,7 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
         var ticket = await dbContext.Tickets
             .Include(item => item.Passenger)
             .Include(item => item.Flight)
+                .ThenInclude(flight => flight.GeneratedSchedule)
             .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
 
         if (ticket is null)
@@ -245,9 +250,21 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
             return ValidationProblem("Only active tickets can be changed.");
         }
 
-        ticket.SeatNumber = request.SeatNumber.Trim().ToUpperInvariant();
+        var seatNumber = request.SeatNumber.Trim().ToUpperInvariant();
+        if (!await IsSeatAvailableAsync(ticket.Flight, seatNumber, cancellationToken, ticket.Id))
+        {
+            return ValidationProblem("Seat is not available on this flight.");
+        }
+
+        var baggageAllowanceKg = request.BaggageAllowanceKg.GetValueOrDefault(ticket.BaggageAllowanceKg);
+        if (baggageAllowanceKg is not (0 or 10 or 20 or 35))
+        {
+            return ValidationProblem("Baggage allowance must be 0, 10, 20, or 35 kg.");
+        }
+
+        ticket.SeatNumber = seatNumber;
         ticket.Class = request.Class;
-        ticket.BaggageAllowanceKg = request.BaggageAllowanceKg.GetValueOrDefault(ticket.BaggageAllowanceKg);
+        ticket.BaggageAllowanceKg = baggageAllowanceKg;
         ticket.Price = CalculatePrice(ticket.Flight, request.Class, ticket.BaggageAllowanceKg, chooseSeat: true);
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -294,7 +311,24 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
         ticket.Price,
         ticket.Status,
         ticket.TicketFilePath,
-        ticket.BookingDate);
+        ticket.BookingDate,
+        ticket.Flight.Origin,
+        ticket.Flight.OriginAirportCode,
+        ticket.Flight.GeneratedSchedule?.OriginAirportName,
+        ticket.Flight.GeneratedSchedule?.OriginCountry,
+        ticket.Flight.Destination,
+        ticket.Flight.DestinationAirportCode,
+        ticket.Flight.GeneratedSchedule?.DestinationAirportName,
+        ticket.Flight.GeneratedSchedule?.DestinationCountry,
+        ticket.Flight.DepartureTime,
+        ticket.Flight.ArrivalTime,
+        ticket.Flight.BoardingGate,
+        ticket.Flight.AircraftCode,
+        ticket.Flight.GeneratedSchedule?.AircraftManufacturer,
+        ticket.Flight.GeneratedSchedule?.AircraftModel,
+        ticket.Flight.GeneratedSchedule?.SeatCapacity,
+        ticket.Flight.Status,
+        ticket.Flight.BasePrice);
 
     private async Task<string?> PickRandomSeatAsync(Flight flight, CancellationToken cancellationToken)
     {
@@ -310,7 +344,10 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
         return seats.Count == 0 ? null : seats[Random.Shared.Next(seats.Count)];
     }
 
-    private async Task<bool> IsSeatAvailableAsync(Flight flight, string seatNumber, CancellationToken cancellationToken)
+    private Task<bool> IsSeatAvailableAsync(Flight flight, string seatNumber, CancellationToken cancellationToken) =>
+        IsSeatAvailableAsync(flight, seatNumber, cancellationToken, exceptTicketId: null);
+
+    private async Task<bool> IsSeatAvailableAsync(Flight flight, string seatNumber, CancellationToken cancellationToken, int? exceptTicketId)
     {
         var capacity = flight.GeneratedSchedule?.SeatCapacity > 0 ? flight.GeneratedSchedule.SeatCapacity : 180;
         if (!BuildSeats(capacity).Contains(seatNumber, StringComparer.OrdinalIgnoreCase))
@@ -320,6 +357,7 @@ public class TicketsController(AirportDbContext dbContext, ICurrentUserService c
 
         return !await dbContext.Tickets.AnyAsync(
             ticket => ticket.FlightId == flight.Id
+                && (!exceptTicketId.HasValue || ticket.Id != exceptTicketId.Value)
                 && ticket.Status == TicketStatus.Active
                 && ticket.SeatNumber == seatNumber,
             cancellationToken);

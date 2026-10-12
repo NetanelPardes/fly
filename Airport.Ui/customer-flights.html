@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Customer Flights</title>
-  <link rel="stylesheet" href="styles.css?v=20261012-1">
+  <link rel="stylesheet" href="styles.css?v=20261012-10">
 </head>
 <body>
   <main class="page-shell">
@@ -22,7 +22,7 @@
       <div>
         <p class="eyebrow">Customer portal</p>
         <h1>Plan your next flight</h1>
-        <p class="lead">Search exact airport routes and book flights until 5 hours before departure.</p>
+        <p class="lead">Search exact airport routes and book flights until 1 hour before departure.</p>
       </div>
       <div class="identity-card light"><span id="roleBadge">Passenger</span><strong id="userName">Passenger</strong><small id="userEmail">-</small></div>
     </section>
@@ -37,15 +37,18 @@
       <form id="flightFilters" class="form-grid">
         <label>From date<input id="fromDate" type="date" lang="en-GB"></label>
         <label>To date<input id="toDate" type="date" lang="en-GB"></label>
-        <label>Origin<input id="origin" list="originOptions" placeholder="Airport, city, code" required><datalist id="originOptions"></datalist></label>
-        <label>Destination<input id="destination" list="destinationOptions" placeholder="Airport, city, code"><datalist id="destinationOptions"></datalist></label>
+        <label>Origin<input id="origin" list="originOptions" placeholder="Airport, city, country, code" required><datalist id="originOptions"></datalist></label>
+        <label>Destination<input id="destination" list="destinationOptions" placeholder="Airport, city, country, code"><datalist id="destinationOptions"></datalist></label>
         <label>Sort by<select id="sortBy"><option value="date">Earliest date</option><option value="price">Lowest price</option></select></label>
         <div class="search-action"><button>Search</button></div>
       </form>
     </section>
     <section id="resultsPanel" class="panel results-panel" hidden>
-      <div class="panel-head"><div><p class="eyebrow">Results</p><div class="results-title-row"><h2 id="resultsTitle">Available flights</h2><span id="searchResultCount">0 results</span></div></div></div>
-      <section id="flightsGrid" class="flight-card-grid"></section>
+      <div class="panel-head results-head">
+        <div><p class="eyebrow">Results</p><div class="results-title-row"><h2 id="resultsTitle">Available flights</h2><span id="searchResultCount">0 results</span></div></div>
+        <label class="currency-control">Currency<select id="currencyPicker" class="currency-picker"></select></label>
+      </div>
+      <section id="flightsGrid" class="flight-list"></section>
     </section>
     <dialog id="detailsDialog">
       <form method="dialog" class="dialog-form">
@@ -57,8 +60,6 @@
     <dialog id="bookingDialog">
       <form id="bookingForm" method="dialog" class="dialog-form">
         <h2>Book flight</h2><p id="bookingFlightText"></p><input id="bookingFlightId" type="hidden">
-        <label>Passenger ID<input id="bookingPassengerId" maxlength="9" pattern="[0-9]{9}" required></label>
-        <label>Contact email<input id="bookingPassengerEmail" type="email" required></label>
         <label class="check-filter"><input id="chooseSeat" type="checkbox"> Choose seat</label>
         <label id="seatPickerRow" hidden>Seat<input id="bookingSeat" placeholder="12A"></label>
         <label>Seat class<select id="bookingClass"><option value="Economy">Economy</option><option value="Business">Business</option><option value="First">First</option></select></label>
@@ -69,9 +70,22 @@
         <div class="dialog-actions"><button type="button" id="closeBooking" class="ghost-button">Close</button><button class="primary-button">Book ticket</button></div>
       </form>
     </dialog>
+    <dialog id="purchaseDialog">
+      <form method="dialog" class="dialog-form">
+        <h2>Purchase confirmed</h2>
+        <div id="purchaseBody" class="confirmation-box"></div>
+        <div class="dialog-actions"><button class="ghost-button" value="close">Close</button><a class="primary-button" href="customer-tickets.html">My tickets</a></div>
+      </form>
+    </dialog>
+    <div id="searchLoader" class="search-loader" hidden>
+      <div class="search-loader-box">
+        <div class="plane-track"><span class="plane-icon">&#9992;</span></div>
+        <strong>Searching flights</strong>
+      </div>
+    </div>
     <div id="toast" class="toast" hidden></div>
   </main>
-  <script src="shared.js?v=20261012-1"></script>
-  <script src="customer-flights.js?v=20261012-1"></script>
+  <script src="shared.js?v=20261012-10"></script>
+  <script src="customer-flights.js?v=20261012-10"></script>
 </body>
 </html>

@@ -33,7 +33,8 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
         CancellationToken cancellationToken,
-        [FromQuery] bool includeDemo = false)
+        [FromQuery] bool includeDemo = false,
+        [FromQuery] bool bookableOnly = false)
     {
         var query = dbContext.Flights
             .AsNoTracking()
@@ -123,6 +124,15 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         if (status.HasValue)
         {
             query = query.Where(flight => flight.Status == status.Value);
+        }
+
+        if (bookableOnly)
+        {
+            var earliestBookableDeparture = DateTime.UtcNow.AddHours(1);
+            query = query.Where(flight =>
+                flight.DepartureTime >= earliestBookableDeparture
+                && flight.Status != FlightStatus.Cancelled
+                && flight.Status != FlightStatus.Departed);
         }
 
         if (from.HasValue)

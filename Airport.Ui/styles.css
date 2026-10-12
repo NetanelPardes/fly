@@ -26,9 +26,20 @@ body {
   min-height: 100vh;
   color: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(135deg, rgba(244, 247, 250, 0.82), rgba(244, 247, 250, 0.42)),
+    url("assets/clu.jpg");
+  background-position: center top, center top;
+  background-size: 100% 100%, 100vw 100vh;
+  background-repeat: repeat-y, repeat-y;
+  background-attachment: scroll, scroll;
+}
+
+body:has(.auth-page) {
   background:
-    linear-gradient(135deg, rgba(18, 97, 166, 0.12), transparent 38%),
-    linear-gradient(315deg, rgba(240, 180, 41, 0.12), transparent 42%),
+    linear-gradient(90deg, rgba(5, 20, 32, 0.58), rgba(5, 20, 32, 0.2) 45%, rgba(244, 247, 250, 0.1)),
+    url("assets/Airplane_pic.png") center / cover fixed,
     var(--paper);
 }
 
@@ -40,6 +51,11 @@ a {
 .page-shell {
   min-height: 100vh;
   padding: 24px;
+}
+
+.auth-page {
+  display: grid;
+  grid-template-rows: auto 1fr;
 }
 
 .portal-header {
@@ -512,6 +528,20 @@ select {
   font-weight: 800;
 }
 
+.results-head {
+  align-items: end;
+}
+
+.currency-control {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  min-width: 110px;
+}
+
 .location-field {
   position: relative;
 }
@@ -689,7 +719,7 @@ tbody tr:hover {
   gap: 10px;
 }
 
-.flight-row {
+.board-flight-row {
   display: grid;
   grid-template-columns: 100px minmax(0, 1fr) 140px 90px;
   gap: 12px;
@@ -700,11 +730,11 @@ tbody tr:hover {
   background: #142c39;
 }
 
-.flight-row strong {
+.board-flight-row strong {
   color: white;
 }
 
-.flight-row small {
+.board-flight-row small {
   color: #95aab6;
 }
 
@@ -746,12 +776,66 @@ tbody tr:hover {
   position: fixed;
   right: 24px;
   bottom: 24px;
+  z-index: 20;
   max-width: min(420px, calc(100vw - 48px));
   padding: 14px 16px;
   border-radius: 14px;
   color: white;
   background: #132b38;
   box-shadow: var(--shadow);
+}
+
+.search-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 18;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 31, 47, 0.18);
+  backdrop-filter: blur(2px);
+}
+
+.search-loader[hidden] {
+  display: none;
+}
+
+.search-loader-box {
+  width: min(360px, calc(100vw - 48px));
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid rgba(220, 228, 236, 0.95);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.plane-track {
+  position: relative;
+  height: 54px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e8f2fa, #f8fbfd);
+}
+
+.plane-icon {
+  position: absolute;
+  top: 10px;
+  left: -42px;
+  color: var(--blue);
+  font-size: 30px;
+  animation: plane-search 1.35s ease-in-out infinite;
+}
+
+@keyframes plane-search {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(390px);
+  }
 }
 
 .hidden-by-role {
@@ -922,15 +1006,55 @@ tbody tr:hover {
 
 .login-screen {
   grid-template-columns: minmax(0, 420px);
+  min-height: 0;
   justify-content: center;
+  align-content: center;
+  padding: 0 0 24px;
 }
 
 .login-box {
+  position: relative;
   padding: 30px;
   border: 1px solid rgba(220, 228, 236, 0.9);
   border-radius: 22px;
   background: var(--panel);
   box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+.login-box h1 {
+  margin-top: 28px;
+}
+
+.login-box-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.login-box-head .eyebrow {
+  margin-bottom: 0;
+}
+
+.manager-login-link {
+  min-height: 36px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--blue-dark);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.manager-login-link:hover {
+  color: white;
+  background: var(--blue);
+  border-color: var(--blue);
 }
 
 .app-shell {
@@ -1000,6 +1124,141 @@ tbody tr:hover {
 }
 
 .flight-card button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flight-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.flight-row {
+  display: grid;
+  grid-template-columns: minmax(300px, 2.1fr) 110px 110px 110px minmax(150px, 1fr) 120px 180px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  box-shadow: none;
+}
+
+.flight-row-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.flight-row-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.flight-row-title > strong {
+  color: var(--navy);
+  font-size: 15px;
+}
+
+.mini-tag {
+  display: inline-grid;
+  min-height: 24px;
+  place-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: #10354a;
+  background: #dff5ee;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.flight-row-route {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.flight-row-route span,
+.flight-row-subroute {
+  color: var(--muted);
+}
+
+.flight-row-subroute {
+  font-size: 12px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flight-cell {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.flight-cell small,
+.flight-row-fare small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.flight-cell strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flight-cell span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flight-row-fare {
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+}
+
+.flight-row-fare strong {
+  color: var(--navy);
+  font-size: 20px;
+}
+
+.currency-picker {
+  width: 100%;
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 4px;
+}
+
+.flight-row-actions {
+  display: flex;
+  justify-content: end;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.flight-row-actions button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -1127,6 +1386,100 @@ tbody tr:hover {
   gap: 16px;
 }
 
+.ticket-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.ticket-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.15fr) minmax(420px, 2fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 8px 22px rgba(17, 35, 49, 0.06);
+}
+
+.ticket-main {
+  display: grid;
+  gap: 6px;
+}
+
+.ticket-title-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ticket-title-line small {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.ticket-title-line strong {
+  color: var(--navy);
+  font-size: 18px;
+}
+
+.ticket-route {
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.ticket-route span,
+.ticket-subroute {
+  color: var(--muted);
+}
+
+.ticket-subroute {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ticket-details-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(90px, 1fr));
+  gap: 10px 14px;
+  margin: 0;
+}
+
+.ticket-details-list div {
+  min-width: 0;
+}
+
+.ticket-details-list dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ticket-details-list dd {
+  margin: 3px 0 0;
+  color: var(--ink);
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.ticket-actions {
+  display: flex;
+  justify-content: end;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 160px;
+}
+
+.tiny-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 dialog {
   width: min(460px, calc(100% - 32px));
   border: 0;
@@ -1182,6 +1535,38 @@ dialog::backdrop {
   color: var(--navy);
 }
 
+.confirmation-box {
+  display: grid;
+  gap: 14px;
+}
+
+.confirmation-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.confirmation-list div {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.4fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.confirmation-list dt {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.confirmation-list dd {
+  margin: 0;
+  color: var(--navy);
+  font-weight: 900;
+}
+
 .dialog-form h2,
 .dialog-form p {
   margin: 0;
@@ -1212,4 +1597,29 @@ dialog::backdrop {
   .entry-cards {
     grid-template-columns: 1fr;
   }
+
+  .ticket-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .flight-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .ticket-details-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .flight-cell,
+  .flight-row-fare {
+    justify-items: start;
+  }
+
+  .ticket-actions,
+  .flight-row-actions {
+    justify-content: start;
+  }
+
 }

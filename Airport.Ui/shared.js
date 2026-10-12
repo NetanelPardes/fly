@@ -110,8 +110,8 @@ const Airport = (() => {
     return new Date(value).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
-  function money(value) {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(value);
+  function money(value, currency = "USD") {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(value);
   }
 
   function escapeHtml(value) {

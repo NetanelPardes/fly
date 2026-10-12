@@ -33,6 +33,11 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddSingleton<AirportLocationCatalog>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<ICurrencyExchangeService, CurrencyExchangeService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 builder.Services.AddHostedService<TicketOutboxPublisher>();
 builder.Services.AddHostedService<CsvFlightScheduleHostedService>();
 

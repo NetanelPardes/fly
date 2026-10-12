@@ -17,7 +17,24 @@ public record TicketDto(
     decimal Price,
     TicketStatus Status,
     string? TicketFilePath,
-    DateTime BookingDate);
+    DateTime BookingDate,
+    string Origin,
+    string OriginAirportCode,
+    string? OriginAirportName,
+    string? OriginCountry,
+    string Destination,
+    string DestinationAirportCode,
+    string? DestinationAirportName,
+    string? DestinationCountry,
+    DateTime DepartureTime,
+    DateTime ArrivalTime,
+    string BoardingGate,
+    string AircraftCode,
+    string? AircraftManufacturer,
+    string? AircraftModel,
+    int? SeatCapacity,
+    FlightStatus FlightStatus,
+    decimal FlightBasePrice);
 
 public record CreateTicketDto(
     int? PassengerId,

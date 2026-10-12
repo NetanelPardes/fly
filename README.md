@@ -148,6 +148,16 @@ docker compose up -d --build airport-api
 
 ## Optional Real Flight API Mode
 
+## Currency Conversion API
+
+Customer flight prices are stored in USD. The customer flight page can convert displayed prices to ILS, EUR, GBP, JPY, or RUB through the backend endpoint:
+
+```text
+GET /api/currency/rates
+```
+
+The backend calls the open ExchangeRate-API endpoint `https://open.er-api.com/v6/latest/USD`, caches the USD rates briefly, and never calls the provider directly from browser JavaScript. If the provider is unavailable, the UI keeps working in USD and shows a clear message.
+
 The flight producer supports Amadeus mode when `FLIGHT_PRODUCER_MODE` is set to `amadeus`:
 
 ```powershell

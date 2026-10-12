@@ -1,6 +1,15 @@
 const SEAT_SELECTION_PRICE = 18;
 const BAGGAGE_PRICES = { 10: 35, 20: 60, 35: 95 };
-const BOOKING_CUTOFF_HOURS = 5;
+const BOOKING_CUTOFF_HOURS = 1;
+const SEARCH_MIN_DEPARTURE_HOURS = 1;
+const CURRENCIES = [
+  ["USD", "US Dollar"],
+  ["ILS", "Israeli shekel"],
+  ["EUR", "Euro"],
+  ["GBP", "Pound sterling"],
+  ["JPY", "Japanese yen"],
+  ["RUB", "Russian ruble"]
+];
 let user = Airport.getUser();
 let flights = [];
 let visibleFlights = [];
@@ -9,6 +18,8 @@ let airportCountries = [];
 let locationOptions = [];
 let selectedFlight = null;
 let hasSearched = false;
+let selectedCurrency = localStorage.getItem("airport_currency") || "USD";
+let exchangeRates = { USD: 1 };
 
 if (!user || user.role !== "Passenger") location.href = "customer-login.html";
 init();
@@ -20,6 +31,10 @@ function init() {
   document.querySelector("#flightFilters").addEventListener("submit", e => { e.preventDefault(); searchFlights().catch(error => Airport.toast(error.message)); });
   setupLocationInput("#origin", "#originOptions");
   setupLocationInput("#destination", "#destinationOptions");
+  renderCurrencyPicker();
+  document.querySelector("#currencyPicker").addEventListener("change", event => {
+    changeCurrency(event.target.value).catch(error => Airport.toast(error.message));
+  });
   document.querySelector("#bookingClass").addEventListener("change", updateBookingPrice);
   document.querySelector("#bookingBaggage").addEventListener("change", updateBookingPrice);
   document.querySelector("#chooseSeat").addEventListener("change", event => {
@@ -36,6 +51,9 @@ function init() {
     if (selectedFlight) openBooking(selectedFlight.id);
   });
   document.querySelector("#closeBooking").addEventListener("click", () => document.querySelector("#bookingDialog").close());
+  setupBackdropClose("#detailsDialog");
+  setupBackdropClose("#bookingDialog");
+  setupBackdropClose("#purchaseDialog");
   document.querySelector("#bookingForm").addEventListener("submit", bookTicket);
   document.body.addEventListener("click", event => {
     if (event.target.dataset.flightDetails) openFlightDetails(event.target.dataset.flightDetails);
@@ -47,6 +65,48 @@ function init() {
 function logout() {
   Airport.clearSession();
   location.href = "customer-login.html";
+}
+
+function setupBackdropClose(selector) {
+  const dialog = document.querySelector(selector);
+  if (!dialog) return;
+  dialog.addEventListener("click", event => {
+    const box = dialog.querySelector(".dialog-form");
+    if (box && !box.contains(event.target)) dialog.close();
+  });
+}
+
+async function changeCurrency(currency) {
+  selectedCurrency = currency;
+  localStorage.setItem("airport_currency", selectedCurrency);
+  await ensureCurrencyRate();
+  renderCurrencyPicker();
+  renderFlights();
+  if (selectedFlight && document.querySelector("#detailsDialog").open) openFlightDetails(selectedFlight.id);
+  if (selectedFlight && document.querySelector("#bookingDialog").open) updateBookingPrice();
+}
+
+async function ensureCurrencyRate() {
+  if (selectedCurrency === "USD" || exchangeRates[selectedCurrency]) return;
+
+  try {
+    const result = await Airport.api("/api/currency/rates");
+    exchangeRates = { USD: 1, ...(result.rates || {}) };
+    if (exchangeRates[selectedCurrency]) return;
+  } catch {
+    // Keep flights usable in USD when the external currency API is unavailable.
+  }
+
+  selectedCurrency = "USD";
+  localStorage.setItem("airport_currency", selectedCurrency);
+  renderCurrencyPicker();
+  Airport.toast("Currency conversion is unavailable right now. Showing USD.");
+}
+
+function renderCurrencyPicker() {
+  const picker = document.querySelector("#currencyPicker");
+  if (!picker) return;
+  picker.innerHTML = CURRENCIES.map(([code]) => `<option value="${code}" ${code === selectedCurrency ? "selected" : ""}>${code}</option>`).join("");
 }
 
 async function refresh() {
@@ -70,20 +130,31 @@ async function searchFlights() {
   hasSearched = true;
   const query = customerFlightQuery();
   if (!query) return;
-  const status = await Airport.api("/api/flights/schedule-status").catch(() => null);
-  if (status && !status.ready) {
-    Airport.toast("Flight schedule is still loading. Try again in a moment.");
-    return;
-  }
 
+  setSearchLoading(true);
   try {
+    const status = await Airport.api("/api/flights/schedule-status").catch(() => null);
+    if (status && !status.ready) {
+      Airport.toast("Flight schedule is still loading. Try again in a moment.");
+      return;
+    }
+
     flights = await Airport.api(`/api/flights?${query}`);
+    await ensureCurrencyRate();
+    renderAutocomplete();
+    renderFlights();
   } catch (error) {
     Airport.toast(error.message === "Failed to fetch" ? "API is still starting. Try again in a moment." : error.message);
-    return;
+  } finally {
+    setSearchLoading(false);
   }
-  renderAutocomplete();
-  renderFlights();
+}
+
+function setSearchLoading(isLoading) {
+  const loader = document.querySelector("#searchLoader");
+  const button = document.querySelector("#flightFilters button");
+  if (loader) loader.hidden = !isLoading;
+  if (button) button.disabled = isLoading;
 }
 
 function customerFlightQuery() {
@@ -97,7 +168,7 @@ function customerFlightQuery() {
   }
 
   if (!isExactAirport(origin)) {
-    Airport.toast("Choose an exact origin airport from the list.");
+    Airport.toast("Choose an exact origin airport or country from the list.");
     return null;
   }
 
@@ -114,22 +185,25 @@ function customerFlightQuery() {
     return null;
   }
 
-  const start = withTime(startDate, 0, 0);
+  const earliestDeparture = new Date(Date.now() + SEARCH_MIN_DEPARTURE_HOURS * 60 * 60 * 1000);
+  const selectedStart = withTime(startDate, 0, 0);
+  const start = selectedStart < earliestDeparture ? earliestDeparture : selectedStart;
   const end = withTime(endDate, 23, 59);
 
   if (end < start) {
-    Airport.toast("End time must be after start time.");
+    Airport.toast("Choose a date range with flights at least 1 hour from now.");
     return null;
   }
 
   params.set("from", start.toISOString());
   params.set("to", end.toISOString());
+  params.set("bookableOnly", "true");
   params.set("originSearch", searchTermForLocation(document.querySelector("#origin")));
 
   const destination = document.querySelector("#destination").value.trim();
   if (destination) {
     if (!isExactAirport(destination)) {
-      Airport.toast("Choose an exact destination airport from the list.");
+      Airport.toast("Choose an exact destination airport or country from the list.");
       return null;
     }
     params.set("destinationSearch", searchTermForLocation(document.querySelector("#destination")));
@@ -180,15 +254,23 @@ function renderAutocomplete() {
       tokens: [item.city, item.country, item.iataCode, item.icaoCode, item.airportName, value, legacyValue].filter(Boolean)
     };
   });
+  const countryEntries = airportCountries.map(country => ({
+    type: "country",
+    value: country,
+    label: "Country",
+    searchValue: country,
+    aliases: [country.toLowerCase()],
+    tokens: [country]
+  }));
 
-  locationOptions = locationEntries.sort((a, b) => a.value.localeCompare(b.value));
+  locationOptions = [...countryEntries, ...locationEntries].sort((a, b) => a.value.localeCompare(b.value));
   updateLocationOptions(document.querySelector("#origin").value, "#originOptions");
   updateLocationOptions(document.querySelector("#destination").value, "#destinationOptions");
 }
 
 function isExactAirport(value) {
   const normalized = value.toLowerCase();
-  return locationOptions.some(option => option.type === "airport" && option.aliases.includes(normalized));
+  return locationOptions.some(option => option.aliases.includes(normalized));
 }
 
 function mergeLocations(locations) {
@@ -255,17 +337,19 @@ function renderFlights() {
   const origin = document.querySelector("#origin").value.trim();
   const destination = document.querySelector("#destination").value.trim();
   visibleFlights = flights
+    .filter(f => isAtLeastOneHourAhead(f))
+    .filter(f => f.status !== "Cancelled" && f.status !== "Departed")
     .filter(f => locationMatches(f, "origin", origin))
     .filter(f => locationMatches(f, "destination", destination))
     .sort(compareFlights);
   document.querySelector("#metricFlights").textContent = visibleFlights.length;
   document.querySelector("#metricOutgoing").textContent = new Set(visibleFlights.map(f => f.destination)).size;
   document.querySelector("#metricIncoming").textContent = new Set(visibleFlights.map(f => dateOnly(f.departureTime))).size;
-  document.querySelector("#metricBestFare").textContent = visibleFlights.length ? Airport.money(Math.min(...visibleFlights.map(basePriceForFlight))) : "-";
+  document.querySelector("#metricBestFare").textContent = visibleFlights.length ? formatFare(Math.min(...visibleFlights.map(basePriceForFlight))) : "-";
   document.querySelector("#searchResultCount").textContent = `${visibleFlights.length} ${visibleFlights.length === 1 ? "result" : "results"}`;
   document.querySelector("#resultsPanel").hidden = false;
   document.querySelector("#resultsTitle").textContent = destination ? `${origin} to ${destination}` : `Flights from ${origin}`;
-  document.querySelector("#flightsGrid").innerHTML = visibleFlights.map(flightCard).join("") || Airport.empty("No flights match this search");
+  document.querySelector("#flightsGrid").innerHTML = visibleFlights.map(flightRow).join("") || Airport.empty("No flights match this search");
 }
 
 function locationMatches(flight, side, value) {
@@ -283,6 +367,10 @@ function locationMatches(flight, side, value) {
   }
 
   return queries.some(query => fields.some(field => String(field || "").toLowerCase().includes(query)));
+}
+
+function isAtLeastOneHourAhead(flight) {
+  return new Date(flight.departureTime) >= new Date(Date.now() + SEARCH_MIN_DEPARTURE_HOURS * 60 * 60 * 1000);
 }
 
 function clientSearchTerms(value) {
@@ -310,19 +398,34 @@ function recommendationScore(flight) {
   return price * 3 + duration + hoursFromNoon * 8 + blockedPenalty;
 }
 
-function flightCard(flight) {
+function flightRow(flight) {
   const reason = bookingBlockReason(flight);
   const origin = placeLabel(flight.origin, flight.originCountry);
   const destination = placeLabel(flight.destination, flight.destinationCountry);
-  return `<article class="flight-card">
-    <div class="flight-card-top"><strong>${Airport.escapeHtml(flight.flightNumber)}</strong>${Airport.badge(flight.status)}</div>
-    <div class="flight-tags">${recommendationTags(flight).map(tag => `<span>${tag}</span>`).join("")}</div>
-    <h3>${Airport.escapeHtml(origin)} -> ${Airport.escapeHtml(destination)}</h3>
-    <div class="flight-times"><div><strong>${timeOnly(flight.departureTime)}</strong><small>${dateOnly(flight.departureTime)}</small></div><div class="flight-line"><span>${durationLabel(flight)}</span></div><div><strong>${timeOnly(flight.arrivalTime)}</strong><small>${dateOnly(flight.arrivalTime)}</small></div></div>
-    <p>Gate ${Airport.escapeHtml(flight.boardingGate || flight.gateNumber || "TBD")} - ${Airport.escapeHtml(flight.aircraftModel || flight.aircraftCode || "Aircraft TBD")}</p>
-    <div class="fare-row"><span>From</span><strong>${Airport.money(basePriceForFlight(flight))}</strong></div>
-    <div class="row-actions"><button class="ghost-button" data-flight-details="${flight.id}">Details</button><button class="primary-button" data-book-flight="${flight.id}" ${reason ? "disabled" : ""}>${reason || "Book"}</button></div>
+  return `<article class="flight-row">
+    <div class="flight-row-main">
+      <div class="flight-row-title">
+        <strong>${Airport.escapeHtml(flight.flightNumber)}</strong>
+        ${Airport.badge(flight.status)}
+        ${recommendationTags(flight).map(tag => `<span class="mini-tag">${tag}</span>`).join("")}
+      </div>
+      <div class="flight-row-route">${Airport.escapeHtml(origin)} <span>-></span> ${Airport.escapeHtml(destination)}</div>
+      <div class="flight-row-subroute">${Airport.escapeHtml(airportLabel(flight.originAirportName, flight.originIataCode || flight.originAirportCode))} to ${Airport.escapeHtml(airportLabel(flight.destinationAirportName, flight.destinationIataCode || flight.destinationAirportCode))}</div>
+    </div>
+    <div class="flight-cell"><small>Depart</small><strong>${timeOnly(flight.departureTime)}</strong><span>${dateOnly(flight.departureTime)}</span></div>
+    <div class="flight-cell"><small>Arrive</small><strong>${timeOnly(flight.arrivalTime)}</strong><span>${dateOnly(flight.arrivalTime)}</span></div>
+    <div class="flight-cell"><small>Duration</small><strong>${durationLabel(flight)}</strong><span>${Airport.escapeHtml(flight.boardingGate || flight.gateNumber || "TBD")}</span></div>
+    <div class="flight-cell"><small>Aircraft</small><strong>${Airport.escapeHtml([flight.aircraftManufacturer, flight.aircraftModel].filter(Boolean).join(" ") || flight.aircraftCode || "TBD")}</strong><span>${Airport.escapeHtml(flight.seatCapacity || "TBD")} seats</span></div>
+    <div class="flight-row-fare"><small>From</small><strong>${formatFare(basePriceForFlight(flight))}</strong></div>
+    <div class="flight-row-actions">
+      <button class="ghost-button" data-flight-details="${flight.id}">Details</button>
+      <button class="primary-button" data-book-flight="${flight.id}" ${reason ? "disabled" : ""}>${reason || "Book"}</button>
+    </div>
   </article>`;
+}
+
+function airportLabel(name, code) {
+  return [name, code ? `(${code})` : ""].filter(Boolean).join(" ") || "Airport";
 }
 
 function placeLabel(city, country) {
@@ -351,8 +454,8 @@ function openFlightDetails(flightId) {
     <article><small>Status</small><strong>${selectedFlight.status}</strong></article>
     <article><small>Aircraft</small><strong>${Airport.escapeHtml([selectedFlight.aircraftManufacturer, selectedFlight.aircraftModel].filter(Boolean).join(" ") || selectedFlight.aircraftCode || "Unknown")}</strong></article>
     <article><small>Seats</small><strong>${Airport.escapeHtml(selectedFlight.seatCapacity || "TBD")}</strong></article>
-    <article><small>Economy from</small><strong>${Airport.money(basePriceForFlight(selectedFlight))}</strong></article>
-    <article><small>Business from</small><strong>${Airport.money(classTotal(selectedFlight, "Business"))}</strong></article>
+    <article><small>Economy from</small><strong>${formatFare(basePriceForFlight(selectedFlight))}</strong></article>
+    <article><small>Business from</small><strong>${formatFare(classTotal(selectedFlight, "Business"))}</strong></article>
   </div>${reason ? `<p class="notice">${Airport.escapeHtml(reason)} - this flight cannot be booked here.</p>` : ""}`;
   const button = document.querySelector("#detailsBookButton");
   button.disabled = Boolean(reason);
@@ -371,8 +474,6 @@ function openBooking(flightId) {
   if (!selectedFlight || bookingBlockReason(selectedFlight)) return;
   document.querySelector("#bookingFlightId").value = selectedFlight.id;
   document.querySelector("#bookingFlightText").textContent = `${selectedFlight.flightNumber}: ${placeLabel(selectedFlight.origin, selectedFlight.originCountry)} -> ${placeLabel(selectedFlight.destination, selectedFlight.destinationCountry)} - ${Airport.formatDate(selectedFlight.departureTime)}`;
-  document.querySelector("#bookingPassengerId").value = user.nationalId || "";
-  document.querySelector("#bookingPassengerEmail").value = user.email;
   document.querySelector("#chooseSeat").checked = false;
   document.querySelector("#seatPickerRow").hidden = true;
   document.querySelector("#bookingSeat").value = "";
@@ -390,11 +491,16 @@ function updateBookingPrice() {
   const classExtra = classTotal(selectedFlight, klass) - base;
   const seat = document.querySelector("#chooseSeat").checked ? SEAT_SELECTION_PRICE : 0;
   const bag = document.querySelector("#addBaggage").checked ? BAGGAGE_PRICES[document.querySelector("#bookingBaggage").value] || 0 : 0;
-  document.querySelector("#flightPriceText").textContent = Airport.money(base);
-  document.querySelector("#seatPriceText").textContent = Airport.money(seat);
-  document.querySelector("#bagPriceText").textContent = Airport.money(bag);
-  document.querySelector("#classPriceText").textContent = Airport.money(classExtra);
+  document.querySelector("#flightPriceText").textContent = formatFare(base);
+  document.querySelector("#seatPriceText").textContent = formatFare(seat);
+  document.querySelector("#bagPriceText").textContent = formatFare(bag);
+  document.querySelector("#classPriceText").textContent = formatFare(classExtra);
   document.querySelector("#bookingPrice").value = (base + classExtra + seat + bag).toFixed(2);
+}
+
+function formatFare(usdValue) {
+  const rate = exchangeRates[selectedCurrency] || 1;
+  return Airport.money(Number(usdValue || 0) * rate, selectedCurrency);
 }
 
 function basePriceForFlight(flight) {
@@ -439,22 +545,33 @@ async function bookTicket(event) {
     baggageAllowanceKg: document.querySelector("#addBaggage").checked ? Number(document.querySelector("#bookingBaggage").value) : 0
   };
 
-  const passengerNationalId = document.querySelector("#bookingPassengerId").value.trim();
-  const passengerEmail = document.querySelector("#bookingPassengerEmail").value.trim();
   const seatNumber = document.querySelector("#chooseSeat").checked ? document.querySelector("#bookingSeat").value.trim() : "";
-  if (passengerNationalId) payload.passengerNationalId = passengerNationalId;
-  if (passengerEmail) payload.passengerEmail = passengerEmail;
+  if (user.nationalId) payload.passengerNationalId = user.nationalId;
+  if (user.email) payload.passengerEmail = user.email;
   if (seatNumber) payload.seatNumber = seatNumber;
 
   try {
-    await Airport.api("/api/tickets", {
+    const ticket = await Airport.api("/api/tickets", {
       method: "POST",
       body: JSON.stringify(payload)
     });
     document.querySelector("#bookingDialog").close();
-    Airport.toast("Ticket booked.");
-    setTimeout(() => location.href = "customer-tickets.html", 700);
+    showPurchaseConfirmation(ticket);
   } catch (error) {
     Airport.toast(error.message);
   }
+}
+
+function showPurchaseConfirmation(ticket) {
+  const dialog = document.querySelector("#purchaseDialog");
+  document.querySelector("#purchaseBody").innerHTML = `
+    <p>Your ticket was booked successfully.</p>
+    <dl class="confirmation-list">
+      <div><dt>Flight</dt><dd>${Airport.escapeHtml(ticket.flightNumber || selectedFlight?.flightNumber || "")}</dd></div>
+      <div><dt>Route</dt><dd>${Airport.escapeHtml(placeLabel(selectedFlight?.origin, selectedFlight?.originCountry))} -> ${Airport.escapeHtml(placeLabel(selectedFlight?.destination, selectedFlight?.destinationCountry))}</dd></div>
+      <div><dt>Seat</dt><dd>${Airport.escapeHtml(ticket.seatNumber || "Assigned")}</dd></div>
+      <div><dt>Class</dt><dd>${Airport.escapeHtml(ticket.class || document.querySelector("#bookingClass").value)}</dd></div>
+      <div><dt>Total</dt><dd>${formatFare(ticket.price || Number(document.querySelector("#bookingPrice").value))}</dd></div>
+    </dl>`;
+  dialog.showModal();
 }
