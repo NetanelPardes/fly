@@ -2,6 +2,11 @@ const SEAT_SELECTION_PRICE = 18;
 const BAGGAGE_PRICES = { 10: 35, 20: 60, 25: 75, 35: 95 };
 const BOOKING_CUTOFF_HOURS = 1;
 const SEARCH_MIN_DEPARTURE_HOURS = 1;
+const MAX_CONNECTIONS = 3;
+const MIN_CONNECTION_MINUTES = 60;
+const MAX_CONNECTION_MINUTES = 24 * 60;
+const MAX_CONNECTION_RESULTS = 120;
+const MAX_CONNECTION_CANDIDATES_PER_LEG = 80;
 const CURRENCIES = [
   ["USD", "US Dollar"],
   ["ILS", "Israeli shekel"],
@@ -12,7 +17,9 @@ const CURRENCIES = [
 ];
 let user = Airport.getUser();
 let flights = [];
+let searchFlightsPool = [];
 let visibleFlights = [];
+let flightsAreRoutes = false;
 let airportLocations = [];
 let airportCountries = [];
 let locationOptions = [];
@@ -35,6 +42,10 @@ function init() {
     e.preventDefault();
     Airport.resetPagination("customer-flights");
     searchFlights().catch(error => Airport.toast(error.message));
+  });
+  document.querySelector("#sortBy").addEventListener("change", () => {
+    Airport.resetPagination("customer-flights");
+    renderFlights();
   });
   setupLocationInput("#origin", "#originOptions");
   setupLocationInput("#destination", "#destinationOptions");
@@ -147,7 +158,19 @@ async function searchFlights() {
       return;
     }
 
-    flights = await Airport.api(`/api/flights?${query}`);
+    if (query.useConnectionSearch) {
+      const routeQuery = new URLSearchParams(query);
+      routeQuery.set("originSearch", query.routeOriginSearch);
+      routeQuery.set("destinationSearch", query.routeDestinationSearch);
+      flights = await Airport.api(`/api/flights/routes?${routeQuery}`);
+      flightsAreRoutes = true;
+      searchFlightsPool = [];
+    } else {
+      const queryText = query.toString();
+      flights = await Airport.api(`/api/flights?${queryText}`);
+      flightsAreRoutes = false;
+      searchFlightsPool = [];
+    }
     await ensureCurrencyRate();
     renderAutocomplete();
     renderFlights();
@@ -266,7 +289,6 @@ function customerFlightQuery() {
   params.set("from", start.toISOString());
   params.set("to", end.toISOString());
   params.set("bookableOnly", "true");
-  params.set("originSearch", searchTermForLocation(document.querySelector("#origin")));
 
   const destination = document.querySelector("#destination").value.trim();
   if (destination) {
@@ -274,7 +296,11 @@ function customerFlightQuery() {
       Airport.toast("Choose a destination country or city from the list.");
       return null;
     }
-    params.set("destinationSearch", searchTermForLocation(document.querySelector("#destination")));
+    params.useConnectionSearch = true;
+    params.routeOriginSearch = searchTermForLocation(document.querySelector("#origin"));
+    params.routeDestinationSearch = searchTermForLocation(document.querySelector("#destination"));
+  } else {
+    params.set("originSearch", searchTermForLocation(document.querySelector("#origin")));
   }
 
   return params;
@@ -298,6 +324,8 @@ function withTime(date, hours, minutes) {
 function resetSearchResults() {
   hasSearched = false;
   visibleFlights = [];
+  searchFlightsPool = [];
+  flightsAreRoutes = false;
   document.querySelector("#metricFlights").textContent = "0";
   document.querySelector("#metricOutgoing").textContent = "0";
   document.querySelector("#metricIncoming").textContent = "0";
@@ -404,20 +432,224 @@ function searchTermFromValue(value) {
 function renderFlights() {
   const origin = document.querySelector("#origin").value.trim();
   const destination = document.querySelector("#destination").value.trim();
-  visibleFlights = flights
+  if (flightsAreRoutes) {
+    visibleFlights = flights
+      .filter(route => routeLegs(route).every(leg => isAtLeastOneHourAhead(leg) && leg.status !== "Cancelled" && leg.status !== "Departed"))
+      .sort(compareFlights);
+    updateFlightResultSummary(origin, destination);
+    return;
+  }
+
+  const directFlights = flights
     .filter(f => isAtLeastOneHourAhead(f))
     .filter(f => f.status !== "Cancelled" && f.status !== "Departed")
     .filter(f => locationMatches(f, "origin", origin))
-    .filter(f => locationMatches(f, "destination", destination))
+    .filter(f => locationMatches(f, "destination", destination));
+  const connectionRoutes = destination ? findConnectionRoutes(origin, destination, directFlights) : [];
+  visibleFlights = [...directFlights.map(singleFlightRoute), ...connectionRoutes]
     .sort(compareFlights);
+  updateFlightResultSummary(origin, destination);
+}
+
+function updateFlightResultSummary(origin, destination) {
   document.querySelector("#metricFlights").textContent = visibleFlights.length;
-  document.querySelector("#metricOutgoing").textContent = new Set(visibleFlights.map(f => f.destination)).size;
-  document.querySelector("#metricIncoming").textContent = new Set(visibleFlights.map(f => dateOnly(f.departureTime))).size;
-  document.querySelector("#metricBestFare").textContent = visibleFlights.length ? formatFare(Math.min(...visibleFlights.map(basePriceForFlight))) : "-";
+  document.querySelector("#metricOutgoing").textContent = new Set(visibleFlights.map(routeDestination)).size;
+  document.querySelector("#metricIncoming").textContent = new Set(visibleFlights.map(route => dateOnly(routeDepartureTime(route)))).size;
+  document.querySelector("#metricBestFare").textContent = visibleFlights.length ? formatFare(Math.min(...visibleFlights.map(routeBasePrice))) : "-";
   document.querySelector("#searchResultCount").textContent = `${visibleFlights.length} ${visibleFlights.length === 1 ? "result" : "results"}`;
   document.querySelector("#resultsPanel").hidden = false;
   document.querySelector("#resultsTitle").textContent = destination ? `${origin} to ${destination}` : `Flights from ${origin}`;
   document.querySelector("#flightsGrid").innerHTML = Airport.paginatedList("customer-flights", visibleFlights, flightRow, "No flights match this search", { onPageChange: renderFlights });
+}
+
+function singleFlightRoute(flight) {
+  return { ...flight, isConnectionRoute: false, legs: [flight], connectionCount: 0, routeId: `flight-${flight.id}` };
+}
+
+function findConnectionRoutes(origin, destination, directFlights) {
+  const directIds = new Set(directFlights.map(flight => flight.id));
+  const pool = (searchFlightsPool.length ? searchFlightsPool : flights)
+    .filter(f => isAtLeastOneHourAhead(f))
+    .filter(f => f.status !== "Cancelled" && f.status !== "Departed")
+    .sort((a, b) => new Date(a.departureTime) - new Date(b.departureTime));
+  const results = [];
+  const seenRoutes = new Set();
+  const startFlights = pool.filter(flight => locationMatches(flight, "origin", origin));
+  const connectionIndex = buildConnectionIndex(pool);
+
+  for (const start of startFlights) {
+    exploreConnectionRoute([start], new Set([connectionNodeKey(start, "origin")]));
+    if (results.length >= MAX_CONNECTION_RESULTS) break;
+  }
+
+  return results
+    .filter(route => !directIds.has(route.legs[0].id) || route.connectionCount > 0)
+    .sort((a, b) => routeConnectionCount(a) - routeConnectionCount(b) || routeBasePrice(a) - routeBasePrice(b) || new Date(routeDepartureTime(a)) - new Date(routeDepartureTime(b)))
+    .slice(0, MAX_CONNECTION_RESULTS);
+
+  function exploreConnectionRoute(legs, visitedAirports) {
+    const last = legs[legs.length - 1];
+    const destinationKey = connectionNodeKey(last, "destination");
+
+    if (locationMatches(last, "destination", destination) && legs.length > 1) {
+      const routeKeyText = legs.map(leg => leg.id).join("-");
+      if (!seenRoutes.has(routeKeyText)) {
+        seenRoutes.add(routeKeyText);
+        results.push(connectionRoute(legs));
+      }
+      return;
+    }
+
+    if (legs.length >= MAX_CONNECTIONS + 1 || results.length >= MAX_CONNECTION_RESULTS) return;
+    if (visitedAirports.has(destinationKey)) return;
+    const nextVisited = new Set(visitedAirports);
+    nextVisited.add(destinationKey);
+
+    for (const next of nextConnectionCandidates(last, connectionIndex)) {
+      if (!isValidConnection(last, next)) continue;
+      if (nextVisited.has(connectionNodeKey(next, "destination"))) continue;
+      exploreConnectionRoute([...legs, next], nextVisited);
+      if (results.length >= MAX_CONNECTION_RESULTS) break;
+    }
+  }
+}
+
+function buildConnectionIndex(pool) {
+  const index = new Map();
+  for (const flight of pool) {
+    for (const key of connectionOriginKeys(flight)) {
+      if (!index.has(key)) index.set(key, []);
+      index.get(key).push(flight);
+    }
+  }
+
+  for (const options of index.values()) {
+    options.sort((a, b) => new Date(a.departureTime) - new Date(b.departureTime));
+  }
+
+  return index;
+}
+
+function nextConnectionCandidates(previous, index) {
+  const earliest = new Date(previous.arrivalTime).getTime() + MIN_CONNECTION_MINUTES * 60000;
+  const latest = new Date(previous.arrivalTime).getTime() + MAX_CONNECTION_MINUTES * 60000;
+  const candidates = new Map();
+
+  for (const key of connectionDestinationKeys(previous)) {
+    const options = index.get(key) || [];
+    for (const next of options) {
+      if (next.id === previous.id) continue;
+      const departure = new Date(next.departureTime).getTime();
+      if (departure < earliest) continue;
+      if (departure > latest) break;
+      candidates.set(next.id, next);
+      if (candidates.size >= MAX_CONNECTION_CANDIDATES_PER_LEG) break;
+    }
+    if (candidates.size >= MAX_CONNECTION_CANDIDATES_PER_LEG) break;
+  }
+
+  return [...candidates.values()];
+}
+
+function connectionRoute(legs) {
+  const first = legs[0];
+  const last = legs[legs.length - 1];
+  return {
+    ...first,
+    id: `connection-${legs.map(leg => leg.id).join("-")}`,
+    routeId: `connection-${legs.map(leg => leg.id).join("-")}`,
+    isConnectionRoute: true,
+    legs,
+    connectionCount: legs.length - 1,
+    flightNumber: legs.map(leg => leg.flightNumber).join(" + "),
+    destination: last.destination,
+    destinationAirportCode: last.destinationAirportCode,
+    destinationAirportName: last.destinationAirportName,
+    destinationIataCode: last.destinationIataCode,
+    destinationCountry: last.destinationCountry,
+    arrivalTime: last.arrivalTime,
+    basePrice: legs.reduce((sum, leg) => sum + basePriceForFlight(leg), 0)
+  };
+}
+
+function isValidConnection(previous, next) {
+  const waitMinutes = Math.round((new Date(next.departureTime) - new Date(previous.arrivalTime)) / 60000);
+  return waitMinutes >= MIN_CONNECTION_MINUTES && waitMinutes <= MAX_CONNECTION_MINUTES;
+}
+
+function airportKey(flight, side) {
+  const code = side === "origin"
+    ? flight.originIataCode || flight.originAirportCode
+    : flight.destinationIataCode || flight.destinationAirportCode;
+  if (code) return String(code).trim().toLowerCase();
+
+  const city = side === "origin" ? flight.origin : flight.destination;
+  const country = side === "origin" ? flight.originCountry : flight.destinationCountry;
+  const airportName = side === "origin" ? flight.originAirportName : flight.destinationAirportName;
+  return [city, country, airportName].filter(Boolean).map(value => String(value).trim().toLowerCase()).join("|");
+}
+
+function connectionOriginKeys(flight) {
+  return connectionKeys(flight, "origin");
+}
+
+function connectionDestinationKeys(flight) {
+  return connectionKeys(flight, "destination");
+}
+
+function connectionKeys(flight, side) {
+  const keys = new Set();
+  const airport = airportKey(flight, side);
+  if (airport) keys.add(`airport:${airport}`);
+
+  const country = side === "origin" ? flight.originCountry : flight.destinationCountry;
+  if (country) keys.add(`country:${String(country).trim().toLowerCase()}`);
+
+  const city = side === "origin" ? flight.origin : flight.destination;
+  if (city) keys.add(`city:${String(city).trim().toLowerCase()}`);
+
+  return [...keys];
+}
+
+function connectionNodeKey(flight, side) {
+  const country = side === "origin" ? flight.originCountry : flight.destinationCountry;
+  if (country) return `country:${String(country).trim().toLowerCase()}`;
+  return `airport:${airportKey(flight, side)}`;
+}
+
+function routeConnectionCount(route) {
+  return route.connectionCount || 0;
+}
+
+function routeLegs(route) {
+  return route.legs?.length ? route.legs : [route];
+}
+
+function routeDepartureTime(route) {
+  return routeLegs(route)[0].departureTime;
+}
+
+function routeArrivalTime(route) {
+  return routeLegs(route).at(-1).arrivalTime;
+}
+
+function routeBasePrice(route) {
+  return routeLegs(route).reduce((sum, leg) => sum + basePriceForFlight(leg), 0);
+}
+
+function routeDurationMinutes(route) {
+  return Math.max(1, Math.round((new Date(routeArrivalTime(route)) - new Date(routeDepartureTime(route))) / 60000));
+}
+
+function routeDestination(route) {
+  return routeLegs(route).at(-1).destination;
+}
+
+function routeStopLabel(route) {
+  const count = routeConnectionCount(route);
+  if (count === 0) return "Direct";
+  if (count === 1) return "1 connection";
+  return `${count} connections`;
 }
 
 function locationMatches(flight, side, value) {
@@ -454,42 +686,75 @@ function isAirportCodeQuery(value) {
 
 function compareFlights(a, b) {
   const mode = document.querySelector("#sortBy").value;
-  if (mode === "price") return basePriceForFlight(a) - basePriceForFlight(b);
-  return new Date(a.departureTime) - new Date(b.departureTime);
+  if (mode === "connections") return routeConnectionCount(a) - routeConnectionCount(b) || new Date(routeDepartureTime(a)) - new Date(routeDepartureTime(b)) || routeBasePrice(a) - routeBasePrice(b);
+  if (mode === "price") return routeBasePrice(a) - routeBasePrice(b) || routeConnectionCount(a) - routeConnectionCount(b);
+  return new Date(routeDepartureTime(a)) - new Date(routeDepartureTime(b)) || routeConnectionCount(a) - routeConnectionCount(b);
 }
 
 function recommendationScore(flight) {
-  const price = basePriceForFlight(flight);
-  const duration = durationMinutes(flight);
-  const hoursFromNoon = Math.abs(new Date(flight.departureTime).getHours() - 12);
+  const price = routeBasePrice(flight);
+  const duration = routeDurationMinutes(flight);
+  const hoursFromNoon = Math.abs(new Date(routeDepartureTime(flight)).getHours() - 12);
   const blockedPenalty = bookingBlockReason(flight) ? 10000 : 0;
-  return price * 3 + duration + hoursFromNoon * 8 + blockedPenalty;
+  return price * 3 + duration + hoursFromNoon * 8 + routeConnectionCount(flight) * 90 + blockedPenalty;
 }
 
 function flightRow(flight) {
   const reason = bookingBlockReason(flight);
-  const origin = placeLabel(flight.origin, flight.originCountry);
-  const destination = placeLabel(flight.destination, flight.destinationCountry);
+  const legs = routeLegs(flight);
+  const first = legs[0];
+  const last = legs.at(-1);
+  const origin = placeLabel(first.origin, first.originCountry);
+  const destination = placeLabel(last.destination, last.destinationCountry);
+  const routeId = Airport.escapeHtml(flight.routeId || String(flight.id));
+  const primaryFlightId = first.id;
+  const action = flight.isConnectionRoute
+    ? `<button class="primary-button" data-flight-details="${routeId}">View route</button>`
+    : `<button class="primary-button" data-book-flight="${primaryFlightId}" ${reason ? "disabled" : ""}>${reason || "Book"}</button>`;
   return `<article class="flight-row">
     <div class="flight-row-main">
       <div class="flight-row-title">
-        <strong>${Airport.escapeHtml(flight.flightNumber)}</strong>
-        ${Airport.badge(flight.status)}
+        <strong>${Airport.escapeHtml(flight.flightNumber || routeFlightNumbers(flight))}</strong>
+        <span class="mini-tag">${Airport.escapeHtml(routeStopLabel(flight))}</span>
+        ${Airport.badge(first.status)}
         ${recommendationTags(flight).map(tag => `<span class="mini-tag">${tag}</span>`).join("")}
       </div>
       <div class="flight-row-route">${Airport.escapeHtml(origin)} <span>-></span> ${Airport.escapeHtml(destination)}</div>
-      <div class="flight-row-subroute">${Airport.escapeHtml(airportLabel(flight.originAirportName, flight.originIataCode || flight.originAirportCode))} to ${Airport.escapeHtml(airportLabel(flight.destinationAirportName, flight.destinationIataCode || flight.destinationAirportCode))}</div>
+      <div class="flight-row-subroute">${Airport.escapeHtml(routeAirportSummary(flight))}</div>
     </div>
-    <div class="flight-cell"><small>Depart</small><strong>${timeOnly(flight.departureTime)}</strong><span>${dateOnly(flight.departureTime)}</span></div>
-    <div class="flight-cell"><small>Arrive</small><strong>${timeOnly(flight.arrivalTime)}</strong><span>${dateOnly(flight.arrivalTime)}</span></div>
-    <div class="flight-cell"><small>Duration</small><strong>${durationLabel(flight)}</strong><span>${Airport.escapeHtml(flight.boardingGate || flight.gateNumber || "TBD")}</span></div>
-    <div class="flight-cell"><small>Aircraft</small><strong>${Airport.escapeHtml([flight.aircraftManufacturer, flight.aircraftModel].filter(Boolean).join(" ") || flight.aircraftCode || "TBD")}</strong><span>${Airport.escapeHtml(flight.seatCapacity || "TBD")} seats</span></div>
-    <div class="flight-row-fare"><small>From</small><strong>${formatFare(basePriceForFlight(flight))}</strong></div>
+    <div class="flight-cell"><small>Depart</small><strong>${timeOnly(routeDepartureTime(flight))}</strong><span>${dateOnly(routeDepartureTime(flight))}</span></div>
+    <div class="flight-cell"><small>Arrive</small><strong>${timeOnly(routeArrivalTime(flight))}</strong><span>${dateOnly(routeArrivalTime(flight))}</span></div>
+    <div class="flight-cell"><small>Duration</small><strong>${routeDurationLabel(flight)}</strong><span>${Airport.escapeHtml(connectionWaitLabel(flight))}</span></div>
+    <div class="flight-cell"><small>Legs</small><strong>${legs.length}</strong><span>${Airport.escapeHtml(routeFlightNumbers(flight))}</span></div>
+    <div class="flight-row-fare"><small>From</small><strong>${formatFare(routeBasePrice(flight))}</strong></div>
     <div class="flight-row-actions">
-      <button class="ghost-button" data-flight-details="${flight.id}">Details</button>
-      <button class="primary-button" data-book-flight="${flight.id}" ${reason ? "disabled" : ""}>${reason || "Book"}</button>
+      <button class="ghost-button" data-flight-details="${routeId}">Details</button>
+      ${action}
     </div>
   </article>`;
+}
+
+function routeAirportSummary(route) {
+  const legs = routeLegs(route);
+  return legs
+    .map((leg, index) => index === 0
+      ? airportLabel(leg.originAirportName, leg.originIataCode || leg.originAirportCode)
+      : airportLabel(leg.destinationAirportName, leg.destinationIataCode || leg.destinationAirportCode))
+    .join(" to ");
+}
+
+function routeFlightNumbers(route) {
+  return routeLegs(route).map(leg => leg.flightNumber).join(", ");
+}
+
+function connectionWaitLabel(route) {
+  const legs = routeLegs(route);
+  if (legs.length === 1) return legs[0].boardingGate || legs[0].gateNumber || "TBD";
+  const waits = [];
+  for (let index = 0; index < legs.length - 1; index++) {
+    waits.push(Math.round((new Date(legs[index + 1].departureTime) - new Date(legs[index].arrivalTime)) / 60000));
+  }
+  return `Layover ${durationFromMinutes(Math.min(...waits))}`;
 }
 
 function airportLabel(name, code) {
@@ -503,42 +768,72 @@ function placeLabel(city, country) {
 function recommendationTags(flight) {
   const active = visibleFlights.length ? visibleFlights : flights;
   const tags = [];
-  if (active.length && basePriceForFlight(flight) === Math.min(...active.map(basePriceForFlight))) tags.push("Cheapest");
+  if (active.length && routeBasePrice(flight) === Math.min(...active.map(routeBasePrice))) tags.push("Cheapest");
   if (!bookingBlockReason(flight) && recommendationScore(flight) === Math.min(...active.map(recommendationScore))) tags.push("Recommended");
   return tags.slice(0, 2);
 }
 
 function openFlightDetails(flightId) {
-  selectedFlight = flights.find(f => f.id === Number(flightId));
+  selectedFlight = visibleFlights.find(f => String(f.routeId || f.id) === String(flightId))
+    || flights.find(f => String(f.id) === String(flightId));
   if (!selectedFlight) return;
+  if (selectedFlight.legs?.length === 1 && !selectedFlight.isConnectionRoute) selectedFlight = selectedFlight.legs[0];
   const reason = bookingBlockReason(selectedFlight);
-  document.querySelector("#detailsTitle").textContent = `${selectedFlight.flightNumber} flight details`;
-  document.querySelector("#detailsBody").innerHTML = `<div class="detail-grid">
-    <article><small>Route</small><strong>${Airport.escapeHtml(placeLabel(selectedFlight.origin, selectedFlight.originCountry))} -> ${Airport.escapeHtml(placeLabel(selectedFlight.destination, selectedFlight.destinationCountry))}</strong></article>
-    <article><small>Departure</small><strong>${Airport.formatDate(selectedFlight.departureTime)}</strong></article>
-    <article><small>Arrival</small><strong>${Airport.formatDate(selectedFlight.arrivalTime)}</strong></article>
-    <article><small>Duration</small><strong>${durationLabel(selectedFlight)}</strong></article>
-    <article><small>Gate</small><strong>${Airport.escapeHtml(selectedFlight.boardingGate || selectedFlight.gateNumber || "TBD")}</strong></article>
-    <article><small>Status</small><strong>${selectedFlight.status}</strong></article>
-    <article><small>Aircraft</small><strong>${Airport.escapeHtml([selectedFlight.aircraftManufacturer, selectedFlight.aircraftModel].filter(Boolean).join(" ") || selectedFlight.aircraftCode || "Unknown")}</strong></article>
-    <article><small>Seats</small><strong>${Airport.escapeHtml(selectedFlight.seatCapacity || "TBD")}</strong></article>
-    <article><small>Economy from</small><strong>${formatFare(basePriceForFlight(selectedFlight))}</strong></article>
-    <article><small>Business from</small><strong>${formatFare(classTotal(selectedFlight, "Business"))}</strong></article>
-  </div>${reason ? `<p class="notice">${Airport.escapeHtml(reason)} - this flight cannot be booked here.</p>` : ""}`;
+  document.querySelector("#detailsTitle").textContent = selectedFlight.isConnectionRoute ? `${routeStopLabel(selectedFlight)} route details` : `${selectedFlight.flightNumber} flight details`;
+  document.querySelector("#detailsBody").innerHTML = selectedFlight.isConnectionRoute
+    ? connectionDetailsHtml(selectedFlight)
+    : `<div class="detail-grid">
+      <article><small>Route</small><strong>${Airport.escapeHtml(placeLabel(selectedFlight.origin, selectedFlight.originCountry))} -> ${Airport.escapeHtml(placeLabel(selectedFlight.destination, selectedFlight.destinationCountry))}</strong></article>
+      <article><small>Departure</small><strong>${Airport.formatDate(selectedFlight.departureTime)}</strong></article>
+      <article><small>Arrival</small><strong>${Airport.formatDate(selectedFlight.arrivalTime)}</strong></article>
+      <article><small>Duration</small><strong>${durationLabel(selectedFlight)}</strong></article>
+      <article><small>Gate</small><strong>${Airport.escapeHtml(selectedFlight.boardingGate || selectedFlight.gateNumber || "TBD")}</strong></article>
+      <article><small>Status</small><strong>${selectedFlight.status}</strong></article>
+      <article><small>Aircraft</small><strong>${Airport.escapeHtml([selectedFlight.aircraftManufacturer, selectedFlight.aircraftModel].filter(Boolean).join(" ") || selectedFlight.aircraftCode || "Unknown")}</strong></article>
+      <article><small>Seats</small><strong>${Airport.escapeHtml(selectedFlight.seatCapacity || "TBD")}</strong></article>
+      <article><small>Economy from</small><strong>${formatFare(basePriceForFlight(selectedFlight))}</strong></article>
+      <article><small>Business from</small><strong>${formatFare(classTotal(selectedFlight, "Business"))}</strong></article>
+    </div>${reason ? `<p class="notice">${Airport.escapeHtml(reason)} - this flight cannot be booked here.</p>` : ""}`;
   const button = document.querySelector("#detailsBookButton");
-  button.disabled = Boolean(reason);
-  button.textContent = reason || "Continue to booking";
+  button.disabled = Boolean(reason) || selectedFlight.isConnectionRoute;
+  button.textContent = selectedFlight.isConnectionRoute ? "Book direct legs separately" : reason || "Continue to booking";
   document.querySelector("#detailsDialog").showModal();
 }
 
+function connectionDetailsHtml(route) {
+  const legs = routeLegs(route);
+  const legRows = legs.map((leg, index) => {
+    const wait = index === legs.length - 1 ? "" : `<span class="connection-wait">Connection wait: ${durationFromMinutes(Math.round((new Date(legs[index + 1].departureTime) - new Date(leg.arrivalTime)) / 60000))}</span>`;
+    return `<article class="connection-leg">
+      <small>Leg ${index + 1}</small>
+      <strong>${Airport.escapeHtml(leg.flightNumber)}: ${Airport.escapeHtml(placeLabel(leg.origin, leg.originCountry))} -> ${Airport.escapeHtml(placeLabel(leg.destination, leg.destinationCountry))}</strong>
+      <span>${Airport.formatDate(leg.departureTime)} to ${Airport.formatDate(leg.arrivalTime)}</span>
+      ${wait}
+    </article>`;
+  }).join("");
+
+  return `<div class="detail-grid">
+    <article><small>Route</small><strong>${Airport.escapeHtml(routeAirportSummary(route))}</strong></article>
+    <article><small>Connections</small><strong>${routeConnectionCount(route)}</strong></article>
+    <article><small>Total duration</small><strong>${routeDurationLabel(route)}</strong></article>
+    <article><small>Total from</small><strong>${formatFare(routeBasePrice(route))}</strong></article>
+  </div>
+  <div class="connection-legs">${legRows}</div>
+  <p class="notice">Connection routes are calculated from available flights. Book each leg as a separate ticket.</p>`;
+}
+
 function bookingBlockReason(flight) {
+  if (flight.isConnectionRoute) return "Connection";
   if (flight.status === "Cancelled" || flight.status === "Departed") return "Unavailable";
-  if (new Date(flight.departureTime) <= new Date(Date.now() + BOOKING_CUTOFF_HOURS * 60 * 60 * 1000)) return "Closed";
+  if (new Date(routeDepartureTime(flight)) <= new Date(Date.now() + BOOKING_CUTOFF_HOURS * 60 * 60 * 1000)) return "Closed";
   return "";
 }
 
 function openBooking(flightId) {
-  selectedFlight = flights.find(f => f.id === Number(flightId));
+  const selectedRoute = visibleFlights.find(f => !f.isConnectionRoute && String(routeLegs(f)[0].id) === String(flightId));
+  selectedFlight = selectedRoute ? routeLegs(selectedRoute)[0] : null;
+  selectedFlight = selectedFlight
+    || flights.find(f => String(f.id) === String(flightId));
   if (!selectedFlight || bookingBlockReason(selectedFlight)) return;
   document.querySelector("#bookingFlightId").value = selectedFlight.id;
   document.querySelector("#bookingFlightText").textContent = `${selectedFlight.flightNumber}: ${placeLabel(selectedFlight.origin, selectedFlight.originCountry)} -> ${placeLabel(selectedFlight.destination, selectedFlight.destinationCountry)} - ${Airport.formatDate(selectedFlight.departureTime)}`;
@@ -592,6 +887,14 @@ function durationMinutes(flight) {
 
 function durationLabel(flight) {
   const minutes = durationMinutes(flight);
+  return durationFromMinutes(minutes);
+}
+
+function routeDurationLabel(route) {
+  return durationFromMinutes(routeDurationMinutes(route));
+}
+
+function durationFromMinutes(minutes) {
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   return `${hours}h ${String(rest).padStart(2, "0")}m`;

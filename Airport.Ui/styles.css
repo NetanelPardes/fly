@@ -1455,6 +1455,43 @@ tbody tr:hover {
   font-weight: 800;
 }
 
+.connection-legs {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.connection-leg {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fbfd;
+}
+
+.connection-leg small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.connection-leg strong {
+  color: var(--navy);
+  font-size: 14px;
+}
+
+.connection-leg span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.connection-wait {
+  color: #0f5d9b !important;
+}
+
 .ticket-card {
   display: grid;
   gap: 16px;

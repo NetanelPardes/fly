@@ -14,6 +14,11 @@ namespace Airport.Api.Controllers;
 public class FlightsController(AirportDbContext dbContext, IConfiguration configuration) : ControllerBase
 {
     private const string ActiveCsvSource = CsvFlightScheduleSeeder.Source;
+    private const int MaxConnections = 3;
+    private const int MinConnectionMinutes = 60;
+    private const int MaxConnectionMinutes = 24 * 60;
+    private const int MaxRouteResults = 120;
+    private const int MaxCandidatesPerLeg = 40;
     private static readonly string[] DemoSources = ["DemoSeed", "DemoSchedule", "PythonDemo", "CsvGenerated", "CsvGeneratedAllOrigins", "CsvGeneratedAllOriginsV2", "CsvGeneratedAllOriginsV4", "CsvGeneratedTrafficProfileV1"];
 
     [HttpGet("schedule-status")]
@@ -151,6 +156,94 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
             .ToListAsync(cancellationToken);
 
         return Ok(flights);
+    }
+
+    [HttpGet("routes")]
+    public async Task<ActionResult<IEnumerable<FlightRouteDto>>> GetFlightRoutes(
+        [FromQuery] string originSearch,
+        [FromQuery] string destinationSearch,
+        [FromQuery] DateTime from,
+        [FromQuery] DateTime to,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(originSearch) || string.IsNullOrWhiteSpace(destinationSearch))
+        {
+            return ValidationProblem("Origin and destination are required.");
+        }
+
+        var start = EnsureUtc(from);
+        var end = EnsureUtc(to);
+        var earliestBookableDeparture = DateTime.UtcNow.AddHours(1);
+        if (start < earliestBookableDeparture)
+        {
+            start = earliestBookableDeparture;
+        }
+
+        var query = dbContext.Flights
+            .AsNoTracking()
+            .Where(flight =>
+                flight.DepartureTime >= start
+                && flight.DepartureTime <= end
+                && flight.Status != FlightStatus.Cancelled
+                && flight.Status != FlightStatus.Departed);
+
+        if (configuration.GetValue("AIRPORT_HIDE_DEMO_FLIGHTS", false)
+            && await dbContext.Flights.AnyAsync(flight => !DemoSources.Contains(flight.Source), cancellationToken))
+        {
+            query = query.Where(flight => !DemoSources.Contains(flight.Source));
+        }
+
+        var pool = await query
+            .OrderBy(flight => flight.DepartureTime)
+            .Select(flight => new FlightDto(
+                flight.Id,
+                flight.FlightNumber,
+                flight.Origin,
+                flight.OriginAirportCode,
+                flight.Destination,
+                flight.DestinationAirportCode,
+                flight.BoardingGate,
+                flight.AircraftCode,
+                flight.DepartureTime,
+                flight.ArrivalTime,
+                flight.Status,
+                flight.PassengerCount,
+                flight.BasePrice,
+                flight.GateId,
+                flight.Gate != null ? flight.Gate.GateNumber : null,
+                flight.ExternalId,
+                flight.Source,
+                flight.LastUpdatedAt,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.AirlineName : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.AirlineIata : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.AircraftManufacturer : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.AircraftModel : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.SeatCapacity : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.ManufactureYear : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.OriginAirportName : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.OriginIataCode : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.OriginCountry : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.DestinationAirportName : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.DestinationIataCode : null,
+                flight.GeneratedSchedule != null ? flight.GeneratedSchedule.DestinationCountry : null))
+            .ToListAsync(cancellationToken);
+
+        var originQuery = BuildLocationQuery(originSearch);
+        var destinationQuery = BuildLocationQuery(destinationSearch);
+
+        var directRoutes = pool
+            .Where(flight => MatchesLocation(flight, originQuery, originSide: true) && MatchesLocation(flight, destinationQuery, originSide: false))
+            .Select(flight => ToRoute([flight]))
+            .ToList();
+
+        var connectionRoutes = FindConnectionRoutes(pool, originQuery, destinationQuery, directRoutes.Count);
+
+        return Ok(directRoutes
+            .Concat(connectionRoutes)
+            .OrderBy(route => route.ConnectionCount)
+            .ThenBy(route => route.Legs.First().DepartureTime)
+            .ThenBy(route => route.BasePrice)
+            .Take(MaxRouteResults));
     }
 
     [HttpGet("{id:int}")]
@@ -299,6 +392,277 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         flight.GeneratedSchedule?.DestinationAirportName,
         flight.GeneratedSchedule?.DestinationIataCode,
         flight.GeneratedSchedule?.DestinationCountry);
+
+    private static IReadOnlyCollection<FlightRouteDto> FindConnectionRoutes(
+        IReadOnlyList<FlightDto> pool,
+        LocationQuery originQuery,
+        LocationQuery destinationQuery,
+        int directRouteCount)
+    {
+        var results = new List<FlightRouteDto>(MaxRouteResults);
+        var seenRoutes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var index = BuildConnectionIndex(pool);
+        var starts = pool.Where(flight => MatchesLocation(flight, originQuery, originSide: true)).Take(180).ToList();
+
+        foreach (var start in starts)
+        {
+            foreach (var next in NextConnectionCandidates(start, index))
+            {
+                if (!MatchesLocation(next, destinationQuery, originSide: false))
+                {
+                    continue;
+                }
+
+                AddRoute([start, next]);
+                if (results.Count + directRouteCount >= MaxRouteResults)
+                {
+                    return OrderedResults();
+                }
+            }
+        }
+
+        if (results.Count > 0)
+        {
+            return OrderedResults();
+        }
+
+        foreach (var start in starts.Take(80))
+        {
+            Explore([start], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ConnectionNodeKey(start, originSide: true) });
+            if (results.Count + directRouteCount >= MaxRouteResults)
+            {
+                break;
+            }
+        }
+
+        return OrderedResults();
+
+        IReadOnlyCollection<FlightRouteDto> OrderedResults() => results
+            .OrderBy(route => route.ConnectionCount)
+            .ThenBy(route => route.BasePrice)
+            .ThenBy(route => route.Legs.First().DepartureTime)
+            .Take(Math.Max(0, MaxRouteResults - directRouteCount))
+            .ToList();
+
+        void AddRoute(List<FlightDto> legs)
+        {
+            var key = string.Join('-', legs.Select(leg => leg.Id));
+            if (seenRoutes.Add(key))
+            {
+                results.Add(ToRoute(legs));
+            }
+        }
+
+        void Explore(List<FlightDto> legs, HashSet<string> visited)
+        {
+            var last = legs[^1];
+            if (MatchesLocation(last, destinationQuery, originSide: false) && legs.Count > 1)
+            {
+                AddRoute(legs);
+                return;
+            }
+
+            if (legs.Count >= MaxConnections + 1 || results.Count + directRouteCount >= MaxRouteResults)
+            {
+                return;
+            }
+
+            var destinationNode = ConnectionNodeKey(last, originSide: false);
+            if (!visited.Add(destinationNode))
+            {
+                return;
+            }
+
+            foreach (var next in NextConnectionCandidates(last, index))
+            {
+                if (visited.Contains(ConnectionNodeKey(next, originSide: false)))
+                {
+                    continue;
+                }
+
+                Explore([.. legs, next], new HashSet<string>(visited, StringComparer.OrdinalIgnoreCase));
+                if (results.Count + directRouteCount >= MaxRouteResults)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    private static FlightRouteDto ToRoute(IReadOnlyCollection<FlightDto> legs)
+    {
+        var routeId = string.Join("-", legs.Select(leg => leg.Id));
+        return new FlightRouteDto(
+            legs.Count > 1 ? $"connection-{routeId}" : $"flight-{routeId}",
+            legs.Count > 1,
+            legs.Count - 1,
+            legs,
+            legs.Sum(leg => leg.BasePrice > 0 ? leg.BasePrice : 180m));
+    }
+
+    private static Dictionary<string, List<FlightDto>> BuildConnectionIndex(IEnumerable<FlightDto> pool)
+    {
+        var index = new Dictionary<string, List<FlightDto>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var flight in pool)
+        {
+            foreach (var key in ConnectionKeys(flight, originSide: true))
+            {
+                if (!index.TryGetValue(key, out var list))
+                {
+                    list = [];
+                    index[key] = list;
+                }
+
+                list.Add(flight);
+            }
+        }
+
+        foreach (var list in index.Values)
+        {
+            list.Sort((a, b) => a.DepartureTime.CompareTo(b.DepartureTime));
+        }
+
+        return index;
+    }
+
+    private static IEnumerable<FlightDto> NextConnectionCandidates(FlightDto previous, IReadOnlyDictionary<string, List<FlightDto>> index)
+    {
+        var earliest = previous.ArrivalTime.AddMinutes(MinConnectionMinutes);
+        var latest = previous.ArrivalTime.AddMinutes(MaxConnectionMinutes);
+        var candidates = new Dictionary<int, FlightDto>();
+
+        foreach (var key in ConnectionKeys(previous, originSide: false))
+        {
+            if (!index.TryGetValue(key, out var options))
+            {
+                continue;
+            }
+
+            for (var indexInOptions = FirstDepartureAtOrAfter(options, earliest); indexInOptions < options.Count; indexInOptions++)
+            {
+                var next = options[indexInOptions];
+                if (next.Id == previous.Id || next.DepartureTime < earliest)
+                {
+                    continue;
+                }
+
+                if (next.DepartureTime > latest)
+                {
+                    break;
+                }
+
+                candidates[next.Id] = next;
+                if (candidates.Count >= MaxCandidatesPerLeg)
+                {
+                    break;
+                }
+            }
+
+            if (candidates.Count >= MaxCandidatesPerLeg)
+            {
+                break;
+            }
+        }
+
+        return candidates.Values;
+    }
+
+    private static int FirstDepartureAtOrAfter(IReadOnlyList<FlightDto> flights, DateTime value)
+    {
+        var low = 0;
+        var high = flights.Count;
+        while (low < high)
+        {
+            var middle = low + ((high - low) / 2);
+            if (flights[middle].DepartureTime < value)
+            {
+                low = middle + 1;
+            }
+            else
+            {
+                high = middle;
+            }
+        }
+
+        return low;
+    }
+
+    private static IEnumerable<string> ConnectionKeys(FlightDto flight, bool originSide)
+    {
+        var airport = AirportKey(flight, originSide);
+        if (!string.IsNullOrWhiteSpace(airport))
+        {
+            yield return $"airport:{airport}";
+        }
+
+        var country = originSide ? flight.OriginCountry : flight.DestinationCountry;
+        if (!string.IsNullOrWhiteSpace(country))
+        {
+            yield return $"country:{country.Trim().ToLowerInvariant()}";
+        }
+
+        var city = originSide ? flight.Origin : flight.Destination;
+        if (!string.IsNullOrWhiteSpace(city))
+        {
+            yield return $"city:{city.Trim().ToLowerInvariant()}";
+        }
+    }
+
+    private static string ConnectionNodeKey(FlightDto flight, bool originSide)
+    {
+        var country = originSide ? flight.OriginCountry : flight.DestinationCountry;
+        return !string.IsNullOrWhiteSpace(country)
+            ? $"country:{country.Trim().ToLowerInvariant()}"
+            : $"airport:{AirportKey(flight, originSide)}";
+    }
+
+    private static string AirportKey(FlightDto flight, bool originSide)
+    {
+        var code = originSide
+            ? flight.OriginIataCode ?? flight.OriginAirportCode
+            : flight.DestinationIataCode ?? flight.DestinationAirportCode;
+        if (!string.IsNullOrWhiteSpace(code))
+        {
+            return code.Trim().ToLowerInvariant();
+        }
+
+        return string.Join("|", new[]
+            {
+                originSide ? flight.Origin : flight.Destination,
+                originSide ? flight.OriginCountry : flight.DestinationCountry,
+                originSide ? flight.OriginAirportName : flight.DestinationAirportName
+            }
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!.Trim().ToLowerInvariant()));
+    }
+
+    private sealed record LocationQuery(string? AirportCode, string[] Terms);
+
+    private static LocationQuery BuildLocationQuery(string value) => new(
+        AirportCodeSearch(value),
+        SearchTerms(value).Select(term => term.ToLowerInvariant()).ToArray());
+
+    private static bool MatchesLocation(FlightDto flight, LocationQuery query, bool originSide)
+    {
+        if (query.Terms.Length == 0 && query.AirportCode is null)
+        {
+            return true;
+        }
+
+        if (query.AirportCode is not null)
+        {
+            var codes = originSide
+                ? new[] { flight.OriginAirportCode, flight.OriginIataCode }
+                : new[] { flight.DestinationAirportCode, flight.DestinationIataCode };
+            return codes.Any(code => string.Equals(code, query.AirportCode, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var fields = originSide
+            ? new[] { flight.Origin, flight.OriginCountry, flight.OriginAirportName }
+            : new[] { flight.Destination, flight.DestinationCountry, flight.DestinationAirportName };
+
+        return query.Terms.Any(term => fields.Any(field => field?.Contains(term, StringComparison.OrdinalIgnoreCase) == true));
+    }
 
     private static string NormalizeCode(string? value, string fallback)
     {

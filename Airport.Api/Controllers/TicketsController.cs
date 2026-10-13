@@ -232,11 +232,7 @@ public class TicketsController(
         ticket.Status = TicketStatus.Cancelled;
         await dbContext.SaveChangesAsync(cancellationToken);
         var dto = ToDto(ticket);
-        await TrySendEmailAsync(
-            dto.PassengerEmail,
-            "KodFly ticket update",
-            BuildChangeEmail(dto, "Your ticket has been cancelled."),
-            cancellationToken);
+        await TrySendEmailAsync(TicketUpdateEmailTemplate.CreateCancelled(dto, environment), cancellationToken);
 
         return Ok(dto);
     }
@@ -304,11 +300,7 @@ public class TicketsController(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var dto = ToDto(ticket);
-        await TrySendEmailAsync(
-            dto.PassengerEmail,
-            "KodFly ticket update",
-            BuildChangeEmail(dto, "Your ticket details have been updated."),
-            cancellationToken);
+        await TrySendEmailAsync(TicketUpdateEmailTemplate.CreateUpdated(dto, environment), cancellationToken);
 
         return Ok(dto);
     }
@@ -457,20 +449,4 @@ public class TicketsController(
         }
     }
 
-    private static string BuildChangeEmail(TicketDto ticket, string message) =>
-        $"""
-        Hello {ticket.PassengerName},
-        {message}
-
-        Ticket details:
-        Booking reference: KOD-{ticket.Id:000000}
-        Flight: {ticket.FlightNumber}
-        Route: {ticket.Origin}, {ticket.OriginCountry} -> {ticket.Destination}, {ticket.DestinationCountry}
-        Departure: {ticket.DepartureTime:dd/MM/yyyy HH:mm}
-        Seat: {ticket.SeatNumber}
-        Class: {ticket.Class}
-        Status: {ticket.Status}
-
-        KodFly team
-        """;
 }

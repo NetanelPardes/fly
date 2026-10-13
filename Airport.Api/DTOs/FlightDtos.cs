@@ -35,6 +35,13 @@ public record FlightDto(
     string? DestinationIataCode,
     string? DestinationCountry);
 
+public record FlightRouteDto(
+    string RouteId,
+    bool IsConnectionRoute,
+    int ConnectionCount,
+    IReadOnlyCollection<FlightDto> Legs,
+    decimal BasePrice);
+
 public record CreateFlightDto(
     [Required, MaxLength(20)] string FlightNumber,
     [Required, MaxLength(80)] string Origin,

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
+    <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="6858000"/><a:chOff x="0" y="0"/><a:chExt cx="12192000" cy="6858000"/></a:xfrm></p:grpSpPr>
+    <p:sp>
+  <p:nvSpPr><p:cNvPr id="2" name="bg"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="6858000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="071827"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="071827"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="3" name="blue-field"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7300000" y="0"/><a:ext cx="4890000" cy="6858000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="EAF6FD"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="EAF6FD"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="4" name="accent-line"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7300000" y="0"/><a:ext cx="115000" cy="6858000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="1C7DBD"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="1C7DBD"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:pic>
+  <p:nvPicPr><p:cNvPr id="5" name="KodFly logo"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>
+  <p:blipFill><a:blip r:embed="rId2"></a:blip><a:stretch><a:fillRect/></a:stretch></p:blipFill>
+  <p:spPr><a:xfrm><a:off x="8460000" y="460000"/><a:ext cx="1200000" cy="555000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>
+</p:pic><p:sp>
+  <p:nvSpPr><p:cNvPr id="20" name="screenshot-shadow"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="660000" y="1240000"/><a:ext cx="6600000" cy="5000000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="0A1724"><a:alpha val="26000"/></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="0A1724"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="21" name="screenshot-stage"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="560000" y="1120000"/><a:ext cx="6600000" cy="5000000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="FFFFFF"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="B7CADA"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:pic>
+  <p:nvPicPr><p:cNvPr id="22" name="screenshot-bookingEmail"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>
+  <p:blipFill><a:blip r:embed="rId20"></a:blip><a:stretch><a:fillRect/></a:stretch></p:blipFill>
+  <p:spPr><a:xfrm><a:off x="1614968" y="1280000"/><a:ext cx="4490065" cy="4680000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>
+</p:pic><p:sp>
+  <p:nvSpPr><p:cNvPr id="40" name="title"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7710000" y="1300000"/><a:ext cx="3440000" cy="700000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="3260" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0B1F33"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>מייל אישור הזמנה</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="41" name="intro"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7710000" y="2140000"/><a:ext cx="3400000" cy="850000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1670" dirty="0"><a:solidFill><a:srgbClr val="5E6D78"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>לאחר הזמנה מוצלחת הנוסע מקבל מייל מסודר עם כל פרטי הטיסה, הנוסע והתשלום.</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="42" name="bullets"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7820000" y="3290000"/><a:ext cx="3180000" cy="1420000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr marR="245000" indent="-205000" algn="r" rtl="1"><a:buChar char="•"/></a:pPr><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>BookingConfirmationEmailTemplate בונה HTML וגם fallback טקסט פשוט.</a:t></a:r></a:p><a:p><a:pPr marR="245000" indent="-205000" algn="r" rtl="1"><a:buChar char="•"/></a:pPr><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>הלוגו מצורף כתמונה פנימית כדי שיופיע בתוך המייל.</a:t></a:r></a:p><a:p><a:pPr marR="245000" indent="-205000" algn="r" rtl="1"><a:buChar char="•"/></a:pPr><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>הפרטים מחולקים למקטעים: נוסע, מסלול, לו״ז, אפשרויות ותשלום.</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="43" name="marker"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7740000" y="5540000"/><a:ext cx="850000" cy="260000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="l"/><a:r><a:rPr lang="he-IL" sz="1500" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0F5D9B"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>09</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="44" name="footer-topic"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="8700000" y="5540000"/><a:ext cx="2450000" cy="260000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1320" dirty="0"><a:solidFill><a:srgbClr val="7D8B97"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>מסכי המערכת בפועל</a:t></a:r></a:p></p:txBody>
+</p:sp>
+  </p:spTree></p:cSld>
+  <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>
+</p:sld>

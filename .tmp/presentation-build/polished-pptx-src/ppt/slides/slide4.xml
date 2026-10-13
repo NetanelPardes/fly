@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
+    <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="6858000"/><a:chOff x="0" y="0"/><a:chExt cx="12192000" cy="6858000"/></a:xfrm></p:grpSpPr>
+    <p:sp>
+  <p:nvSpPr><p:cNvPr id="2" name="bg"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="6858000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="F5FAFD"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="F5FAFD"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="3" name="top-band"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="230000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="0F5D9B"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="0F5D9B"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="4" name="side-accent"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="11390000" y="0"/><a:ext cx="790000" cy="6858000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="DCEFFB"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="DCEFFB"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:pic>
+  <p:nvPicPr><p:cNvPr id="5" name="KodFly logo"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>
+  <p:blipFill><a:blip r:embed="rId2"></a:blip><a:stretch><a:fillRect/></a:stretch></p:blipFill>
+  <p:spPr><a:xfrm><a:off x="390000" y="360000"/><a:ext cx="1280000" cy="590000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>
+</p:pic><p:sp>
+  <p:nvSpPr><p:cNvPr id="6" name="footer"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="430000" y="6280000"/><a:ext cx="1900000" cy="220000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="l"/><a:r><a:rPr lang="he-IL" sz="1200" dirty="0"><a:solidFill><a:srgbClr val="7D8B97"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>04 / 19</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="7" name="section-title"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="9300000" y="6240000"/><a:ext cx="2200000" cy="240000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1220" dirty="0"><a:solidFill><a:srgbClr val="7D8B97"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>KodFly</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="20" name="title"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="6230000" y="540000"/><a:ext cx="5060000" cy="560000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="3180" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0B1F33"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>ארכיטקטורה כללית</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="21" name="intro"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="1460000" y="1240000"/><a:ext cx="9820000" cy="640000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1800" dirty="0"><a:solidFill><a:srgbClr val="5E6D78"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>כאן מוצג מסלול הנתונים מקצה לקצה: מהדפדפן, דרך השרת, ועד תהליכים אסינכרוניים שממשיכים לעבוד ברקע.</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="22" name="intro-card"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="6450000" y="2140000"/><a:ext cx="4760000" cy="2850000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="FFFFFF"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="C7D6E2"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="23" name="bullets-title"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="9280000" y="2350000"/><a:ext cx="1700000" cy="260000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1500" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0F5D9B"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>עיקרי השלב</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="24" name="bullets"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="6760000" y="2750000"/><a:ext cx="4080000" cy="1700000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr marR="245000" indent="-205000" algn="r" rtl="1"><a:buChar char="•"/></a:pPr><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>הדפדפן קורא ל-API עם JWT לכל פעולה מוגנת.</a:t></a:r></a:p><a:p><a:pPr marR="245000" indent="-205000" algn="r" rtl="1"><a:buChar char="•"/></a:pPr><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>ה-API שומר את הנתונים ב-MySQL ומנהל טרנזקציות.</a:t></a:r></a:p><a:p><a:pPr marR="245000" indent="-205000" algn="r" rtl="1"><a:buChar char="•"/></a:pPr><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>RabbitMQ משמש ליצירת כרטיסים לאחר הזמנה.</a:t></a:r></a:p><a:p><a:pPr marR="245000" indent="-205000" algn="r" rtl="1"><a:buChar char="•"/></a:pPr><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>Kafka משמש לעדכוני טיסות חיצוניים במצב האופציונלי.</a:t></a:r></a:p></p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="25" name="step-0"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="1120000" y="5080000"/><a:ext cx="1868000" cy="630000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="DCEFFB"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="C7D6E2"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="26" name="step-text-0"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="1200000" y="5245000"/><a:ext cx="1708000" cy="250000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1650" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0B1F33"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>Airport.Ui</a:t></a:r></a:p></p:txBody>
+</p:sp><p:cxnSp>
+  <p:nvCxnSpPr><p:cNvPr id="27" name="connector 27"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>
+  <p:spPr><a:xfrm><a:off x="3003000" y="5395000"/><a:ext cx="110000" cy="1"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom><a:ln w="25400"><a:solidFill><a:srgbClr val="1C7DBD"/></a:solidFill><a:headEnd type="triangle"/></a:ln></p:spPr>
+</p:cxnSp><p:sp>
+  <p:nvSpPr><p:cNvPr id="28" name="step-1"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="3128000" y="5080000"/><a:ext cx="1868000" cy="630000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="DDF4EA"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="C7D6E2"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="29" name="step-text-1"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="3208000" y="5245000"/><a:ext cx="1708000" cy="250000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1650" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0B1F33"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>Airport.Api</a:t></a:r></a:p></p:txBody>
+</p:sp><p:cxnSp>
+  <p:nvCxnSpPr><p:cNvPr id="30" name="connector 30"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>
+  <p:spPr><a:xfrm><a:off x="5011000" y="5395000"/><a:ext cx="110000" cy="1"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom><a:ln w="25400"><a:solidFill><a:srgbClr val="1C7DBD"/></a:solidFill><a:headEnd type="triangle"/></a:ln></p:spPr>
+</p:cxnSp><p:sp>
+  <p:nvSpPr><p:cNvPr id="31" name="step-2"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="5136000" y="5080000"/><a:ext cx="1868000" cy="630000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="FFE8B3"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="C7D6E2"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="32" name="step-text-2"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="5216000" y="5245000"/><a:ext cx="1708000" cy="250000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1650" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0B1F33"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>MySQL</a:t></a:r></a:p></p:txBody>
+</p:sp><p:cxnSp>
+  <p:nvCxnSpPr><p:cNvPr id="33" name="connector 33"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>
+  <p:spPr><a:xfrm><a:off x="7019000" y="5395000"/><a:ext cx="110000" cy="1"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom><a:ln w="25400"><a:solidFill><a:srgbClr val="1C7DBD"/></a:solidFill><a:headEnd type="triangle"/></a:ln></p:spPr>
+</p:cxnSp><p:sp>
+  <p:nvSpPr><p:cNvPr id="34" name="step-3"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7144000" y="5080000"/><a:ext cx="1868000" cy="630000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="FFD9CF"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="C7D6E2"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="35" name="step-text-3"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7224000" y="5245000"/><a:ext cx="1708000" cy="250000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1650" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0B1F33"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>RabbitMQ</a:t></a:r></a:p></p:txBody>
+</p:sp><p:cxnSp>
+  <p:nvCxnSpPr><p:cNvPr id="36" name="connector 36"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>
+  <p:spPr><a:xfrm><a:off x="9027000" y="5395000"/><a:ext cx="110000" cy="1"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom><a:ln w="25400"><a:solidFill><a:srgbClr val="1C7DBD"/></a:solidFill><a:headEnd type="triangle"/></a:ln></p:spPr>
+</p:cxnSp><p:sp>
+  <p:nvSpPr><p:cNvPr id="37" name="step-4"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="9152000" y="5080000"/><a:ext cx="1868000" cy="630000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="E8E7FF"></a:srgbClr></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="C7D6E2"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="38" name="step-text-4"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="9232000" y="5245000"/><a:ext cx="1708000" cy="250000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1650" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0B1F33"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>Ticket Worker</a:t></a:r></a:p></p:txBody>
+</p:sp>
+  </p:spTree></p:cSld>
+  <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>
+</p:sld>
