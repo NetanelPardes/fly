@@ -1,7 +1,11 @@
 AdminCommon.init("admin-flights.html");
 document.querySelector("#flightDate").value = new Date().toISOString().slice(0, 10);
 document.querySelector("#refreshButton").addEventListener("click", refresh);
-document.querySelector("#flightFilters").addEventListener("submit", event => { event.preventDefault(); refresh(); });
+document.querySelector("#flightFilters").addEventListener("submit", event => {
+  event.preventDefault();
+  Airport.resetPagination("admin-flights");
+  refresh();
+});
 document.body.addEventListener("click", handleActions);
 
 let flights = [];
@@ -40,12 +44,29 @@ async function refresh() {
         Airport.escapeHtml(f.boardingGate || f.gateNumber || "TBD"),
         Airport.escapeHtml(f.aircraftModel || f.aircraftCode || "TBD"),
         `<button class="tiny-button" data-delay-flight="${f.id}">Delay</button> <button class="tiny-button" data-cancel-flight="${f.id}">Cancel</button>`
-      ]));
+      ]), { paginateKey: "admin-flights", onPageChange: renderFlightsTable });
   } catch (error) {
     Airport.toast(error.message);
   } finally {
     Airport.setPlaneLoading(false);
   }
+}
+
+function renderFlightsTable() {
+  const sorted = [...flights].sort((a, b) => new Date(a.departureTime) - new Date(b.departureTime));
+  const selectedDate = document.querySelector("#flightDate").value || "selected day";
+  const selectedAirport = document.querySelector("#origin").value || "all airports";
+  document.querySelector("#flightsTable").innerHTML =
+    `<p class="table-caption">Flights on ${Airport.escapeHtml(selectedDate)} at ${Airport.escapeHtml(selectedAirport)}</p>` +
+    Airport.table(["Time", "Flight", "Route", "Status", "Gate", "Aircraft", "Actions"], sorted.map(f => [
+      timeOnly(f.departureTime),
+      Airport.escapeHtml(f.flightNumber),
+      `${Airport.escapeHtml(f.origin)} (${Airport.escapeHtml(f.originAirportCode || "")}) -> ${Airport.escapeHtml(f.destination)} (${Airport.escapeHtml(f.destinationAirportCode || "")})`,
+      Airport.badge(f.status),
+      Airport.escapeHtml(f.boardingGate || f.gateNumber || "TBD"),
+      Airport.escapeHtml(f.aircraftModel || f.aircraftCode || "TBD"),
+      `<button class="tiny-button" data-delay-flight="${f.id}">Delay</button> <button class="tiny-button" data-cancel-flight="${f.id}">Cancel</button>`
+    ]), { paginateKey: "admin-flights", onPageChange: renderFlightsTable });
 }
 
 function adminFlightQuery() {

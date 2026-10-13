@@ -81,11 +81,11 @@ function render() {
   document.querySelector("#metricBaggage").textContent = baggage.length;
   document.querySelector("#metricGates").textContent = gates.length;
   document.querySelector("#departureBoard").innerHTML = flights.slice(0, 10).map(f => `<div class="flight-row"><strong>${Airport.escapeHtml(f.flightNumber)}</strong><div><strong>${Airport.escapeHtml(f.origin)} -> ${Airport.escapeHtml(f.destination)}</strong><small>${Airport.formatDate(f.departureTime)}</small></div>${Airport.badge(f.status)}<strong>${Airport.escapeHtml(f.gateNumber || "TBD")}</strong></div>`).join("") || Airport.empty("No flights");
-  document.querySelector("#flightsTable").innerHTML = Airport.table(["ID", "Flight", "Route", "Time", "Status", "Gate"], flights.map(f => [f.id, Airport.escapeHtml(f.flightNumber), `${Airport.escapeHtml(f.origin)} -> ${Airport.escapeHtml(f.destination)}`, Airport.formatDate(f.departureTime), Airport.badge(f.status), Airport.escapeHtml(f.gateNumber || "TBD")]));
-  document.querySelector("#ticketsTable").innerHTML = Airport.table(["ID", "Passenger", "Flight", "Seat", "Class", "Price", "Status", "Actions"], tickets.map(t => [t.id, Airport.escapeHtml(t.passengerName), Airport.escapeHtml(t.flightNumber), Airport.escapeHtml(t.seatNumber), t.class, Airport.money(t.price), Airport.badge(t.status), `<button class="tiny-button" data-manage-ticket="${t.id}">Change</button> ${t.status === "Active" ? `<button class="tiny-button" data-cancel-ticket="${t.id}">Cancel</button>` : ""}`]));
-  document.querySelector("#baggageTable").innerHTML = Airport.table(["ID", "Ticket", "Tag", "Weight", "Status", "Updated"], baggage.map(b => [b.id, b.ticketId, Airport.escapeHtml(b.tagNumber), `${b.weightKg} kg`, Airport.badge(b.status), Airport.formatDate(b.lastUpdatedAt)]));
-  document.querySelector("#gatesGrid").innerHTML = gates.map(g => `<article class="gate-card"><strong>${Airport.escapeHtml(g.gateNumber)}</strong><span>Terminal ${Airport.escapeHtml(g.terminal)}</span></article>`).join("") || Airport.empty("No gates");
-  document.querySelector("#usersTable").innerHTML = Airport.table(["ID", "Name", "Email", "Role"], users.map(u => [u.id, Airport.escapeHtml(u.fullName), Airport.escapeHtml(u.email), Airport.badge(u.role)]));
+  document.querySelector("#flightsTable").innerHTML = Airport.table(["ID", "Flight", "Route", "Time", "Status", "Gate"], flights.map(f => [f.id, Airport.escapeHtml(f.flightNumber), `${Airport.escapeHtml(f.origin)} -> ${Airport.escapeHtml(f.destination)}`, Airport.formatDate(f.departureTime), Airport.badge(f.status), Airport.escapeHtml(f.gateNumber || "TBD")]), { paginateKey: "legacy-admin-flights", onPageChange: render });
+  document.querySelector("#ticketsTable").innerHTML = Airport.table(["ID", "Passenger", "Flight", "Seat", "Class", "Price", "Status", "Actions"], tickets.map(t => [t.id, Airport.escapeHtml(t.passengerName), Airport.escapeHtml(t.flightNumber), Airport.escapeHtml(t.seatNumber), t.class, Airport.money(t.price), Airport.badge(t.status), `<button class="tiny-button" data-manage-ticket="${t.id}">Change</button> ${t.status === "Active" ? `<button class="tiny-button" data-cancel-ticket="${t.id}">Cancel</button>` : ""}`]), { paginateKey: "legacy-admin-tickets", onPageChange: render });
+  document.querySelector("#baggageTable").innerHTML = Airport.table(["ID", "Ticket", "Tag", "Weight", "Status", "Updated"], baggage.map(b => [b.id, b.ticketId, Airport.escapeHtml(b.tagNumber), `${b.weightKg} kg`, Airport.badge(b.status), Airport.formatDate(b.lastUpdatedAt)]), { paginateKey: "legacy-admin-baggage", onPageChange: render });
+  document.querySelector("#gatesGrid").innerHTML = Airport.paginatedList("legacy-admin-gates", gates, g => `<article class="gate-card"><strong>${Airport.escapeHtml(g.gateNumber)}</strong><span>Terminal ${Airport.escapeHtml(g.terminal)}</span></article>`, "No gates", { onPageChange: render });
+  document.querySelector("#usersTable").innerHTML = Airport.table(["ID", "Name", "Email", "Role"], users.map(u => [u.id, Airport.escapeHtml(u.fullName), Airport.escapeHtml(u.email), Airport.badge(u.role)]), { paginateKey: "legacy-admin-users", onPageChange: render });
 }
 
 function switchView(viewId) {
@@ -136,13 +136,18 @@ async function updateTicket(event) {
 }
 
 async function handleActions(event) {
+  let loading = false;
   try {
     if (event.target.dataset.manageTicket) openTicket(event.target.dataset.manageTicket);
     if (event.target.dataset.cancelTicket) {
+      loading = true;
+      Airport.setPlaneLoading(true, "Cancelling ticket");
       await Airport.api(`/api/tickets/${event.target.dataset.cancelTicket}/cancel`, { method: "POST" });
       await refresh();
     }
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    if (loading) Airport.setPlaneLoading(false);
   }
 }

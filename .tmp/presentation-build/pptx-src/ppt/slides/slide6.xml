@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+<p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val="F8FAFC"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree>
+<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
+<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="6858000"/><a:chOff x="0" y="0"/><a:chExt cx="12192000" cy="6858000"/></a:xfrm></p:grpSpPr>
+<p:sp>
+  <p:nvSpPr><p:cNvPr id="10" name="title"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="6800000" y="470000"/><a:ext cx="4800000" cy="650000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="3300" dirty="0"><a:b/><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>יצירת קובץ כרטיס</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="11" name="intro"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="1440000" y="1240000"/><a:ext cx="10080000" cy="780000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="2050" dirty="0"><a:solidFill><a:srgbClr val="5E6D78"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>לאחר יצירת הכרטיס מופעל תהליך רקע שמייצר קובץ טקסט להורדה בלי לעכב את פעולת ההזמנה במסך.</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="13" name="left panel"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="850000" y="2300000"/><a:ext cx="4500000" cy="3080000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="D7E1EA"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="14" name="stage label"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="1040000" y="2520000"/><a:ext cx="4120000" cy="440000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1800" dirty="0"><a:b/><a:solidFill><a:srgbClr val="0F5D9B"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>תיאור מקדים לשלב</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="15" name="stage desc"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="1040000" y="3030000"/><a:ext cx="4120000" cy="1420000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1780" dirty="0"><a:solidFill><a:srgbClr val="1D2B36"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>לאחר יצירת הכרטיס מופעל תהליך רקע שמייצר קובץ טקסט להורדה בלי לעכב את פעולת ההזמנה במסך.</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="12" name="bullets"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="5900000" y="2340000"/><a:ext cx="5500000" cy="3000000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="1D2B36"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>• ה-API כותב OutboxMessage כחלק מטרנזקציית ההזמנה.</a:t></a:r></a:p><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="1D2B36"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>• TicketOutboxPublisher שולח משימות ל-RabbitMQ במחזורים קצרים.</a:t></a:r></a:p><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="1D2B36"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>• ticket-generator מקבל הודעה, יוצר ticket-{id}.txt ומעדכן את הנתיב במסד הנתונים.</a:t></a:r></a:p><a:p><a:pPr algn="r" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1850" dirty="0"><a:solidFill><a:srgbClr val="1D2B36"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>• ProcessedEvents מונע טיפול כפול באותו אירוע.</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="16" name="flow 1"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="1096000" y="5620000"/><a:ext cx="1864000" cy="760000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="DCEFFB"/></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="B6C6D4"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="17" name="flow text 1"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="1186000" y="5805000"/><a:ext cx="1684000" cy="360000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1900" dirty="0"><a:b/><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>Tickets</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:cxnSp>
+  <p:nvCxnSpPr><p:cNvPr id="18" name="connector 18"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>
+  <p:spPr><a:xfrm><a:off x="2980000" y="6000000"/><a:ext cx="130000" cy="1"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom><a:ln w="25400"><a:solidFill><a:srgbClr val="0F5D9B"/></a:solidFill><a:tailEnd type="none"/><a:headEnd type="triangle"/></a:ln></p:spPr>
+</p:cxnSp><p:sp>
+  <p:nvSpPr><p:cNvPr id="19" name="flow 2"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="3130000" y="5620000"/><a:ext cx="1864000" cy="760000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="DFF4EA"/></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="B6C6D4"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="20" name="flow text 2"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="3220000" y="5805000"/><a:ext cx="1684000" cy="360000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1900" dirty="0"><a:b/><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>Outbox</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:cxnSp>
+  <p:nvCxnSpPr><p:cNvPr id="21" name="connector 21"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>
+  <p:spPr><a:xfrm><a:off x="5014000" y="6000000"/><a:ext cx="130000" cy="1"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom><a:ln w="25400"><a:solidFill><a:srgbClr val="0F5D9B"/></a:solidFill><a:tailEnd type="none"/><a:headEnd type="triangle"/></a:ln></p:spPr>
+</p:cxnSp><p:sp>
+  <p:nvSpPr><p:cNvPr id="22" name="flow 3"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="5164000" y="5620000"/><a:ext cx="1864000" cy="760000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="FFE8B3"/></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="B6C6D4"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="23" name="flow text 3"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="5254000" y="5805000"/><a:ext cx="1684000" cy="360000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1900" dirty="0"><a:b/><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>RabbitMQ</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:cxnSp>
+  <p:nvCxnSpPr><p:cNvPr id="24" name="connector 24"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>
+  <p:spPr><a:xfrm><a:off x="7048000" y="6000000"/><a:ext cx="130000" cy="1"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom><a:ln w="25400"><a:solidFill><a:srgbClr val="0F5D9B"/></a:solidFill><a:tailEnd type="none"/><a:headEnd type="triangle"/></a:ln></p:spPr>
+</p:cxnSp><p:sp>
+  <p:nvSpPr><p:cNvPr id="25" name="flow 4"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7198000" y="5620000"/><a:ext cx="1864000" cy="760000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="FFD8CC"/></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="B6C6D4"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="26" name="flow text 4"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="7288000" y="5805000"/><a:ext cx="1684000" cy="360000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1900" dirty="0"><a:b/><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>Worker</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:cxnSp>
+  <p:nvCxnSpPr><p:cNvPr id="27" name="connector 27"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>
+  <p:spPr><a:xfrm><a:off x="9082000" y="6000000"/><a:ext cx="130000" cy="1"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom><a:ln w="25400"><a:solidFill><a:srgbClr val="0F5D9B"/></a:solidFill><a:tailEnd type="none"/><a:headEnd type="triangle"/></a:ln></p:spPr>
+</p:cxnSp><p:sp>
+  <p:nvSpPr><p:cNvPr id="28" name="flow 5"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="9232000" y="5620000"/><a:ext cx="1864000" cy="760000"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="E9E7FF"/></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="B6C6D4"/></a:solidFill></a:ln></p:spPr>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="29" name="flow text 5"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="9322000" y="5805000"/><a:ext cx="1684000" cy="360000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="c" rtl="1"/><a:r><a:rPr lang="he-IL" sz="1900" dirty="0"><a:b/><a:solidFill><a:srgbClr val="102338"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>Ticket file</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp><p:sp>
+  <p:nvSpPr><p:cNvPr id="90" name="slide number"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
+  <p:spPr><a:xfrm><a:off x="420000" y="6200000"/><a:ext cx="600000" cy="260000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>
+  <p:txBody><a:bodyPr wrap="square" anchor="top" rtlCol="1"><a:spAutoFit/></a:bodyPr><a:lstStyle/>
+  <a:p><a:pPr algn="l"/><a:r><a:rPr lang="he-IL" sz="1350" dirty="0"><a:solidFill><a:srgbClr val="8A98A5"/></a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>06</a:t></a:r></a:p>
+  </p:txBody>
+</p:sp>
+</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>
+</p:sld>

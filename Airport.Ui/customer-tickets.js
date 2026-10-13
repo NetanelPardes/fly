@@ -98,7 +98,7 @@ function render() {
   document.querySelector("#metricActiveTickets").textContent = `${tickets.filter(t => t.status === "Active").length} active`;
   document.querySelector("#metricBaggage").textContent = baggage.length;
   document.querySelector("#metricFiles").textContent = tickets.filter(t => t.ticketFilePath).length;
-  document.querySelector("#ticketsList").innerHTML = tickets.map(ticketRow).join("") || Airport.empty("No tickets yet");
+  document.querySelector("#ticketsList").innerHTML = Airport.paginatedList("customer-tickets", tickets, ticketRow, "No tickets yet", { onPageChange: render });
 }
 
 function ticketRow(ticket) {
@@ -124,8 +124,7 @@ function ticketRow(ticket) {
       <div><dt>Total</dt><dd>${Airport.money(ticket.price)}</dd></div>
     </dl>
     <div class="ticket-actions">
-      <button class="tiny-button" data-manage-ticket="${ticket.id}" ${active ? "" : "disabled"}>Change details</button>
-      ${active ? `<button class="tiny-button" data-cancel-ticket="${ticket.id}">Cancel</button>` : ""}
+      <button class="tiny-button" data-manage-ticket="${ticket.id}" ${active ? "" : "disabled"}>Upgrade options</button>
       ${ticket.ticketFilePath ? `<button class="tiny-button" data-download-ticket="${ticket.id}">Download</button>` : ""}
     </div>
   </article>`;
@@ -146,7 +145,19 @@ function openTicket(ticketId) {
   document.querySelector("#manageSeat").value = ticket.seatNumber;
   document.querySelector("#manageClass").value = ticket.class;
   document.querySelector("#manageBaggage").value = String(ticket.baggageAllowanceKg || 0);
+  limitUpgradeChoices(ticket);
   document.querySelector("#ticketDialog").showModal();
+}
+
+function limitUpgradeChoices(ticket) {
+  const classRank = { Economy: 1, Business: 2, First: 3 };
+  document.querySelectorAll("#manageClass option").forEach(option => {
+    option.disabled = classRank[option.value] < classRank[ticket.class];
+  });
+
+  document.querySelectorAll("#manageBaggage option").forEach(option => {
+    option.disabled = Number(option.value) < Number(ticket.baggageAllowanceKg || 0);
+  });
 }
 
 async function updateTicket(event) {
@@ -175,18 +186,10 @@ async function updateTicket(event) {
 async function handleActions(event) {
   try {
     if (event.target.dataset.manageTicket && !event.target.disabled) openTicket(event.target.dataset.manageTicket);
-    if (event.target.dataset.cancelTicket) {
-      Airport.setPlaneLoading(true, "Cancelling ticket");
-      await Promise.all([
-        Airport.api(`/api/tickets/${event.target.dataset.cancelTicket}/cancel`, { method: "POST" }),
-        Airport.delay(1200)
-      ]);
-      await refresh();
+    if (event.target.dataset.downloadTicket) {
+      await Airport.downloadTicket(event.target.dataset.downloadTicket);
     }
-    if (event.target.dataset.downloadTicket) await Airport.downloadTicket(event.target.dataset.downloadTicket);
   } catch (error) {
     Airport.toast(error.message);
-  } finally {
-    Airport.setPlaneLoading(false);
   }
 }

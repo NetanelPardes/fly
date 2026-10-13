@@ -1,5 +1,5 @@
 const SEAT_SELECTION_PRICE = 18;
-const BAGGAGE_PRICES = { 10: 35, 20: 60, 35: 95 };
+const BAGGAGE_PRICES = { 10: 35, 20: 60, 25: 75, 35: 95 };
 const BOOKING_CUTOFF_HOURS = 1;
 const SEARCH_MIN_DEPARTURE_HOURS = 1;
 const CURRENCIES = [
@@ -31,7 +31,11 @@ function init() {
   document.querySelector("#profileButton").addEventListener("click", openProfile);
   document.querySelector("#closeProfile").addEventListener("click", () => document.querySelector("#profileDialog").close());
   document.querySelector("#profileForm").addEventListener("submit", saveProfile);
-  document.querySelector("#flightFilters").addEventListener("submit", e => { e.preventDefault(); searchFlights().catch(error => Airport.toast(error.message)); });
+  document.querySelector("#flightFilters").addEventListener("submit", e => {
+    e.preventDefault();
+    Airport.resetPagination("customer-flights");
+    searchFlights().catch(error => Airport.toast(error.message));
+  });
   setupLocationInput("#origin", "#originOptions");
   setupLocationInput("#destination", "#destinationOptions");
   renderCurrencyPicker();
@@ -413,7 +417,7 @@ function renderFlights() {
   document.querySelector("#searchResultCount").textContent = `${visibleFlights.length} ${visibleFlights.length === 1 ? "result" : "results"}`;
   document.querySelector("#resultsPanel").hidden = false;
   document.querySelector("#resultsTitle").textContent = destination ? `${origin} to ${destination}` : `Flights from ${origin}`;
-  document.querySelector("#flightsGrid").innerHTML = visibleFlights.map(flightRow).join("") || Airport.empty("No flights match this search");
+  document.querySelector("#flightsGrid").innerHTML = Airport.paginatedList("customer-flights", visibleFlights, flightRow, "No flights match this search", { onPageChange: renderFlights });
 }
 
 function locationMatches(flight, side, value) {
@@ -619,6 +623,7 @@ async function bookTicket(event) {
     openPurchaseOverlay();
     const ticket = await Airport.api("/api/tickets", {
       method: "POST",
+      skipLoader: true,
       body: JSON.stringify(payload)
     });
     await showPurchaseConfirmation(ticket);

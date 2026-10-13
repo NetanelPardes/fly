@@ -19,18 +19,20 @@ function boot() {
   document.querySelector("#refreshButton").addEventListener("click", () => refresh().catch(e => Airport.toast(e.message)));
   document.querySelector("#flightFilters").addEventListener("submit", event => {
     event.preventDefault();
+    Airport.resetPagination("legacy-customer-flights");
     searchLocalFlights();
   });
   document.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => {
       direction = button.dataset.direction;
+      Airport.resetPagination("legacy-customer-flights");
       document.querySelectorAll("[data-direction]").forEach(item => item.classList.toggle("active", item === button));
       renderFlights();
     });
   });
-  document.querySelector("#origin").addEventListener("input", renderFlights);
-  document.querySelector("#destination").addEventListener("input", renderFlights);
-  document.querySelector("#status").addEventListener("change", renderFlights);
+  document.querySelector("#origin").addEventListener("input", () => { Airport.resetPagination("legacy-customer-flights"); renderFlights(); });
+  document.querySelector("#destination").addEventListener("input", () => { Airport.resetPagination("legacy-customer-flights"); renderFlights(); });
+  document.querySelector("#status").addEventListener("change", () => { Airport.resetPagination("legacy-customer-flights"); renderFlights(); });
   document.querySelector("#bookingClass").addEventListener("change", updateBookingPrice);
   document.querySelector("#bookingBaggage").addEventListener("change", updateBookingPrice);
   document.querySelector("#closeBooking").addEventListener("click", () => document.querySelector("#bookingDialog").close());
@@ -125,7 +127,7 @@ function renderFlights() {
     .filter(f => !status || f.status === status)
     .sort((a, b) => new Date(a.departureTime) - new Date(b.departureTime));
   document.querySelector("#metricFlights").textContent = visibleFlights.length;
-  document.querySelector("#flightsGrid").innerHTML = visibleFlights.map(flightCard).join("") || Airport.empty("No flights match this search");
+  document.querySelector("#flightsGrid").innerHTML = Airport.paginatedList("legacy-customer-flights", visibleFlights, flightCard, "No flights match this search", { onPageChange: renderFlights });
 }
 
 function flightCard(flight) {
@@ -150,7 +152,7 @@ function bookingBlockReason(flight) {
 }
 
 function renderTickets() {
-  document.querySelector("#ticketsGrid").innerHTML = tickets.map(ticket => `
+  document.querySelector("#ticketsGrid").innerHTML = Airport.paginatedList("legacy-customer-tickets", tickets, ticket => `
     <article class="ticket-card">
       <div>
         <small>Ticket #${ticket.id}</small>
@@ -163,7 +165,7 @@ function renderTickets() {
         ${ticket.ticketFilePath ? `<button class="tiny-button" data-download-ticket="${ticket.id}">Download</button>` : ""}
       </div>
     </article>
-  `).join("") || Airport.empty("No tickets yet");
+  `, "No tickets yet", { onPageChange: renderTickets });
 }
 
 function openBooking(flightId) {
@@ -262,15 +264,22 @@ async function updateTicket(event) {
 }
 
 async function handleActions(event) {
+  let loading = false;
   try {
     if (event.target.dataset.bookFlight) openBooking(event.target.dataset.bookFlight);
     if (event.target.dataset.manageTicket) openTicket(event.target.dataset.manageTicket);
     if (event.target.dataset.cancelTicket) {
+      loading = true;
+      Airport.setPlaneLoading(true, "Cancelling ticket");
       await Airport.api(`/api/tickets/${event.target.dataset.cancelTicket}/cancel`, { method: "POST" });
       await refresh();
     }
-    if (event.target.dataset.downloadTicket) await Airport.downloadTicket(event.target.dataset.downloadTicket);
+    if (event.target.dataset.downloadTicket) {
+      await Airport.downloadTicket(event.target.dataset.downloadTicket);
+    }
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    if (loading) Airport.setPlaneLoading(false);
   }
 }

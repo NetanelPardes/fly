@@ -2,6 +2,8 @@ const Airport = (() => {
   const apiBase = localStorage.getItem("airport_ui_api_base") || "http://localhost:8080";
   const tokenKey = "airport_ui_token";
   const userKey = "airport_ui_user";
+  const pageSize = 30;
+  const paginationState = new Map();
 
   function getToken() {
     return localStorage.getItem(tokenKey);
@@ -26,19 +28,27 @@ const Airport = (() => {
   }
 
   async function api(path, options = {}) {
+    const loadingText = options.loadingText || "Loading";
+    const skipLoader = options.skipLoader === true;
+    if (!skipLoader) beginLoading(loadingText);
     const token = getToken();
-    const response = await fetch(endpoint(path), {
-      ...options,
-      headers: {
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(options.headers || {}),
-      },
-    });
-    if (!response.ok) {
-      throw new Error(problem(await response.text(), response.statusText));
+    const { loadingText: _loadingText, skipLoader: _skipLoader, ...fetchOptions } = options;
+    try {
+      const response = await fetch(endpoint(path), {
+        ...fetchOptions,
+        headers: {
+          ...(fetchOptions.body ? { "Content-Type": "application/json" } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(fetchOptions.headers || {}),
+        },
+      });
+      if (!response.ok) {
+        throw new Error(problem(await response.text(), response.statusText));
+      }
+      return response.status === 204 ? null : response.json();
+    } finally {
+      if (!skipLoader) endLoading();
     }
-    return response.status === 204 ? null : response.json();
   }
 
   function problem(text, fallback) {
@@ -79,10 +89,27 @@ const Airport = (() => {
   }
 
   function setPlaneLoading(isLoading, text = "Searching") {
+    if (isLoading) {
+      beginLoading(text);
+      return;
+    }
+
+    endLoading();
+  }
+
+  function beginLoading(text = "Loading") {
     const loader = ensurePlaneLoader();
     const label = loader.querySelector("#searchLoaderText") || loader.querySelector("strong");
     if (label) label.textContent = text;
-    loader.hidden = !isLoading;
+    loader.dataset.loadingCount = String((Number(loader.dataset.loadingCount) || 0) + 1);
+    loader.hidden = false;
+  }
+
+  function endLoading() {
+    const loader = ensurePlaneLoader();
+    const count = Math.max(0, (Number(loader.dataset.loadingCount) || 0) - 1);
+    loader.dataset.loadingCount = String(count);
+    loader.hidden = count > 0 ? false : true;
   }
 
   function delay(ms) {
@@ -125,9 +152,49 @@ const Airport = (() => {
     return `<div class="empty-state">${escapeHtml(text)}</div>`;
   }
 
-  function table(headers, rows) {
+  function table(headers, rows, options = {}) {
     if (!rows.length) return empty("No records");
-    return `<div class="table-wrap"><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    const visibleRows = options.paginateKey ? pagedItems(options.paginateKey, rows, options.onPageChange) : rows;
+    const controls = options.paginateKey ? paginationControls(options.paginateKey, rows.length) : "";
+    return `<div class="table-wrap"><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${visibleRows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${controls}`;
+  }
+
+  function paginatedList(key, items, renderItem, emptyText = "No records", options = {}) {
+    if (!items.length) return empty(emptyText);
+    const visibleItems = pagedItems(key, items, options.onPageChange);
+    return `${visibleItems.map(renderItem).join("")}${paginationControls(key, items.length)}`;
+  }
+
+  function pagedItems(key, items, onPageChange) {
+    const state = paginationState.get(key) || { page: 1 };
+    state.onPageChange = onPageChange || state.onPageChange;
+    state.total = items.length;
+    const maxPage = Math.max(1, Math.ceil(items.length / pageSize));
+    state.page = Math.min(Math.max(1, state.page || 1), maxPage);
+    paginationState.set(key, state);
+    const start = (state.page - 1) * pageSize;
+    return items.slice(start, start + pageSize);
+  }
+
+  function paginationControls(key, total) {
+    if (total <= pageSize) return "";
+    const state = paginationState.get(key) || { page: 1 };
+    const maxPage = Math.max(1, Math.ceil(total / pageSize));
+    const start = (state.page - 1) * pageSize + 1;
+    const end = Math.min(total, state.page * pageSize);
+    return `<div class="pagination">
+      <span>${start}-${end} of ${total}</span>
+      <div class="pagination-actions">
+        <button class="tiny-button" type="button" data-pagination-key="${key}" data-pagination-page="${state.page - 1}" ${state.page <= 1 ? "disabled" : ""}>Previous</button>
+        <strong>${state.page} / ${maxPage}</strong>
+        <button class="tiny-button" type="button" data-pagination-key="${key}" data-pagination-page="${state.page + 1}" ${state.page >= maxPage ? "disabled" : ""}>Next</button>
+      </div>
+    </div>`;
+  }
+
+  function resetPagination(key) {
+    const state = paginationState.get(key);
+    if (state) state.page = 1;
   }
 
   function formatDate(value) {
@@ -147,20 +214,34 @@ const Airport = (() => {
   }
 
   async function downloadTicket(ticketId) {
-    const response = await fetch(endpoint(`/api/tickets/${ticketId}/file`), {
-      headers: { Authorization: `Bearer ${getToken()}` },
-    });
-    if (!response.ok) throw new Error(problem(await response.text(), response.statusText));
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `ticket-${ticketId}.txt`;
-    document.body.append(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
+    beginLoading("Preparing ticket file");
+    try {
+      const response = await fetch(endpoint(`/api/tickets/${ticketId}/file`), {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!response.ok) throw new Error(problem(await response.text(), response.statusText));
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `ticket-${ticketId}.txt`;
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } finally {
+      endLoading();
+    }
   }
 
-  return { api, setSession, clearSession, getUser, toast, setDefaultDates, flightQuery, badge, empty, table, formatDate, money, escapeHtml, priceForClass, downloadTicket, setPlaneLoading, delay };
+  document.body.addEventListener("click", event => {
+    const button = event.target.closest("[data-pagination-key]");
+    if (!button || button.disabled) return;
+    const state = paginationState.get(button.dataset.paginationKey);
+    if (!state) return;
+    state.page = Number(button.dataset.paginationPage) || 1;
+    state.onPageChange?.();
+  });
+
+  return { api, setSession, clearSession, getUser, toast, setDefaultDates, flightQuery, badge, empty, table, paginatedList, resetPagination, formatDate, money, escapeHtml, priceForClass, downloadTicket, setPlaneLoading, delay };
 })();

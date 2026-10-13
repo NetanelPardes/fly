@@ -136,9 +136,9 @@ public class TicketsController(
             }
 
             var baggageAllowanceKg = request.BaggageAllowanceKg.GetValueOrDefault(0);
-            if (baggageAllowanceKg is not (0 or 10 or 20 or 35))
+            if (!IsAllowedBaggageAllowance(baggageAllowanceKg))
             {
-                return ValidationProblem("Baggage allowance must be 0, 10, 20, or 35 kg.");
+                return ValidationProblem("Baggage allowance must be 0, 10, 20, 25, or 35 kg.");
             }
 
             var ticket = new Ticket
@@ -219,6 +219,11 @@ public class TicketsController(
             return Forbid();
         }
 
+        if (User.IsInRole(nameof(UserRole.Passenger)))
+        {
+            return Forbid();
+        }
+
         if (!User.IsInRole(nameof(UserRole.Passenger)) && !User.IsInRole(nameof(UserRole.Admin)) && !User.IsInRole(nameof(UserRole.Ticketing)))
         {
             return Forbid();
@@ -266,15 +271,30 @@ public class TicketsController(
         }
 
         var seatNumber = request.SeatNumber.Trim().ToUpperInvariant();
+        if (User.IsInRole(nameof(UserRole.Passenger)) && !string.Equals(seatNumber, ticket.SeatNumber, StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationProblem("Passengers cannot change seats after booking.");
+        }
+
         if (!await IsSeatAvailableAsync(ticket.Flight, seatNumber, cancellationToken, ticket.Id))
         {
             return ValidationProblem("Seat is not available on this flight.");
         }
 
         var baggageAllowanceKg = request.BaggageAllowanceKg.GetValueOrDefault(ticket.BaggageAllowanceKg);
-        if (baggageAllowanceKg is not (0 or 10 or 20 or 35))
+        if (!IsAllowedBaggageAllowance(baggageAllowanceKg))
         {
-            return ValidationProblem("Baggage allowance must be 0, 10, 20, or 35 kg.");
+            return ValidationProblem("Baggage allowance must be 0, 10, 20, 25, or 35 kg.");
+        }
+
+        if (User.IsInRole(nameof(UserRole.Passenger)) && request.Class < ticket.Class)
+        {
+            return ValidationProblem("Passengers can upgrade class, but cannot downgrade it.");
+        }
+
+        if (User.IsInRole(nameof(UserRole.Passenger)) && baggageAllowanceKg < ticket.BaggageAllowanceKg)
+        {
+            return ValidationProblem("Passengers can add baggage allowance, but cannot reduce it.");
         }
 
         ticket.SeatNumber = seatNumber;
@@ -409,12 +429,16 @@ public class TicketsController(
         {
             10 => 35m,
             20 => 60m,
+            25 => 75m,
             35 => 95m,
             _ => 0m
         };
 
         return Math.Round(classPrice + baggagePrice + (chooseSeat ? 18m : 0m), 2);
     }
+
+    private static bool IsAllowedBaggageAllowance(int baggageAllowanceKg) =>
+        baggageAllowanceKg is 0 or 10 or 20 or 25 or 35;
 
     private async Task TrySendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken)
     {

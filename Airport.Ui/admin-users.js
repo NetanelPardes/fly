@@ -1,6 +1,10 @@
 AdminCommon.init("admin-users.html");
 document.querySelector("#refreshButton").addEventListener("click", refresh);
-document.querySelector("#userSearchForm").addEventListener("submit", event => { event.preventDefault(); searchUsers(); });
+document.querySelector("#userSearchForm").addEventListener("submit", event => {
+  event.preventDefault();
+  Airport.resetPagination("admin-users");
+  searchUsers();
+});
 
 let users = [];
 refresh();
@@ -39,5 +43,5 @@ function renderUsers() {
     Airport.escapeHtml(user.email),
     Airport.escapeHtml(user.phoneNumber || ""),
     Airport.badge(user.role)
-  ]));
+  ]), { paginateKey: "admin-users", onPageChange: renderUsers });
 }

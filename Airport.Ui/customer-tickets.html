@@ -20,7 +20,7 @@
       </div>
     </header>
     <section class="customer-hero">
-      <div><p class="eyebrow">Customer portal</p><h1>My tickets</h1><p class="lead">Cancel, upgrade, change your seat, add baggage, or download your ticket.</p></div>
+      <div><p class="eyebrow">Customer portal</p><h1>My tickets</h1><p class="lead">Upgrade your class, add baggage, or download your ticket.</p></div>
       <button id="profileButton" class="identity-card light profile-button" type="button"><span id="roleBadge">Passenger</span><strong id="userName">Passenger</strong><small id="userEmail">-</small></button>
     </section>
     <section class="metrics">
@@ -33,9 +33,9 @@
     <dialog id="ticketDialog">
       <form id="ticketOptionsForm" method="dialog" class="dialog-form">
         <h2>Manage ticket</h2><input id="manageTicketId" type="hidden">
-        <label>Seat<input id="manageSeat" required></label>
+        <label>Seat<input id="manageSeat" required readonly></label>
         <label>Class<select id="manageClass"><option>Economy</option><option>Business</option><option>First</option></select></label>
-        <label>Baggage<select id="manageBaggage"><option value="0">No baggage</option><option value="10">10 kg</option><option value="20">20 kg</option><option value="35">35 kg</option></select></label>
+        <label>Baggage<select id="manageBaggage"><option value="0">No baggage</option><option value="10">10 kg</option><option value="20">20 kg</option><option value="25">25 kg</option><option value="35">35 kg</option></select></label>
         <div class="dialog-actions"><button type="button" id="closeTicketDialog" class="ghost-button">Close</button><button class="primary-button">Save changes</button></div>
       </form>
     </dialog>

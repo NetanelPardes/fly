@@ -1,6 +1,10 @@
 AdminCommon.init("admin-tickets.html");
 document.querySelector("#refreshButton").addEventListener("click", refresh);
-document.querySelector("#ticketFilters").addEventListener("submit", event => { event.preventDefault(); searchTickets(); });
+document.querySelector("#ticketFilters").addEventListener("submit", event => {
+  event.preventDefault();
+  Airport.resetPagination("admin-tickets");
+  searchTickets();
+});
 document.querySelector("#closeTicketDialog").addEventListener("click", () => document.querySelector("#ticketDialog").close());
 document.querySelector("#ticketOptionsForm").addEventListener("submit", updateTicket);
 document.body.addEventListener("click", handleActions);
@@ -51,7 +55,7 @@ function renderTickets() {
     t.bookingDate ? Airport.formatDate(t.bookingDate) : "-",
     Airport.badge(t.status),
     `<button class="tiny-button" data-manage-ticket="${t.id}">Change</button> ${t.status === "Active" ? `<button class="tiny-button" data-cancel-ticket="${t.id}">Cancel</button>` : ""}`
-  ]));
+  ]), { paginateKey: "admin-tickets", onPageChange: renderTickets });
 }
 
 function openTicket(id) {
@@ -82,9 +86,11 @@ async function updateTicket(event) {
 }
 
 async function handleActions(event) {
+  let loading = false;
   try {
     if (event.target.dataset.manageTicket) openTicket(event.target.dataset.manageTicket);
     if (event.target.dataset.cancelTicket) {
+      loading = true;
       Airport.setPlaneLoading(true, "Cancelling ticket");
       await Promise.all([
         Airport.api(`/api/tickets/${event.target.dataset.cancelTicket}/cancel`, { method: "POST" }),
@@ -95,6 +101,6 @@ async function handleActions(event) {
   } catch (error) {
     Airport.toast(error.message);
   } finally {
-    Airport.setPlaneLoading(false);
+    if (loading) Airport.setPlaneLoading(false);
   }
 }
