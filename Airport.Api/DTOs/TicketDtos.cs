@@ -35,13 +35,26 @@ public record TicketDto(
     string? AircraftModel,
     int? SeatCapacity,
     FlightStatus FlightStatus,
-    decimal FlightBasePrice);
+    decimal FlightBasePrice,
+    string? RouteBookingReference,
+    int? RouteLegIndex,
+    int? RouteLegCount);
 
 public record CreateTicketDto(
     int? PassengerId,
     int FlightId,
     [MaxLength(9)] string? PassengerNationalId,
     [EmailAddress, MaxLength(254)] string? PassengerEmail,
+    [MaxLength(10)] string? SeatNumber,
+    int? BaggageAllowanceKg,
+    TicketClass Class,
+    [Range(0, 999999)] decimal? Price);
+
+public record CreateRouteBookingDto(
+    [Required, MinLength(2)] IReadOnlyCollection<CreateRouteBookingLegDto> Legs);
+
+public record CreateRouteBookingLegDto(
+    int FlightId,
     [MaxLength(10)] string? SeatNumber,
     int? BaggageAllowanceKg,
     TicketClass Class,

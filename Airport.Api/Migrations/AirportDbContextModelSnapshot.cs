@@ -580,6 +580,16 @@ namespace Airport.Api.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<string>("RouteBookingReference")
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<int?>("RouteLegCount")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RouteLegIndex")
+                        .HasColumnType("int");
+
                     b.Property<string>("SeatNumber")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -608,6 +618,8 @@ namespace Airport.Api.Migrations
                     b.HasIndex("PassengerId");
 
                     b.HasIndex("PassengerNationalId");
+
+                    b.HasIndex("RouteBookingReference");
 
                     b.ToTable("Tickets");
                 });

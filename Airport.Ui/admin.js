@@ -126,12 +126,23 @@ function openTicket(ticketId) {
 
 async function updateTicket(event) {
   event.preventDefault();
+  const ticketId = document.querySelector("#manageTicketId").value;
+  const payload = {
+    seatNumber: document.querySelector("#manageSeat").value,
+    class: document.querySelector("#manageClass").value
+  };
+  document.querySelector("#ticketDialog").close();
   try {
-    await Airport.api(`/api/tickets/${document.querySelector("#manageTicketId").value}/options`, { method: "PUT", body: JSON.stringify({ seatNumber: document.querySelector("#manageSeat").value, class: document.querySelector("#manageClass").value }) });
-    document.querySelector("#ticketDialog").close();
+    Airport.setPlaneLoading(true, "Updating ticket details");
+    await Promise.all([
+      Airport.api(`/api/tickets/${ticketId}/options`, { method: "PUT", skipLoader: true, body: JSON.stringify(payload) }),
+      Airport.delay(1200)
+    ]);
     await refresh();
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
   }
 }
 

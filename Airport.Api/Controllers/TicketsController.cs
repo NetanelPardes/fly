@@ -200,6 +200,158 @@ public class TicketsController(
         });
     }
 
+    [HttpPost("route")]
+    public async Task<ActionResult<IEnumerable<TicketDto>>> CreateRouteBooking(CreateRouteBookingDto request, CancellationToken cancellationToken)
+    {
+        if (request.Legs.Count < 2 || request.Legs.Count > 4)
+        {
+            return ValidationProblem("A connection route must include 2 to 4 flights.");
+        }
+
+        var passengerId = User.IsInRole(nameof(UserRole.Passenger)) ? currentUser.UserId : (int?)null;
+        if (!passengerId.HasValue)
+        {
+            return Forbid();
+        }
+
+        var passenger = await dbContext.Users.FirstOrDefaultAsync(
+            user => user.Id == passengerId.Value && user.Role == UserRole.Passenger,
+            cancellationToken);
+        if (passenger is null)
+        {
+            return ValidationProblem("Passenger does not exist.");
+        }
+
+        var legRequests = request.Legs.ToArray();
+        var flightIds = legRequests.Select(leg => leg.FlightId).ToArray();
+        var flightsById = await dbContext.Flights
+            .Include(item => item.GeneratedSchedule)
+            .Where(flight => flightIds.Contains(flight.Id))
+            .ToDictionaryAsync(flight => flight.Id, cancellationToken);
+
+        if (flightsById.Count != flightIds.Distinct().Count())
+        {
+            return ValidationProblem("One or more flights do not exist.");
+        }
+
+        var flights = legRequests.Select(leg => flightsById[leg.FlightId]).ToArray();
+        if (flights.Any(flight => flight.Status is FlightStatus.Cancelled or FlightStatus.Departed))
+        {
+            return ValidationProblem("One or more route flights cannot be booked.");
+        }
+
+        if (flights.Any(flight => flight.DepartureTime <= DateTime.UtcNow.AddHours(1)))
+        {
+            return ValidationProblem("Booking closes 1 hour before departure.");
+        }
+
+        for (var index = 0; index < flights.Length - 1; index++)
+        {
+            if (flights[index + 1].DepartureTime <= flights[index].ArrivalTime)
+            {
+                return ValidationProblem("Route flights must be in chronological order.");
+            }
+        }
+
+        var routeReference = $"KODR-{DateTime.UtcNow:yyyyMMddHHmmss}-{Random.Shared.Next(1000, 9999)}";
+        var executionStrategy = dbContext.Database.CreateExecutionStrategy();
+        return await executionStrategy.ExecuteAsync<ActionResult<IEnumerable<TicketDto>>>(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var tickets = new List<Ticket>();
+
+            for (var index = 0; index < legRequests.Length; index++)
+            {
+                var leg = legRequests[index];
+                var flight = flights[index];
+                var seatNumber = string.IsNullOrWhiteSpace(leg.SeatNumber)
+                    ? await PickRandomSeatAsync(flight, cancellationToken)
+                    : leg.SeatNumber.Trim().ToUpperInvariant();
+                if (string.IsNullOrWhiteSpace(seatNumber))
+                {
+                    return ValidationProblem($"No available seats on flight {flight.FlightNumber}.");
+                }
+
+                if (!await IsSeatAvailableAsync(flight, seatNumber, cancellationToken))
+                {
+                    return ValidationProblem($"Seat {seatNumber} is not available on flight {flight.FlightNumber}.");
+                }
+
+                var baggageAllowanceKg = leg.BaggageAllowanceKg.GetValueOrDefault(0);
+                if (!IsAllowedBaggageAllowance(baggageAllowanceKg))
+                {
+                    return ValidationProblem("Baggage allowance must be 0, 10, 20, 25, or 35 kg.");
+                }
+
+                var ticket = new Ticket
+                {
+                    PassengerId = passenger.Id,
+                    FlightId = flight.Id,
+                    PassengerNationalId = passenger.NationalId,
+                    PassengerEmail = passenger.Email,
+                    SeatNumber = seatNumber,
+                    BaggageAllowanceKg = baggageAllowanceKg,
+                    Class = leg.Class,
+                    Price = leg.Price ?? CalculatePrice(flight, leg.Class, baggageAllowanceKg, !string.IsNullOrWhiteSpace(leg.SeatNumber)),
+                    Status = TicketStatus.Active,
+                    BookingDate = DateTime.UtcNow,
+                    RouteBookingReference = routeReference,
+                    RouteLegIndex = index + 1,
+                    RouteLegCount = legRequests.Length
+                };
+
+                dbContext.Tickets.Add(ticket);
+                flight.PassengerCount += 1;
+                tickets.Add(ticket);
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            foreach (var ticket in tickets)
+            {
+                var eventId = Guid.NewGuid();
+                var flight = flightsById[ticket.FlightId];
+                var task = new TicketGenerationTask(
+                    eventId,
+                    ticket.Id,
+                    passenger.Id,
+                    flight.Id,
+                    passenger.FullName,
+                    flight.FlightNumber,
+                    flight.Origin,
+                    flight.Destination,
+                    flight.DepartureTime,
+                    ticket.SeatNumber,
+                    ticket.Class.ToString(),
+                    ticket.Price);
+
+                dbContext.OutboxMessages.Add(new OutboxMessage
+                {
+                    EventId = eventId,
+                    Type = nameof(TicketGenerationTask),
+                    Payload = JsonSerializer.Serialize(task),
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            var ticketIds = tickets.Select(ticket => ticket.Id).ToArray();
+            var savedTickets = await dbContext.Tickets
+                .Include(ticket => ticket.Passenger)
+                .Include(ticket => ticket.Flight)
+                    .ThenInclude(flight => flight.GeneratedSchedule)
+                .Where(ticket => ticketIds.Contains(ticket.Id))
+                .OrderBy(ticket => ticket.RouteLegIndex)
+                .ToListAsync(cancellationToken);
+            var dtos = savedTickets.Select(ToDto).ToList();
+
+            await TrySendEmailAsync(BookingConfirmationEmailTemplate.Create(dtos, environment), cancellationToken);
+            return CreatedAtAction(nameof(GetTickets), dtos);
+        });
+    }
+
     [HttpPost("{id:int}/cancel")]
     public async Task<ActionResult<TicketDto>> CancelTicket(int id, CancellationToken cancellationToken)
     {
@@ -363,7 +515,10 @@ public class TicketsController(
         ticket.Flight.GeneratedSchedule?.AircraftModel,
         ticket.Flight.GeneratedSchedule?.SeatCapacity,
         ticket.Flight.Status,
-        ticket.Flight.BasePrice);
+        ticket.Flight.BasePrice,
+        ticket.RouteBookingReference,
+        ticket.RouteLegIndex,
+        ticket.RouteLegCount);
 
     private async Task<string?> PickRandomSeatAsync(Flight flight, CancellationToken cancellationToken)
     {

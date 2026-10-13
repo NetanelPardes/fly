@@ -99,9 +99,11 @@ public class AirportDbContext(DbContextOptions<AirportDbContext> options) : DbCo
             entity.Property(ticket => ticket.Class).HasConversion(ticketClassConverter).HasMaxLength(30);
             entity.Property(ticket => ticket.Status).HasConversion(ticketStatusConverter).HasMaxLength(30);
             entity.Property(ticket => ticket.BookingDate).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+            entity.Property(ticket => ticket.RouteBookingReference).HasMaxLength(40);
             entity.Property(ticket => ticket.ActiveSeatKey)
                 .HasComputedColumnSql("CASE WHEN `Status` = 'Active' THEN CONCAT(`FlightId`, ':', `SeatNumber`) ELSE NULL END", stored: true);
             entity.HasIndex(ticket => ticket.ActiveSeatKey).IsUnique();
+            entity.HasIndex(ticket => ticket.RouteBookingReference);
             entity.HasIndex(ticket => ticket.PassengerNationalId);
             entity.HasIndex(ticket => ticket.PassengerEmail);
             entity.HasIndex(ticket => ticket.BookingDate);

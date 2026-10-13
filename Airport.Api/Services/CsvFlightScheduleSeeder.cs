@@ -7,7 +7,7 @@ namespace Airport.Api.Services;
 
 public static class CsvFlightScheduleSeeder
 {
-    public const string Source = "CsvGeneratedTrafficProfileV2";
+    public const string Source = "CsvGeneratedTrafficProfileV4";
     private static readonly string[] PreferredHighTrafficOriginTerms =
     [
         "Paris", "Nice", "Lyon", "Marseille", "Bordeaux", "Strasbourg", "Toulouse", "Lille", "Nantes", "Montpellier",
@@ -84,11 +84,16 @@ public static class CsvFlightScheduleSeeder
         var highTrafficOriginCount = Math.Clamp(configuration.GetValue("AIRPORT_CSV_HIGH_TRAFFIC_ORIGIN_COUNT", 500), 1, airports.Count);
         var highTrafficFlightsPerDay = Math.Clamp(configuration.GetValue("AIRPORT_CSV_HIGH_TRAFFIC_FLIGHTS_PER_DAY", 50), 1, 200);
         var lowTrafficFlightsPerDay = Math.Clamp(configuration.GetValue("AIRPORT_CSV_LOW_TRAFFIC_FLIGHTS_PER_DAY", 2), 1, 20);
+        var guaranteedOriginFlightsPerDay = Math.Clamp(configuration.GetValue("AIRPORT_CSV_GUARANTEED_ORIGIN_FLIGHTS_PER_DAY", 25), 1, 80);
+        var maxFlightsPerOriginPerDay = Math.Clamp(configuration.GetValue("AIRPORT_CSV_MAX_FLIGHTS_PER_ORIGIN_PER_DAY", 8), 1, 20);
+        var originsPerDay = Math.Clamp(configuration.GetValue("AIRPORT_CSV_ORIGINS_PER_DAY", 180), 10, airports.Count);
         var destinationsPerOrigin = Math.Clamp(configuration.GetValue("AIRPORT_CSV_DESTINATIONS_PER_ORIGIN", 25), 1, 50);
 
         var highTrafficOrigins = PickHighTrafficOrigins(airports, highTrafficOriginCount, random).ToHashSet();
         var origins = airports.OrderBy(_ => random.Next()).ToList();
-        LogSeed(configuration, $"Generating flights from {origins.Count} origin airports for {days} days. High traffic origins: {highTrafficOrigins.Count} x {highTrafficFlightsPerDay} flights/day. Other origins: {lowTrafficFlightsPerDay} flights/day.");
+        var guaranteedOrigins = origins.Where(IsGuaranteedDailyOrigin).ToList();
+        var guaranteedOriginCodes = guaranteedOrigins.Select(origin => origin.Iata).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        LogSeed(configuration, $"Generating flights for {days} days. Daily origins: {originsPerDay} plus {guaranteedOrigins.Count} guaranteed origins. Guaranteed origins: {guaranteedOriginFlightsPerDay} flights/day. High traffic cap: {maxFlightsPerOriginPerDay} flights/day. Other origins: {lowTrafficFlightsPerDay} flights/day.");
         var generatedAt = DateTime.UtcNow;
         var startDate = DateTime.UtcNow.Date;
         var pendingSchedules = new List<GeneratedFlightSchedule>(500);
@@ -101,17 +106,27 @@ public static class CsvFlightScheduleSeeder
         for (var day = 0; day < days; day++)
         {
             var date = startDate.AddDays(day);
-            foreach (var origin in origins)
+            var dailyOrigins = guaranteedOrigins
+                .Concat(origins.Where(origin => !guaranteedOriginCodes.Contains(origin.Iata)).OrderBy(_ => random.Next()).Take(originsPerDay))
+                .DistinctBy(origin => origin.Iata)
+                .ToList();
+
+            foreach (var origin in dailyOrigins)
             {
                 var destinations = PickDestinations(origin, airports, destinationsPerOrigin, random);
-                var dailyFlights = highTrafficOrigins.Contains(origin)
-                    ? highTrafficFlightsPerDay
+                var isGuaranteedDailyOrigin = IsGuaranteedDailyOrigin(origin);
+                var dailyFlights = isGuaranteedDailyOrigin
+                    ? guaranteedOriginFlightsPerDay
+                    : highTrafficOrigins.Contains(origin)
+                    ? Math.Min(highTrafficFlightsPerDay, maxFlightsPerOriginPerDay)
                     : lowTrafficFlightsPerDay;
                 for (var flightIndex = 0; flightIndex < dailyFlights; flightIndex++)
                 {
                     var destination = destinations[flightIndex % destinations.Count];
                     var departure = BuildDeparture(date, flightIndex, dailyFlights, random);
-                    var airplane = FindAvailableAircraft(aircraft, aircraftNextAvailable, departure, random);
+                    var airplane = isGuaranteedDailyOrigin
+                        ? aircraft[random.Next(aircraft.Count)]
+                        : FindAvailableAircraft(aircraft, aircraftNextAvailable, departure, random);
                     if (airplane is null || !occupiedDepartureSlots.Add($"{origin.Iata}|{departure:O}"))
                     {
                         continue;
@@ -450,6 +465,9 @@ public static class CsvFlightScheduleSeeder
 
     private static bool ContainsTerm(string? value, string term) =>
         !string.IsNullOrWhiteSpace(value) && value.Contains(term, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsGuaranteedDailyOrigin(AirportRecord airport) =>
+        airport.Country.Equals("Israel", StringComparison.OrdinalIgnoreCase);
 
     private static DateTime BuildDeparture(DateTime date, int flightIndex, int dailyFlights, Random random)
     {

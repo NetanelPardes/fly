@@ -15,6 +15,20 @@ public static class ProfileUpdatedEmailTemplate
             BuildPlainText(user),
             BuildHtml(user));
 
+    public static EmailMessage Create(Employee employee) =>
+        Create(new User
+        {
+            NationalId = employee.NationalId,
+            FirstName = employee.FirstName,
+            LastName = employee.LastName,
+            FullName = employee.FullName,
+            Email = employee.Email,
+            Gender = employee.Gender,
+            Address = employee.Address,
+            PhoneNumber = employee.PhoneNumber,
+            Role = UserRole.Admin
+        });
+
     private static string BuildPlainText(User user)
     {
         var builder = new StringBuilder();

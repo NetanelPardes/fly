@@ -245,21 +245,30 @@ function openTicket(ticketId) {
 async function updateTicket(event) {
   event.preventDefault();
   const ticketId = document.querySelector("#manageTicketId").value;
+  const payload = {
+    seatNumber: document.querySelector("#manageSeat").value,
+    class: document.querySelector("#manageClass").value
+  };
+  const tag = document.querySelector("#manageBagTag").value.trim();
+  const weight = Number(document.querySelector("#manageBagWeight").value);
+  document.querySelector("#ticketDialog").close();
   try {
+    Airport.setPlaneLoading(true, "Updating ticket details");
     await Airport.api(`/api/tickets/${ticketId}/options`, {
       method: "PUT",
-      body: JSON.stringify({ seatNumber: document.querySelector("#manageSeat").value, class: document.querySelector("#manageClass").value }),
+      skipLoader: true,
+      body: JSON.stringify(payload),
     });
-    const tag = document.querySelector("#manageBagTag").value.trim();
-    const weight = Number(document.querySelector("#manageBagWeight").value);
     if (tag && weight) {
-      await Airport.api("/api/baggage", { method: "POST", body: JSON.stringify({ ticketId: Number(ticketId), tagNumber: tag, weightKg: weight }) }).catch(() => {});
+      await Airport.api("/api/baggage", { method: "POST", skipLoader: true, body: JSON.stringify({ ticketId: Number(ticketId), tagNumber: tag, weightKg: weight }) }).catch(() => {});
     }
-    document.querySelector("#ticketDialog").close();
+    await Airport.delay(1200);
     await refresh();
     Airport.toast("Ticket updated.");
   } catch (error) {
     Airport.toast(error.message);
+  } finally {
+    Airport.setPlaneLoading(false);
   }
 }
 

@@ -34,6 +34,13 @@ public class Ticket
 
     public DateTime BookingDate { get; set; }
 
+    [MaxLength(40)]
+    public string? RouteBookingReference { get; set; }
+
+    public int? RouteLegIndex { get; set; }
+
+    public int? RouteLegCount { get; set; }
+
     [MaxLength(500)]
     public string? TicketFilePath { get; set; }
 

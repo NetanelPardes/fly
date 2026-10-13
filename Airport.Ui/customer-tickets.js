@@ -98,7 +98,74 @@ function render() {
   document.querySelector("#metricActiveTickets").textContent = `${tickets.filter(t => t.status === "Active").length} active`;
   document.querySelector("#metricBaggage").textContent = baggage.length;
   document.querySelector("#metricFiles").textContent = tickets.filter(t => t.ticketFilePath).length;
-  document.querySelector("#ticketsList").innerHTML = Airport.paginatedList("customer-tickets", tickets, ticketRow, "No tickets yet", { onPageChange: render });
+  document.querySelector("#ticketsList").innerHTML = Airport.paginatedList("customer-tickets", ticketItems(), ticketItemRow, "No tickets yet", { onPageChange: render });
+}
+
+function ticketItems() {
+  const groups = new Map();
+  const singles = [];
+  tickets.forEach(ticket => {
+    if (ticket.routeBookingReference && ticket.routeLegCount > 1) {
+      if (!groups.has(ticket.routeBookingReference)) groups.set(ticket.routeBookingReference, []);
+      groups.get(ticket.routeBookingReference).push(ticket);
+    } else {
+      singles.push({ type: "ticket", departureTime: ticket.departureTime, ticket });
+    }
+  });
+
+  const routes = [...groups.entries()].map(([reference, routeTickets]) => {
+    const ordered = routeTickets.sort((a, b) => (a.routeLegIndex || 0) - (b.routeLegIndex || 0) || new Date(a.departureTime) - new Date(b.departureTime));
+    return { type: "route", reference, departureTime: ordered[0].departureTime, tickets: ordered };
+  });
+
+  return [...routes, ...singles].sort((a, b) => new Date(a.departureTime) - new Date(b.departureTime));
+}
+
+function ticketItemRow(item) {
+  return item.type === "route" ? routeTicketRow(item) : ticketRow(item.ticket);
+}
+
+function routeTicketRow(route) {
+  const legs = route.tickets;
+  const first = legs[0];
+  const last = legs.at(-1);
+  const active = legs.every(ticket => ticket.status === "Active");
+  const waits = [];
+  for (let index = 0; index < legs.length - 1; index++) {
+    waits.push(Math.max(0, Math.round((new Date(legs[index + 1].departureTime) - new Date(legs[index].arrivalTime)) / 60000)));
+  }
+
+  return `<article class="ticket-row connection-ticket-row">
+    <div class="ticket-main">
+      <div class="ticket-title-line">
+        <small>Route ${Airport.escapeHtml(route.reference)}</small>
+        <strong>${Airport.escapeHtml(legs.map(ticket => ticket.flightNumber).join(" + "))}</strong>
+        <span class="mini-tag">${legs.length - 1} connection${legs.length - 1 === 1 ? "" : "s"}</span>
+        ${Airport.badge(active ? "Active" : "Updated")}
+      </div>
+      <div class="ticket-route">${Airport.escapeHtml(place(first.origin, first.originCountry))} <span>-></span> ${Airport.escapeHtml(place(last.destination, last.destinationCountry))}</div>
+      <div class="ticket-subroute">Total wait: ${Airport.escapeHtml(waits.length ? waits.map(durationFromMinutes).join(", ") : "Direct")}</div>
+    </div>
+    <div class="connection-legs">${legs.map((ticket, index) => routeLegTicketRow(ticket, index, legs)).join("")}</div>
+  </article>`;
+}
+
+function routeLegTicketRow(ticket, index, legs) {
+  const wait = index < legs.length - 1
+    ? `<span class="connection-wait">Connection wait: ${durationFromMinutes(Math.max(0, Math.round((new Date(legs[index + 1].departureTime) - new Date(ticket.arrivalTime)) / 60000)))}</span>`
+    : "";
+  const active = ticket.status === "Active";
+  return `<article class="connection-leg">
+    <small>Leg ${index + 1} · Ticket #${ticket.id}</small>
+    <strong>${Airport.escapeHtml(ticket.flightNumber)}: ${Airport.escapeHtml(place(ticket.origin, ticket.originCountry))} -> ${Airport.escapeHtml(place(ticket.destination, ticket.destinationCountry))}</strong>
+    <span>${Airport.formatDate(ticket.departureTime)} to ${Airport.formatDate(ticket.arrivalTime)}</span>
+    <span>Seat ${Airport.escapeHtml(ticket.seatNumber)} · ${Airport.escapeHtml(ticket.class)} · ${ticket.baggageAllowanceKg || 0} kg · ${Airport.money(ticket.price)}</span>
+    ${wait}
+    <div class="ticket-actions route-leg-actions">
+      <button class="tiny-button" data-manage-ticket="${ticket.id}" ${active ? "" : "disabled"}>Upgrade options</button>
+      ${ticket.ticketFilePath ? `<button class="tiny-button" data-download-ticket="${ticket.id}">Download</button>` : ""}
+    </div>
+  </article>`;
 }
 
 function ticketRow(ticket) {
@@ -138,6 +205,10 @@ function airport(name, code) {
   return [name, code ? `(${code})` : ""].filter(Boolean).join(" ");
 }
 
+function durationFromMinutes(minutes) {
+  return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
+}
+
 function openTicket(ticketId) {
   const ticket = tickets.find(t => t.id === Number(ticketId));
   if (!ticket) return;
@@ -163,17 +234,19 @@ function limitUpgradeChoices(ticket) {
 async function updateTicket(event) {
   event.preventDefault();
   const ticketId = document.querySelector("#manageTicketId").value;
+  const payload = {
+    seatNumber: document.querySelector("#manageSeat").value.trim(),
+    class: document.querySelector("#manageClass").value,
+    baggageAllowanceKg: Number(document.querySelector("#manageBaggage").value)
+  };
+  document.querySelector("#ticketDialog").close();
   try {
     Airport.setPlaneLoading(true, "Updating ticket details");
     await Promise.all([Airport.api(`/api/tickets/${ticketId}/options`, {
       method: "PUT",
-      body: JSON.stringify({
-        seatNumber: document.querySelector("#manageSeat").value.trim(),
-        class: document.querySelector("#manageClass").value,
-        baggageAllowanceKg: Number(document.querySelector("#manageBaggage").value)
-      })
+      skipLoader: true,
+      body: JSON.stringify(payload)
     }), Airport.delay(1200)]);
-    document.querySelector("#ticketDialog").close();
     await refresh();
     Airport.toast("Ticket details updated.");
   } catch (error) {

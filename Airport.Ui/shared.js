@@ -18,6 +18,10 @@ const Airport = (() => {
     localStorage.setItem(userKey, JSON.stringify(result.user));
   }
 
+  function updateUser(user) {
+    localStorage.setItem(userKey, JSON.stringify(user));
+  }
+
   function clearSession() {
     localStorage.removeItem(tokenKey);
     localStorage.removeItem(userKey);
@@ -243,5 +247,5 @@ const Airport = (() => {
     state.onPageChange?.();
   });
 
-  return { api, setSession, clearSession, getUser, toast, setDefaultDates, flightQuery, badge, empty, table, paginatedList, resetPagination, formatDate, money, escapeHtml, priceForClass, downloadTicket, setPlaneLoading, delay };
+  return { api, setSession, updateUser, clearSession, getUser, toast, setDefaultDates, flightQuery, badge, empty, table, paginatedList, resetPagination, formatDate, money, escapeHtml, priceForClass, downloadTicket, setPlaneLoading, delay };
 })();

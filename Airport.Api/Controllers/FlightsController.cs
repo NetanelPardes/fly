@@ -17,9 +17,12 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
     private const int MaxConnections = 3;
     private const int MinConnectionMinutes = 60;
     private const int MaxConnectionMinutes = 24 * 60;
-    private const int MaxRouteResults = 120;
+    private const int MaxRouteResults = 320;
+    private const int MaxDirectRouteResults = 200;
+    private const int MaxOneConnectionRouteResults = 50;
+    private const int MaxTwoConnectionRouteResults = 50;
     private const int MaxCandidatesPerLeg = 40;
-    private static readonly string[] DemoSources = ["DemoSeed", "DemoSchedule", "PythonDemo", "CsvGenerated", "CsvGeneratedAllOrigins", "CsvGeneratedAllOriginsV2", "CsvGeneratedAllOriginsV4", "CsvGeneratedTrafficProfileV1"];
+    private static readonly string[] DemoSources = ["DemoSeed", "DemoSchedule", "PythonDemo", "CsvGenerated", "CsvGeneratedAllOrigins", "CsvGeneratedAllOriginsV2", "CsvGeneratedAllOriginsV4", "CsvGeneratedTrafficProfileV1", "CsvGeneratedTrafficProfileV2", "CsvGeneratedTrafficProfileV3"];
 
     [HttpGet("schedule-status")]
     public async Task<ActionResult<object>> GetScheduleStatus(CancellationToken cancellationToken)
@@ -164,6 +167,7 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         [FromQuery] string destinationSearch,
         [FromQuery] DateTime from,
         [FromQuery] DateTime to,
+        [FromQuery] string? sortBy,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(originSearch) || string.IsNullOrWhiteSpace(destinationSearch))
@@ -231,19 +235,15 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         var originQuery = BuildLocationQuery(originSearch);
         var destinationQuery = BuildLocationQuery(destinationSearch);
 
-        var directRoutes = pool
+        var directRoutes = SortRoutes(pool
             .Where(flight => MatchesLocation(flight, originQuery, originSide: true) && MatchesLocation(flight, destinationQuery, originSide: false))
-            .Select(flight => ToRoute([flight]))
+            .Select(flight => ToRoute([flight])), sortBy)
+            .Take(MaxDirectRouteResults)
             .ToList();
 
-        var connectionRoutes = FindConnectionRoutes(pool, originQuery, destinationQuery, directRoutes.Count);
+        var connectionRoutes = FindConnectionRoutes(pool, originQuery, destinationQuery, sortBy);
 
-        return Ok(directRoutes
-            .Concat(connectionRoutes)
-            .OrderBy(route => route.ConnectionCount)
-            .ThenBy(route => route.Legs.First().DepartureTime)
-            .ThenBy(route => route.BasePrice)
-            .Take(MaxRouteResults));
+        return Ok(SortRoutes(directRoutes.Concat(connectionRoutes), sortBy).Take(MaxRouteResults));
     }
 
     [HttpGet("{id:int}")]
@@ -397,9 +397,15 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
         IReadOnlyList<FlightDto> pool,
         LocationQuery originQuery,
         LocationQuery destinationQuery,
-        int directRouteCount)
+        string? sortBy)
     {
-        var results = new List<FlightRouteDto>(MaxRouteResults);
+        var results = new List<FlightRouteDto>(MaxRouteResults - MaxDirectRouteResults);
+        var routeCounts = new Dictionary<int, int>
+        {
+            [1] = 0,
+            [2] = 0,
+            [3] = 0
+        };
         var seenRoutes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var index = BuildConnectionIndex(pool);
         var starts = pool.Where(flight => MatchesLocation(flight, originQuery, originSide: true)).Take(180).ToList();
@@ -414,22 +420,17 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
                 }
 
                 AddRoute([start, next]);
-                if (results.Count + directRouteCount >= MaxRouteResults)
+                if (QuotaIsFull(1))
                 {
-                    return OrderedResults();
+                    break;
                 }
             }
-        }
-
-        if (results.Count > 0)
-        {
-            return OrderedResults();
         }
 
         foreach (var start in starts.Take(80))
         {
             Explore([start], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ConnectionNodeKey(start, originSide: true) });
-            if (results.Count + directRouteCount >= MaxRouteResults)
+            if (AllConnectionQuotasAreFull())
             {
                 break;
             }
@@ -437,19 +438,22 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
 
         return OrderedResults();
 
-        IReadOnlyCollection<FlightRouteDto> OrderedResults() => results
-            .OrderBy(route => route.ConnectionCount)
-            .ThenBy(route => route.BasePrice)
-            .ThenBy(route => route.Legs.First().DepartureTime)
-            .Take(Math.Max(0, MaxRouteResults - directRouteCount))
+        IReadOnlyCollection<FlightRouteDto> OrderedResults() => SortRoutes(results, sortBy)
             .ToList();
 
         void AddRoute(List<FlightDto> legs)
         {
+            var connectionCount = legs.Count - 1;
+            if (connectionCount < 1 || connectionCount > MaxConnections || QuotaIsFull(connectionCount))
+            {
+                return;
+            }
+
             var key = string.Join('-', legs.Select(leg => leg.Id));
             if (seenRoutes.Add(key))
             {
                 results.Add(ToRoute(legs));
+                routeCounts[connectionCount] += 1;
             }
         }
 
@@ -462,7 +466,7 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
                 return;
             }
 
-            if (legs.Count >= MaxConnections + 1 || results.Count + directRouteCount >= MaxRouteResults)
+            if (legs.Count >= MaxConnections + 1 || AllConnectionQuotasAreFull())
             {
                 return;
             }
@@ -481,12 +485,50 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
                 }
 
                 Explore([.. legs, next], new HashSet<string>(visited, StringComparer.OrdinalIgnoreCase));
-                if (results.Count + directRouteCount >= MaxRouteResults)
+                if (AllConnectionQuotasAreFull())
                 {
                     break;
                 }
             }
         }
+
+        bool QuotaIsFull(int connectionCount) => routeCounts[connectionCount] >= QuotaForConnections(connectionCount);
+
+        bool AllConnectionQuotasAreFull() =>
+            QuotaIsFull(1) && QuotaIsFull(2) && QuotaIsFull(3);
+    }
+
+    private static int QuotaForConnections(int connectionCount) => connectionCount switch
+    {
+        1 => MaxOneConnectionRouteResults,
+        2 => MaxTwoConnectionRouteResults,
+        3 => MaxRouteResults - MaxDirectRouteResults - MaxOneConnectionRouteResults - MaxTwoConnectionRouteResults,
+        _ => 0
+    };
+
+    private static IOrderedEnumerable<FlightRouteDto> SortRoutes(IEnumerable<FlightRouteDto> routes, string? sortBy)
+    {
+        var normalized = sortBy?.Trim().ToLowerInvariant();
+        if (normalized == "price")
+        {
+            return routes
+                .OrderBy(route => route.BasePrice)
+                .ThenBy(route => route.ConnectionCount)
+                .ThenBy(route => route.Legs.First().DepartureTime);
+        }
+
+        if (normalized == "date")
+        {
+            return routes
+                .OrderBy(route => route.Legs.First().DepartureTime)
+                .ThenBy(route => route.ConnectionCount)
+                .ThenBy(route => route.BasePrice);
+        }
+
+        return routes
+            .OrderBy(route => route.ConnectionCount)
+            .ThenBy(route => route.Legs.First().DepartureTime)
+            .ThenBy(route => route.BasePrice);
     }
 
     private static FlightRouteDto ToRoute(IReadOnlyCollection<FlightDto> legs)
@@ -766,15 +808,6 @@ public class FlightsController(AirportDbContext dbContext, IConfiguration config
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Append(withoutCode)
             .ToList();
-
-        foreach (var term in terms.ToArray())
-        {
-            var countryCode = CountryCodeFor(term);
-            if (!string.IsNullOrWhiteSpace(countryCode))
-            {
-                terms.Add(countryCode);
-            }
-        }
 
         return terms
             .Distinct(StringComparer.OrdinalIgnoreCase)

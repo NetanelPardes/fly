@@ -6,6 +6,7 @@ public interface ICurrentUserService
 {
     int? UserId { get; }
     string? Role { get; }
+    string? Email { get; }
 }
 
 public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
@@ -20,4 +21,6 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
     }
 
     public string? Role => httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role);
+
+    public string? Email => httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Email);
 }

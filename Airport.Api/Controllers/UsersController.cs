@@ -51,7 +51,8 @@ public class UsersController(
     public async Task<ActionResult<UserDto>> CreateUser(CreateUserDto request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim().ToLowerInvariant();
-        if (await dbContext.Users.AnyAsync(user => user.Email == email, cancellationToken))
+        if (await dbContext.Users.AnyAsync(user => user.Email == email, cancellationToken)
+            || await dbContext.Employees.AnyAsync(employee => employee.Email == email, cancellationToken))
         {
             return Conflict("Email already exists.");
         }
@@ -59,12 +60,14 @@ public class UsersController(
         var identity = NormalizeIdentity(request.FullName, request.FirstName, request.LastName);
         var nationalId = string.IsNullOrWhiteSpace(request.NationalId) ? GenerateNineDigitValue() : request.NationalId.Trim();
         var phone = string.IsNullOrWhiteSpace(request.PhoneNumber) ? GeneratePhoneValue() : request.PhoneNumber.Trim();
-        if (await dbContext.Users.AnyAsync(user => user.NationalId == nationalId, cancellationToken))
+        if (await dbContext.Users.AnyAsync(user => user.NationalId == nationalId, cancellationToken)
+            || await dbContext.Employees.AnyAsync(employee => employee.NationalId == nationalId, cancellationToken))
         {
             return Conflict("National ID already exists.");
         }
 
-        if (await dbContext.Users.AnyAsync(user => user.PhoneNumber == phone, cancellationToken))
+        if (await dbContext.Users.AnyAsync(user => user.PhoneNumber == phone, cancellationToken)
+            || await dbContext.Employees.AnyAsync(employee => employee.PhoneNumber == phone, cancellationToken))
         {
             return Conflict("Phone number already exists.");
         }
@@ -170,22 +173,51 @@ public class UsersController(
     [HttpGet("me")]
     public async Task<ActionResult<UserDto>> GetMe(CancellationToken cancellationToken)
     {
+        var email = currentUser.Email?.Trim().ToLowerInvariant();
         var user = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == currentUser.UserId && item.Email == email, cancellationToken);
+        user ??= await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == currentUser.UserId && item.Role == UserRole.Admin, cancellationToken);
+        if (user is not null)
+        {
+            return Ok(ToDto(user));
+        }
+
+        var employee = await dbContext.Employees
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == currentUser.UserId && item.Email == email, cancellationToken);
+        employee ??= await dbContext.Employees
             .AsNoTracking()
             .FirstOrDefaultAsync(item => item.Id == currentUser.UserId, cancellationToken);
 
-        return user is null ? NotFound() : Ok(ToDto(user));
+        return employee is null ? NotFound() : Ok(ToDto(employee));
     }
 
     [HttpPut("me")]
     public async Task<ActionResult<UserDto>> UpdateMe(UpdateMyProfileDto request, CancellationToken cancellationToken)
     {
-        var user = await dbContext.Users.FirstOrDefaultAsync(item => item.Id == currentUser.UserId, cancellationToken);
-        if (user is null)
+        var emailClaim = currentUser.Email?.Trim().ToLowerInvariant();
+        var user = await dbContext.Users.FirstOrDefaultAsync(item => item.Id == currentUser.UserId && item.Email == emailClaim, cancellationToken);
+        user ??= await dbContext.Users.FirstOrDefaultAsync(item => item.Id == currentUser.UserId && item.Role == UserRole.Admin, cancellationToken);
+        if (user is not null)
         {
-            return NotFound();
+            return await UpdateUserProfile(user, request, cancellationToken);
         }
 
+        var employee = await dbContext.Employees.FirstOrDefaultAsync(item => item.Id == currentUser.UserId && item.Email == emailClaim, cancellationToken);
+        employee ??= await dbContext.Employees.FirstOrDefaultAsync(item => item.Id == currentUser.UserId, cancellationToken);
+        if (employee is not null)
+        {
+            return await UpdateEmployeeProfile(employee, request, cancellationToken);
+        }
+
+        return NotFound();
+    }
+
+    private async Task<ActionResult<UserDto>> UpdateUserProfile(User user, UpdateMyProfileDto request, CancellationToken cancellationToken)
+    {
         var nationalId = request.NationalId.Trim();
         var firstName = request.FirstName.Trim();
         var lastName = request.LastName.Trim();
@@ -195,17 +227,20 @@ public class UsersController(
         var gender = request.Gender.Trim();
         var address = request.Address.Trim();
 
-        if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.Email == email, cancellationToken))
+        if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.Email == email, cancellationToken)
+            || await dbContext.Employees.AnyAsync(item => item.Email == email, cancellationToken))
         {
             return Conflict("Email already exists.");
         }
 
-        if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.NationalId == nationalId, cancellationToken))
+        if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.NationalId == nationalId, cancellationToken)
+            || await dbContext.Employees.AnyAsync(item => item.NationalId == nationalId, cancellationToken))
         {
             return Conflict("National ID already exists.");
         }
 
-        if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.PhoneNumber == phoneNumber, cancellationToken))
+        if (await dbContext.Users.AnyAsync(item => item.Id != user.Id && item.PhoneNumber == phoneNumber, cancellationToken)
+            || await dbContext.Employees.AnyAsync(item => item.PhoneNumber == phoneNumber, cancellationToken))
         {
             return Conflict("Phone number already exists.");
         }
@@ -235,6 +270,62 @@ public class UsersController(
         }
 
         return Ok(ToDto(user));
+    }
+
+    private async Task<ActionResult<UserDto>> UpdateEmployeeProfile(Employee employee, UpdateMyProfileDto request, CancellationToken cancellationToken)
+    {
+        var nationalId = request.NationalId.Trim();
+        var firstName = request.FirstName.Trim();
+        var lastName = request.LastName.Trim();
+        var fullName = request.FullName.Trim();
+        var email = request.Email.Trim().ToLowerInvariant();
+        var phoneNumber = request.PhoneNumber.Trim();
+        var gender = request.Gender.Trim();
+        var address = request.Address.Trim();
+
+        if (await dbContext.Users.AnyAsync(item => item.Email == email, cancellationToken)
+            || await dbContext.Employees.AnyAsync(item => item.Id != employee.Id && item.Email == email, cancellationToken))
+        {
+            return Conflict("Email already exists.");
+        }
+
+        if (await dbContext.Users.AnyAsync(item => item.NationalId == nationalId, cancellationToken)
+            || await dbContext.Employees.AnyAsync(item => item.Id != employee.Id && item.NationalId == nationalId, cancellationToken))
+        {
+            return Conflict("National ID already exists.");
+        }
+
+        if (await dbContext.Users.AnyAsync(item => item.PhoneNumber == phoneNumber, cancellationToken)
+            || await dbContext.Employees.AnyAsync(item => item.Id != employee.Id && item.PhoneNumber == phoneNumber, cancellationToken))
+        {
+            return Conflict("Phone number already exists.");
+        }
+
+        var changed = employee.NationalId != nationalId
+            || employee.FirstName != firstName
+            || employee.LastName != lastName
+            || employee.FullName != fullName
+            || employee.Email != email
+            || employee.Gender != gender
+            || employee.Address != address
+            || employee.PhoneNumber != phoneNumber;
+
+        employee.NationalId = nationalId;
+        employee.FirstName = firstName;
+        employee.LastName = lastName;
+        employee.FullName = fullName;
+        employee.Email = email;
+        employee.Gender = gender;
+        employee.Address = address;
+        employee.PhoneNumber = phoneNumber;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        if (changed)
+        {
+            await TrySendEmailAsync(ProfileUpdatedEmailTemplate.Create(employee), cancellationToken);
+        }
+
+        return Ok(ToDto(employee));
     }
 
     private static UserDto ToDto(User user) => new(

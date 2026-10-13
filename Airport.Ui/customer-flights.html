@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Customer Flights</title>
-  <link rel="stylesheet" href="styles.css?v=20261013-connections">
+  <link rel="stylesheet" href="styles.css?v=20261013-stable-booking">
 </head>
 <body>
   <main class="page-shell">
@@ -59,15 +59,15 @@
     </dialog>
     <dialog id="bookingDialog">
       <form id="bookingForm" method="dialog" class="dialog-form">
-        <h2>Book flight</h2><p id="bookingFlightText"></p><input id="bookingFlightId" type="hidden">
+        <h2 id="bookingTitle">Book flight</h2><p id="bookingFlightText"></p><input id="bookingFlightId" type="hidden">
         <label class="check-filter"><input id="chooseSeat" type="checkbox"> Choose seat</label>
-        <label id="seatPickerRow" hidden>Seat<input id="bookingSeat" placeholder="12A"></label>
+        <label id="seatPickerRow" class="booking-option-field" aria-hidden="true">Seat<input id="bookingSeat" placeholder="12A" disabled></label>
         <label>Seat class<select id="bookingClass"><option value="Economy">Economy</option><option value="Business">Business</option><option value="First">First</option></select></label>
         <label class="check-filter"><input id="addBaggage" type="checkbox"> Add baggage</label>
-        <label id="baggagePickerRow" hidden>Baggage<select id="bookingBaggage"><option value="10">10 kg</option><option value="20">20 kg</option><option value="25">25 kg</option><option value="35">35 kg</option></select></label>
+        <label id="baggagePickerRow" class="booking-option-field" aria-hidden="true">Baggage<select id="bookingBaggage" disabled><option value="10">10 kg</option><option value="20">20 kg</option><option value="25">25 kg</option><option value="35">35 kg</option></select></label>
         <div class="price-breakdown"><span>Flight</span><strong id="flightPriceText">$180.00</strong><span>Seat choice</span><strong id="seatPriceText">$0.00</strong><span>Baggage</span><strong id="bagPriceText">$0.00</strong><span>Class</span><strong id="classPriceText">$0.00</strong></div>
         <label>Total price<input id="bookingPrice" type="number" step="0.01" readonly></label>
-        <div class="dialog-actions"><button type="button" id="closeBooking" class="ghost-button">Close</button><button class="primary-button">Book ticket</button></div>
+        <div class="dialog-actions"><button type="button" id="closeBooking" class="ghost-button">Close</button><button id="bookingSubmitButton" class="primary-button">Book ticket</button></div>
       </form>
     </dialog>
     <div id="purchaseOverlay" class="purchase-overlay" hidden>
@@ -106,6 +106,6 @@
     <div id="toast" class="toast" hidden></div>
   </main>
   <script src="shared.js?v=20261012-12"></script>
-  <script src="customer-flights.js?v=20261013-connections"></script>
+  <script src="customer-flights.js?v=20261013-stable-booking"></script>
 </body>
 </html>
